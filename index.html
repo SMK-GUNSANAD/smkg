@@ -87,11 +87,24 @@
       background: var(--btnBg); display:flex; align-items:center; justify-content:center;
     }
     .navlinks{ display:flex; gap:10px; align-items: center; }
-    .navlinks a, .themeBtn{
-      padding: 8px 14px; border-radius: 10px; border: 1px solid var(--btnBorder);
-      background: var(--btnBg); color: var(--text); font-size: 13px; transition: 0.3s; cursor: pointer; text-decoration: none;
-    }
-    .navlinks a:hover, .themeBtn:hover{ background: var(--btnBgHover); transform: translateY(-2px); box-shadow: var(--btnShadowHover); }
+
+  .navlinks a, .themeBtn{
+    padding: 8px 14px;
+    border-radius: 10px;
+    border: 1px solid var(--btnBorder);
+    background: var(--btnBg);
+    color: var(--text);
+    font-size: 13px;
+    transition: 0.3s;
+    cursor: pointer;
+    text-decoration: none;
+  }
+    .navlinks a:hover,
+  .themeBtn:hover{
+    background: var(--btnBgHover);
+    transform: translateY(-2px);
+    box-shadow: var(--btnShadowHover);
+  }
 
     /* Slider Styles */
     .section-1 { height: 100vh; position: relative; }
@@ -176,17 +189,17 @@
       </div>
     </div>
   
-    <nav class="navlinks">
-      <a href="akademik.html" data-trans="true">Kurikulum</a>
-      <a href="#" data-trans="true">HEM</a>
-      <a href="#" data-trans="true">Ko-Kurikulum</a>
-      <a href="#" data-trans="true">Tingkatan 6</a>
-      <a href="#" data-trans="true">PPKI</a>
-      <a href="#" data-trans="true">Kaunseling</a>
-      <button class="themeBtn" id="themeToggle">
-        <span id="themeIcon">☾</span> <span id="themeLabel">Dark</span>
-      </button>
-    </nav>
+<nav class="navlinks">
+  <a href="akademik.html" data-trans="true">Kurikulum</a>
+  <a href="#" data-trans="true">HEM</a>
+  <a href="#" data-trans="true">Ko-Kurikulum</a>
+  <a href="#" data-trans="true">Tingkatan 6</a>
+  <a href="#" data-trans="true">PPKI</a>
+  <a href="#" data-trans="true">Kaunseling</a>
+  <button class="themeBtn" id="themeToggle">
+    <span id="themeIcon">☾</span> <span id="themeLabel">Dark</span>
+  </button>
+</nav>
   </header>
 
   <div class="main-container">
