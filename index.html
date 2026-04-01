@@ -4,211 +4,650 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Dashboard SMKG</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;800;900&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
     :root{
-      --navH: 64px;
+      --navH: 60px;
+      --tickerH: 34px;
+      --topH: 94px; /* navH + tickerH */
       --ease: cubic-bezier(.2,.8,.2,1);
       --ease2: cubic-bezier(.16,1,.3,1);
       --dur: 560ms;
+      --radius: 12px;
+      --radius-lg: 20px;
 
       /* THEME (default = dark) */
-      --bg0: #07080b;
-      --glass: rgba(12,14,18,.55);
-      --border: rgba(255,255,255,.14);
-      --text: rgba(255,255,255,.92);
-      --muted: rgba(255,255,255,.74);
-      --shadow: 0 18px 55px rgba(0,0,0,.45);
+      --bg0: #0a0b0f;
+      --glass: rgba(16,17,24,.72);
+      --border: rgba(255,255,255,.08);
+      --border-strong: rgba(255,255,255,.14);
+      --text: rgba(255,255,255,.95);
+      --muted: rgba(255,255,255,.50);
+      --muted2: rgba(255,255,255,.30);
+      --shadow: 0 20px 60px rgba(0,0,0,.50);
 
-      --navBg: rgba(10,12,16,.55);
-      --navBorder: rgba(255,255,255,.12);
+      --navBg: rgba(10,11,15,.85);
+      --navBorder: rgba(255,255,255,.08);
       --btnBg: rgba(255,255,255,.06);
       --btnBgHover: rgba(255,255,255,.10);
-      --btnBorder: rgba(255,255,255,.14);
-      --btnShadowHover: 0 16px 36px rgba(0,0,0,.22);
+      --btnBorder: rgba(255,255,255,.10);
+      --btnShadowHover: 0 8px 24px rgba(0,0,0,.30);
+      --accent: #6366f1;
+      --accent2: #8b5cf6;
+      --accent-glow: rgba(99,102,241,.20);
 
-      --bg-r1: rgba(255,255,255,.10);
-      --bg-r2: rgba(255,255,255,.08);
-      --bg-l1: #05060a;
-      --bg-l2: #07080b;
-      --gridLine: rgba(255,255,255,.06);
+      --bg-r1: rgba(99,102,241,.12);
+      --bg-r2: rgba(139,92,246,.08);
+      --bg-l1: #0a0b0f;
+      --bg-l2: #080910;
+      --gridLine: rgba(255,255,255,.04);
+
+      /* Figma-style component tokens */
+      --surface: rgba(255,255,255,.04);
+      --surface-hover: rgba(255,255,255,.07);
+      --tag-bg: rgba(99,102,241,.12);
+      --tag-text: #818cf8;
     }
 
-    /* Light theme overrides */
     html[data-theme="light"]{
-      --bg0: #f6f7fb;
-      --glass: rgba(255,255,255,.62);
-      --border: rgba(10,12,16,.14);
-      --text: rgba(10,12,16,.92);
-      --muted: rgba(10,12,16,.70);
-      --shadow: 0 18px 55px rgba(10,12,16,.10);
-      --navBg: rgba(255,255,255,.72);
-      --navBorder: rgba(10,12,16,.10);
-      --btnBg: rgba(10,12,16,.06);
-      --btnBgHover: rgba(10,12,16,.10);
-      --btnBorder: rgba(10,12,16,.12);
-      --bg-r1: rgba(10,12,16,.10);
-      --bg-r2: rgba(10,12,16,.08);
+      --bg0: #fafafa;
+      --glass: rgba(255,255,255,.85);
+      --border: rgba(0,0,0,.07);
+      --border-strong: rgba(0,0,0,.12);
+      --text: rgba(10,10,15,.95);
+      --muted: rgba(10,10,15,.50);
+      --muted2: rgba(10,10,15,.28);
+      --shadow: 0 20px 60px rgba(0,0,0,.08);
+      --navBg: rgba(255,255,255,.90);
+      --navBorder: rgba(0,0,0,.07);
+      --btnBg: rgba(0,0,0,.04);
+      --btnBgHover: rgba(0,0,0,.07);
+      --btnBorder: rgba(0,0,0,.09);
+      --btnShadowHover: 0 8px 24px rgba(0,0,0,.08);
+      --bg-r1: rgba(99,102,241,.07);
+      --bg-r2: rgba(139,92,246,.05);
       --bg-l1: #ffffff;
-      --bg-l2: #f6f7fb;
-      --gridLine: rgba(10,12,16,.08);
+      --bg-l2: #f5f5fa;
+      --gridLine: rgba(0,0,0,.04);
+      --surface: rgba(0,0,0,.03);
+      --surface-hover: rgba(0,0,0,.05);
+      --tag-bg: rgba(99,102,241,.08);
+      --tag-text: #4f46e5;
+      --accent-glow: rgba(99,102,241,.10);
     }
 
-    *{ box-sizing:border-box; }
-    html,body{ height:100%; margin:0; font-family: system-ui,-apple-system,Segoe UI,Roboto,Arial; background: var(--bg0); overflow:hidden; }
-    
-    /* Vertical Container Structure */
+    *{ box-sizing:border-box; margin:0; padding:0; }
+    html,body{
+      height:100%; font-family: 'Geist', system-ui, sans-serif;
+      background: var(--bg0); overflow:hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Layout */
     .main-container { height: 100vh; overflow: hidden; position: relative; touch-action: none; }
     .vertical-track { height: 200vh; transition: transform 1100ms var(--ease2); will-change: transform; }
 
-    /* Backgrounds */
+    /* Background */
     .bg{
       position: fixed; inset:0; z-index:0;
-      background: radial-gradient(900px 600px at 18% 18%, var(--bg-r1), transparent 55%),
-                  radial-gradient(900px 700px at 82% 28%, var(--bg-r2), transparent 55%),
-                  linear-gradient(180deg, var(--bg-l1), var(--bg-l2) 60%, var(--bg-l1));
+      background:
+        radial-gradient(ellipse 900px 700px at 15% 20%, var(--bg-r1), transparent 60%),
+        radial-gradient(ellipse 700px 600px at 85% 30%, var(--bg-r2), transparent 55%),
+        radial-gradient(ellipse 500px 400px at 50% 85%, rgba(99,102,241,.06), transparent 60%),
+        linear-gradient(180deg, var(--bg-l1), var(--bg-l2) 70%, var(--bg-l1));
     }
     .grid{
       position:absolute; inset:0;
-      background-image: linear-gradient(to right, var(--gridLine) 1px, transparent 1px),
-                        linear-gradient(to bottom, var(--gridLine) 1px, transparent 1px);
-      background-size: 68px 68px; opacity: .08; pointer-events:none;
+      background-image:
+        linear-gradient(to right, var(--gridLine) 1px, transparent 1px),
+        linear-gradient(to bottom, var(--gridLine) 1px, transparent 1px);
+      background-size: 60px 60px;
+      pointer-events:none;
+    }
+    /* Dot pattern overlay - Figma style */
+    .dots{
+      position: absolute; inset: 0; pointer-events: none;
+      background-image: radial-gradient(circle, var(--gridLine) 1px, transparent 1px);
+      background-size: 30px 30px;
+      opacity: 0.6;
     }
 
-    /* Top nav */
+    /* ─── TICKER ──────────────────────────────────────────── */
+    .ticker-wrap{
+      position: fixed; top: var(--navH); left: 0; right: 0; z-index: 90;
+      height: 34px; overflow: hidden;
+      background: var(--navBg);
+      border-bottom: 1px solid var(--navBorder);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      display: flex; align-items: center;
+    }
+    .ticker-track{
+      display: flex; align-items: center; gap: 0;
+      white-space: nowrap;
+      animation: ticker-scroll 36s linear infinite;
+      will-change: transform;
+    }
+    .ticker-wrap:hover .ticker-track{ animation-play-state: paused; }
+    @keyframes ticker-scroll{
+      0%  { transform: translateX(0); }
+      100%{ transform: translateX(-50%); }
+    }
+    .ticker-item{
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 0 28px; font-size: 12px;
+      color: var(--muted); font-family: 'Geist Mono', monospace;
+      letter-spacing: 0.02em;
+    }
+    .ticker-item .ti-icon{
+      font-size: 12px; flex-shrink: 0;
+    }
+    .ticker-item .ti-label{
+      color: var(--muted2); font-size: 10px; text-transform: uppercase;
+      letter-spacing: 0.1em; margin-right: 2px;
+    }
+    .ticker-item .ti-value{
+      color: var(--text); font-weight: 500;
+    }
+    .ticker-divider{
+      display: inline-block; width: 1px; height: 12px;
+      background: var(--border-strong); flex-shrink: 0;
+    }
+
+    /* ─── TOP NAV ─────────────────────────────────────────── */
     .topbar{
       position: fixed; inset: 0 0 auto 0; height: var(--navH); z-index: 100;
       display:flex; align-items:center; justify-content:space-between;
-      padding: 0 24px; backdrop-filter: blur(16px);
-      background: var(--navBg); border-bottom: 1px solid var(--navBorder);
+      padding: 0 20px;
+      backdrop-filter: blur(20px) saturate(1.4);
+      -webkit-backdrop-filter: blur(20px) saturate(1.4);
+      background: var(--navBg);
+      border-bottom: 1px solid var(--navBorder);
     }
-    .brand{ display:flex; align-items:center; gap:10px; color: var(--text); font-weight: 820; letter-spacing:.2px; }
+
+    /* Brand */
+    .brand{ display:flex; align-items:center; gap:10px; color: var(--text); text-decoration:none; }
     .mark{
-      width: 34px; height: 34px; border-radius: 12px; border: 1px solid var(--btnBorder);
-      background: var(--btnBg); display:flex; align-items:center; justify-content:center;
+      width: 32px; height: 32px; border-radius: 10px;
+      border: 1px solid var(--border-strong);
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      display:flex; align-items:center; justify-content:center;
+      font-size: 14px; color: #fff; font-weight: 700;
+      box-shadow: 0 0 20px var(--accent-glow);
     }
-    .navlinks{ display:flex; gap:10px; align-items: center; }
+    .brand-text{ display:flex; flex-direction:column; gap:1px; }
+    .brand-name{ font-size: 13px; font-weight: 700; letter-spacing: -0.01em; color: var(--text); line-height:1; }
+    .brand-sub{ font-size: 10px; color: var(--muted); letter-spacing: 0.06em; text-transform: uppercase; line-height:1; font-family: 'Geist Mono', monospace; }
 
-  .navlinks a, .themeBtn{
-    padding: 8px 14px;
-    border-radius: 10px;
-    border: 1px solid var(--btnBorder);
-    background: var(--btnBg);
-    color: var(--text);
-    font-size: 13px;
-    transition: 0.3s;
-    cursor: pointer;
-    text-decoration: none;
-  }
-    .navlinks a:hover,
-  .themeBtn:hover{
-    background: var(--btnBgHover);
-    transform: translateY(-2px);
-    box-shadow: var(--btnShadowHover);
-  }
+    /* Nav right side */
+    .nav-right{ display: flex; align-items: center; gap: 8px; }
 
-    /* Slider Styles */
+    /* Theme button */
+    .themeBtn{
+      display: flex; align-items: center; gap: 6px;
+      padding: 7px 12px; border-radius: var(--radius);
+      border: 1px solid var(--btnBorder);
+      background: var(--btnBg);
+      color: var(--muted);
+      font-size: 12px; font-family: 'Geist', sans-serif;
+      cursor: pointer; transition: all 0.2s var(--ease);
+      white-space: nowrap;
+    }
+    .themeBtn:hover{ background: var(--btnBgHover); color: var(--text); border-color: var(--border-strong); }
+
+    /* ─── HAMBURGER ───────────────────────────────────────── */
+    .hamburger{
+      width: 36px; height: 36px; border-radius: var(--radius);
+      border: 1px solid var(--btnBorder);
+      background: var(--btnBg);
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 4.5px; cursor: pointer; transition: all 0.2s var(--ease);
+      position: relative; z-index: 200;
+    }
+    .hamburger:hover{ background: var(--btnBgHover); border-color: var(--border-strong); }
+    .hamburger span{
+      display: block; width: 16px; height: 1.5px;
+      background: var(--text); border-radius: 2px;
+      transition: all 0.35s var(--ease2); transform-origin: center;
+    }
+    .hamburger.open span:nth-child(1){ transform: translateY(6px) rotate(45deg); }
+    .hamburger.open span:nth-child(2){ opacity: 0; transform: scaleX(0); }
+    .hamburger.open span:nth-child(3){ transform: translateY(-6px) rotate(-45deg); }
+
+    /* ─── DRAWER MENU ─────────────────────────────────────── */
+    .drawer-overlay{
+      position: fixed; inset: 0; z-index: 150;
+      background: rgba(0,0,0,.40);
+      backdrop-filter: blur(4px);
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.35s var(--ease);
+    }
+    .drawer-overlay.open{ opacity: 1; pointer-events: auto; }
+
+    .drawer{
+      position: fixed; top: 0; right: 0; bottom: 0;
+      width: 300px; z-index: 160;
+      background: var(--navBg);
+      backdrop-filter: blur(32px) saturate(1.6);
+      -webkit-backdrop-filter: blur(32px) saturate(1.6);
+      border-left: 1px solid var(--navBorder);
+      transform: translateX(100%);
+      transition: transform 0.45s var(--ease2);
+      display: flex; flex-direction: column;
+      padding: 0;
+    }
+    .drawer.open{ transform: translateX(0); }
+
+    .drawer-header{
+      height: var(--navH); display: flex; align-items: center;
+      padding: 0 20px; border-bottom: 1px solid var(--navBorder);
+      flex-shrink: 0;
+    }
+    .drawer-label{
+      font-size: 11px; font-weight: 600; letter-spacing: 0.1em;
+      text-transform: uppercase; color: var(--muted);
+      font-family: 'Geist Mono', monospace;
+    }
+
+    .drawer-body{ flex: 1; padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; }
+
+    /* Figma-style nav item */
+    .drawer-link{
+      display: flex; align-items: center; gap: 12px;
+      padding: 10px 12px; border-radius: 10px;
+      color: var(--text); text-decoration: none;
+      font-size: 14px; font-weight: 500;
+      transition: all 0.18s var(--ease);
+      position: relative; border: 1px solid transparent;
+      cursor: pointer;
+    }
+    .drawer-link:hover{
+      background: var(--surface-hover);
+      border-color: var(--border);
+    }
+    .drawer-link .link-icon{
+      width: 30px; height: 30px; border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; flex-shrink: 0;
+      transition: all 0.18s var(--ease);
+    }
+    .drawer-link:hover .link-icon{
+      background: var(--accent-glow);
+      border-color: rgba(99,102,241,.25);
+    }
+    .drawer-link .link-meta{ flex: 1; min-width: 0; }
+    .drawer-link .link-title{ font-size: 13.5px; font-weight: 500; color: var(--text); }
+    .drawer-link .link-desc{ font-size: 11px; color: var(--muted); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .drawer-link .link-arrow{ color: var(--muted2); font-size: 13px; transition: transform 0.18s; }
+    .drawer-link:hover .link-arrow{ transform: translateX(3px); color: var(--muted); }
+
+    .drawer-divider{ height: 1px; background: var(--border); margin: 8px 0; }
+    .drawer-section-label{
+      font-size: 10px; font-weight: 600; letter-spacing: 0.1em;
+      text-transform: uppercase; color: var(--muted2);
+      padding: 4px 12px; font-family: 'Geist Mono', monospace;
+    }
+
+    .drawer-footer{ padding: 16px; border-top: 1px solid var(--navBorder); flex-shrink: 0; }
+    .footer-version{
+      font-size: 11px; color: var(--muted2);
+      font-family: 'Geist Mono', monospace;
+      text-align: center; letter-spacing: 0.04em;
+    }
+
+    /* ─── SECTION 1: HERO / SLIDER ────────────────────────── */
     .section-1 { height: 100vh; position: relative; }
-    .viewport{ position: relative; height: 100%; padding-top: var(--navH); overflow:hidden; }
-    .track{ height: calc(100% - var(--navH)); display:flex; transition: transform var(--dur) var(--ease2); }
+    .viewport{ position: relative; height: 100%; padding-top: var(--topH); overflow:hidden; }
+    .track{ height: calc(100% - var(--topH)); display:flex; transition: transform var(--dur) var(--ease2); }
     .slide{ width: 100vw; height: 100%; flex: 0 0 100%; position: relative; overflow:hidden; }
     .img{ position:absolute; inset:0; background-size: cover; background-position: center; transition: transform 1000ms var(--ease2); }
     .slide.active .img{ animation: zoom 18s linear forwards; }
     @keyframes zoom{ from{ transform: scale(1.02); } to{ transform: scale(1.08); } }
-    .overlay{ position:absolute; inset:0; background: linear-gradient(to top, rgba(0,0,0,0.8), transparent); }
-    html[data-theme="light"] .overlay { background: linear-gradient(to top, rgba(255,255,255,0.7), transparent); }
+    .overlay{
+      position:absolute; inset:0;
+      background: linear-gradient(135deg, rgba(0,0,0,.75) 0%, rgba(0,0,0,.35) 60%, rgba(0,0,0,.65) 100%);
+    }
+    html[data-theme="light"] .overlay {
+      background: linear-gradient(135deg, rgba(10,10,20,.55) 0%, rgba(10,10,20,.15) 60%, rgba(10,10,20,.45) 100%);
+    }
 
-    .content{ position:absolute; left: 24px; bottom: 80px; max-width: 800px; color: var(--text); z-index: 5; }
+    /* Figma-style slide content */
+    .content{
+      position:absolute; left: 0; right: 0; bottom: 0;
+      padding: 32px 32px 100px;
+      z-index: 5;
+    }
     .card{
-      padding: 24px; border-radius: 24px; border: 1px solid var(--border);
-      background: var(--glass); backdrop-filter: blur(20px);
-      transform: translateY(20px); opacity: 0; transition: 0.8s var(--ease2) 0.1s;
+      max-width: 700px;
+      padding: 28px 32px; border-radius: var(--radius-lg);
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(10,10,18,.65);
+      backdrop-filter: blur(24px) saturate(1.2);
+      -webkit-backdrop-filter: blur(24px) saturate(1.2);
+      transform: translateY(24px); opacity: 0;
+      transition: transform 0.9s var(--ease2) 0.1s, opacity 0.9s var(--ease2) 0.1s;
+      box-shadow: 0 32px 80px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.06);
+    }
+    html[data-theme="light"] .card{
+      background: rgba(255,255,255,.80);
+      border-color: rgba(255,255,255,.50);
+      box-shadow: 0 32px 80px rgba(0,0,0,.10), inset 0 1px 0 rgba(255,255,255,.80);
     }
     .slide.active .card{ transform: translateY(0); opacity: 1; }
-    .title{ font-size: clamp(32px, 5vw, 64px); font-weight: 800; line-height: 1.1; margin: 10px 0; }
-    .hl{ color: var(--text); text-decoration: underline color-mix(in srgb, var(--text) 30%, transparent); }
-    .bullets{ margin: 15px 0 0; padding-left: 20px; color: var(--muted); line-height: 1.6; }
 
-    /* Section 2: Reveal Effect */
-    .section-2 { height: 100vh; display: flex; align-items: center; justify-content: center; background: var(--bg-l1); position: relative; }
-    .brand-statement { text-align: center; }
+    .kicker-row{ display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+    .kicker{
+      display: inline-flex; align-items: center; gap: 5px;
+      font-size: 10px; font-weight: 600; letter-spacing: 0.12em;
+      text-transform: uppercase; color: #818cf8;
+      background: rgba(99,102,241,.14); border: 1px solid rgba(99,102,241,.20);
+      padding: 4px 10px; border-radius: 100px;
+      font-family: 'Geist Mono', monospace;
+    }
+    html[data-theme="light"] .kicker{ color: #4f46e5; background: rgba(99,102,241,.08); }
+    .kicker::before{ content: ''; width: 5px; height: 5px; border-radius: 50%; background: #818cf8; }
+
+    .title{
+      font-size: clamp(26px, 4vw, 52px);
+      font-weight: 800; line-height: 1.08;
+      margin: 0 0 10px;
+      color: rgba(255,255,255,.97);
+      letter-spacing: -0.03em;
+    }
+    html[data-theme="light"] .title{ color: rgba(10,10,15,.95); }
+
+    .hl{
+      background: linear-gradient(135deg, #818cf8, #a78bfa);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .note{
+      font-size: 14px; color: rgba(255,255,255,.60); margin: 0 0 16px;
+      line-height: 1.55; font-weight: 400;
+    }
+    html[data-theme="light"] .note{ color: rgba(10,10,15,.55); }
+
+    .bullets{
+      margin: 0; padding: 0; list-style: none;
+      display: flex; flex-direction: column; gap: 6px;
+    }
+    .bullets li{
+      display: flex; align-items: flex-start; gap: 8px;
+      font-size: 13px; color: rgba(255,255,255,.65); line-height: 1.5;
+    }
+    html[data-theme="light"] .bullets li{ color: rgba(10,10,15,.60); }
+    .bullets li::before{
+      content: ''; flex-shrink: 0;
+      width: 4px; height: 4px; border-radius: 50%;
+      background: #6366f1; margin-top: 8px;
+    }
+
+    /* ─── SECTION 2: REVEAL ───────────────────────────────── */
+    .section-2 {
+      height: 100vh; display: flex; align-items: center; justify-content: center;
+      background: var(--bg-l1); position: relative; overflow: hidden;
+    }
+    .brand-statement { text-align: center; position: relative; z-index: 2; }
+
+    /* Figma-style accent ring behind text */
+    .brand-statement::before{
+      content: '';
+      position: absolute; top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 500px; height: 500px; border-radius: 50%;
+      border: 1px solid var(--border);
+      background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
     .reveal-text {
-      display: block; font-size: clamp(48px, 12vw, 160px); font-weight: 900;
-      color: var(--text); line-height: 0.95; letter-spacing: -0.05em;
-      text-transform: uppercase; opacity: 0; transform: translateY(100px) skewY(8deg);
-      filter: blur(15px); transition: all 1200ms var(--ease2);
+      display: block;
+      font-size: clamp(52px, 13vw, 160px);
+      font-weight: 900;
+      color: var(--text); line-height: 0.92;
+      letter-spacing: -0.06em; text-transform: uppercase;
+      opacity: 0; transform: translateY(80px) skewY(5deg);
+      filter: blur(12px); transition: all 1100ms var(--ease2);
     }
-    .section-2.active .reveal-text { opacity: 1; transform: translateY(0) skewY(0); filter: blur(0); }
-    .section-2.active .reveal-text:nth-child(2) { transition-delay: 150ms; color: color-mix(in srgb, var(--text) 40%, transparent); }
-    .section-2.active .reveal-text:nth-child(3) { transition-delay: 300ms; }
+    .section-2.active .reveal-text{ opacity: 1; transform: translateY(0) skewY(0); filter: blur(0); }
+    .section-2.active .reveal-text:nth-child(2){ transition-delay: 120ms; color: color-mix(in srgb, var(--text) 35%, transparent); }
+    .section-2.active .reveal-text:nth-child(3){
+      transition-delay: 240ms;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6, #a78bfa);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
 
-    /* Navigation UI */
-    .pills{ position: fixed; left: 24px; bottom: 24px; z-index: 60; display:flex; gap:10px; transition: opacity 0.5s; }
+    /* ─── BOTTOM UI: PILLS ────────────────────────────────── */
+    .pills{
+      position: fixed; left: 50%; transform: translateX(-50%);
+      bottom: 28px; z-index: 60;
+      display: flex; gap: 6px; align-items: center;
+      background: var(--glass);
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      padding: 8px 12px;
+      backdrop-filter: blur(16px);
+      transition: opacity 0.5s;
+    }
     .pill{
-      width: 10px; height: 10px; border-radius: 10px; background: color-mix(in srgb, var(--text) 20%, transparent);
-      cursor:pointer; transition: width 0.4s; overflow:hidden; border: none;
+      width: 6px; height: 6px; border-radius: 100px;
+      background: var(--muted2); cursor:pointer;
+      transition: all 0.4s var(--ease2); overflow:hidden; border: none;
+      flex-shrink: 0;
     }
-    .pill.active{ width: 50px; background: color-mix(in srgb, var(--text) 40%, transparent); }
-    .bar{ display:block; height:100%; width:0%; background: var(--text); }
-    .pill.active.running .bar { animation: fill linear forwards; }
-    @keyframes fill { to { width: 100%; } }
+    .pill.active{ width: 36px; background: var(--accent); }
+    .bar{ display:block; height:100%; width:0%; background: rgba(255,255,255,.5); }
+    .pill.active.running .bar{ animation: fill linear forwards; }
+    @keyframes fill{ to{ width: 100%; } }
 
-    .controls{ position: fixed; right: 24px; bottom: 24px; z-index: 60; display:flex; gap:10px; transition: opacity 0.5s; }
+    /* ─── PREV/NEXT CONTROLS ──────────────────────────────── */
+    .controls{
+      position: fixed; right: 20px; bottom: 20px; z-index: 60;
+      display:flex; gap: 6px; transition: opacity 0.5s;
+    }
     .btn{
-      width: 48px; height: 48px; border-radius: 14px; border: 1px solid var(--btnBorder);
-      background: var(--btnBg); color: var(--text); cursor:pointer; backdrop-filter: blur(10px); font-size: 20px;
+      width: 40px; height: 40px; border-radius: 12px;
+      border: 1px solid var(--btnBorder);
+      background: var(--glass);
+      color: var(--text); cursor:pointer;
+      backdrop-filter: blur(12px);
+      font-size: 18px; transition: all 0.2s var(--ease);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .btn:hover{
+      background: var(--btnBgHover);
+      border-color: var(--border-strong);
+      transform: scale(1.05);
     }
 
-    /* Floating Hints */
+    /* ─── SCROLL HINTS ────────────────────────────────────── */
     .scroll-hint, .gallery-hint {
       position: absolute; left: 50%; transform: translateX(-50%);
-      color: var(--muted); font-size: 10px; letter-spacing: 3px;
+      color: var(--muted2); font-size: 9px; letter-spacing: 0.18em;
       text-transform: uppercase; text-decoration: none;
-      z-index: 10;
+      z-index: 10; font-family: 'Geist Mono', monospace;
+      display: flex; flex-direction: column; align-items: center; gap: 6px;
     }
-    .scroll-hint { bottom: 30px; animation: bounceDown 2s infinite; }
-    .gallery-hint { bottom: 40px; animation: bounceUp 2s infinite; }
+    .scroll-hint{ bottom: 26px; animation: bounceDown 2.5s infinite; }
+    .gallery-hint{ bottom: 36px; animation: bounceUp 2.5s infinite; color: var(--muted); }
+    .scroll-hint::after{
+      content: '';
+      width: 1px; height: 24px;
+      background: linear-gradient(to bottom, var(--muted2), transparent);
+    }
 
-    @keyframes bounceDown { 0%, 100% { transform: translate(-50%, 0); opacity: 0.3; } 50% { transform: translate(-50%, 10px); opacity: 1; } }
-    @keyframes bounceUp { 0%, 100% { transform: translate(-50%, 0); opacity: 0.3; } 50% { transform: translate(-50%, -10px); opacity: 1; } }
+    @keyframes bounceDown{
+      0%, 100%{ transform: translate(-50%, 0); opacity: .3; }
+      50%{ transform: translate(-50%, 8px); opacity: .9; }
+    }
+    @keyframes bounceUp{
+      0%, 100%{ transform: translate(-50%, 0); opacity: .3; }
+      50%{ transform: translate(-50%, -8px); opacity: .9; }
+    }
 
-    .pageTrans{ position: fixed; inset: 0; z-index: 999; pointer-events:none; transform: translateY(-100%); background: var(--bg-l1); transition: transform 0.5s var(--ease2); }
+    /* Page Transition */
+    .pageTrans{
+      position: fixed; inset: 0; z-index: 999; pointer-events:none;
+      transform: translateY(-100%); background: var(--bg-l1);
+      transition: transform 0.5s var(--ease2);
+    }
     .pageTrans.run{ transform: translateY(0); pointer-events: auto; }
+
+    /* Slide indicator — top right of card */
+    .slide-counter{
+      position: absolute; top: 20px; right: 24px;
+      font-size: 11px; color: var(--muted2);
+      font-family: 'Geist Mono', monospace;
+      letter-spacing: 0.08em; z-index: 10;
+    }
+
+    /* Decorative corner pieces */
+    .corner{
+      position: absolute; width: 12px; height: 12px;
+      border-color: rgba(255,255,255,.15); border-style: solid; z-index: 10;
+    }
+    .corner-tl{ top: 16px; left: 16px; border-width: 1px 0 0 1px; }
+    .corner-br{ bottom: 90px; right: 16px; border-width: 0 1px 1px 0; }
+    html[data-theme="light"] .corner{ border-color: rgba(0,0,0,.10); }
   </style>
 </head>
 
 <body>
-  <div class="bg"><div class="grid"></div></div>
+  <div class="bg"><div class="grid"></div><div class="dots"></div></div>
   <div class="pageTrans" id="pageTrans"></div>
 
-    <header class="topbar">
-    <div class="brand">
+  <!-- TICKER BAR -->
+  <div class="ticker-wrap" id="tickerWrap">
+    <div class="ticker-track" id="tickerTrack"></div>
+  </div>
+
+  <!-- TOP NAV -->
+  <header class="topbar">
+    <a class="brand" href="#">
       <div class="mark">◆</div>
-      <div>
-        <div>Dashboard SMKG</div>
-        <div class="sub">Showcase • Dashboard</div>
+      <div class="brand-text">
+        <div class="brand-name">Dashboard SMKG</div>
+        <div class="brand-sub">Showcase · Dashboard</div>
+      </div>
+    </a>
+
+    <div class="nav-right">
+      <button class="themeBtn" id="themeToggle">
+        <span id="themeIcon">☾</span>
+        <span id="themeLabel">Dark</span>
+      </button>
+      <div class="hamburger" id="hamburger" role="button" aria-label="Open menu" tabindex="0">
+        <span></span><span></span><span></span>
       </div>
     </div>
-  
-<nav class="navlinks">
-  <a href="akademik.html" data-trans="true">Kurikulum</a>
-  <a href="#" data-trans="true">HEM</a>
-  <a href="#" data-trans="true">Ko-Kurikulum</a>
-  <a href="#" data-trans="true">Tingkatan 6</a>
-  <a href="#" data-trans="true">PPKI</a>
-  <a href="#" data-trans="true">Kaunseling</a>
-  <button class="themeBtn" id="themeToggle">
-    <span id="themeIcon">☾</span> <span id="themeLabel">Dark</span>
-  </button>
-</nav>
   </header>
 
+  <!-- DRAWER OVERLAY -->
+  <div class="drawer-overlay" id="drawerOverlay"></div>
+
+  <!-- DRAWER -->
+  <aside class="drawer" id="drawer" aria-label="Navigation menu">
+    <div class="drawer-header">
+      <span class="drawer-label">Navigation</span>
+    </div>
+    <div class="drawer-body">
+      <div class="drawer-section-label">Panels</div>
+
+      <a href="akademik.html" class="drawer-link" data-trans="true">
+        <div class="link-icon">📚</div>
+        <div class="link-meta">
+          <div class="link-title">Kurikulum</div>
+          <div class="link-desc">Akademik & pencapaian pelajar</div>
+        </div>
+        <span class="link-arrow">›</span>
+      </a>
+
+      <a href="#" class="drawer-link">
+        <div class="link-icon">🏫</div>
+        <div class="link-meta">
+          <div class="link-title">HEM</div>
+          <div class="link-desc">Hal Ehwal Murid</div>
+        </div>
+        <span class="link-arrow">›</span>
+      </a>
+
+      <a href="#" class="drawer-link">
+        <div class="link-icon">🏆</div>
+        <div class="link-meta">
+          <div class="link-title">Ko-Kurikulum</div>
+          <div class="link-desc">Aktiviti & persatuan</div>
+        </div>
+        <span class="link-arrow">›</span>
+      </a>
+
+      <div class="drawer-divider"></div>
+      <div class="drawer-section-label">Unit Khas</div>
+
+      <a href="#" class="drawer-link">
+        <div class="link-icon">🎓</div>
+        <div class="link-meta">
+          <div class="link-title">Tingkatan 6</div>
+          <div class="link-desc">Program pra-universiti</div>
+        </div>
+        <span class="link-arrow">›</span>
+      </a>
+
+      <a href="#" class="drawer-link">
+        <div class="link-icon">♿</div>
+        <div class="link-meta">
+          <div class="link-title">PPKI</div>
+          <div class="link-desc">Pendidikan Khas Integrasi</div>
+        </div>
+        <span class="link-arrow">›</span>
+      </a>
+
+      <a href="#" class="drawer-link">
+        <div class="link-icon">💬</div>
+        <div class="link-meta">
+          <div class="link-title">Kaunseling</div>
+          <div class="link-desc">Bimbingan & kaunseling</div>
+        </div>
+        <span class="link-arrow">›</span>
+      </a>
+
+      <div class="drawer-divider"></div>
+
+      <a href="/smkg/gallery.html" class="drawer-link" data-trans="true">
+        <div class="link-icon">🖼️</div>
+        <div class="link-meta">
+          <div class="link-title">Gallery</div>
+          <div class="link-desc">Gambar & kenangan sekolah</div>
+        </div>
+        <span class="link-arrow">›</span>
+      </a>
+    </div>
+
+    <div class="drawer-footer">
+      <div class="footer-version">SMKG · v2.0 · 2026</div>
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT -->
   <div class="main-container">
     <div class="vertical-track" id="verticalTrack">
+
+      <!-- SECTION 1: SLIDER -->
       <section class="section-1">
-        <main class="viewport"><section class="track" id="track"></section></main>
-        <div class="scroll-hint">Scroll Down</div>
+        <main class="viewport">
+          <section class="track" id="track"></section>
+        </main>
+        <div class="corner corner-tl"></div>
+        <div class="corner corner-br"></div>
+        <div class="slide-counter" id="slideCounter">01 / 03</div>
+        <div class="scroll-hint">Scroll</div>
       </section>
 
+      <!-- SECTION 2: REVEAL -->
       <section class="section-2" id="section2">
         <div class="brand-statement">
           <span class="reveal-text">SMKG</span>
@@ -217,9 +656,11 @@
         </div>
         <a href="/smkg/gallery.html" class="gallery-hint" data-trans="true">Gallery</a>
       </section>
+
     </div>
   </div>
 
+  <!-- BOTTOM UI -->
   <div class="pills" id="pills"></div>
   <div class="controls" id="ui-controls">
     <button class="btn" id="prev">‹</button>
@@ -231,22 +672,34 @@
       {
         kicker: "SHOWCASE",
         title: `School<span class="hl">Connect</span> @smkg`,
-        note: "Briding the community closer via digital portal.",
-        bullets: ["2026 focus: Improve core subjects consistency through data driven approach", "Panel interventions tracked weekly", "Targets aligned with district KPI"],
+        note: "Bridging the community closer via digital portal.",
+        bullets: [
+          "2026 focus: Improve core subjects consistency through data driven approach",
+          "Panel interventions tracked weekly",
+          "Targets aligned with district KPI"
+        ],
         bg: "https://lh3.googleusercontent.com/d/1ueNup6noBzwpn61rR3ArqB_ya5bA2oZZ"
       },
       {
         kicker: "DASHBOARD",
         title: `Trends & <span class="hl">Highlights</span>`,
-        note: "This slide becomes your KPI proof (charts later).",
-        bullets: ["GPMP trend + subject heatmap", "Identify at-risk groups early", "Compare TOV vs current vs target"],
+        note: "This slide becomes your KPI proof — charts and insights.",
+        bullets: [
+          "GPMP trend + subject heatmap",
+          "Identify at-risk groups early",
+          "Compare TOV vs current vs target"
+        ],
         bg: "https://images.unsplash.com/photo-1556761175-5973dc0f32e7?auto=format&fit=crop&w=2200&q=60"
       },
       {
         kicker: "ACTION",
         title: `Intervention <span class="hl">Next</span>`,
         note: "Clear plan. Clear ownership. Clear timeline.",
-        bullets: ["Week 1: Diagnose + set target groups", "Week 2–3: Execute micro-interventions", "Week 4: Review impact + refine"],
+        bullets: [
+          "Week 1: Diagnose + set target groups",
+          "Week 2–3: Execute micro-interventions",
+          "Week 4: Review impact + refine"
+        ],
         bg: "https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=2200&q=60"
       }
     ];
@@ -255,14 +708,23 @@
     const AUTO_MS = 10000;
     let autoTimer = null;
 
-    const vTrack = document.getElementById('verticalTrack'), s2 = document.getElementById('section2'),
-          track = document.getElementById('track'), pills = document.getElementById('pills'),
-          uiControls = document.getElementById('ui-controls'), pageTrans = document.getElementById('pageTrans');
+    const vTrack    = document.getElementById('verticalTrack');
+    const s2        = document.getElementById('section2');
+    const track     = document.getElementById('track');
+    const pills     = document.getElementById('pills');
+    const uiControls = document.getElementById('ui-controls');
+    const pageTrans = document.getElementById('pageTrans');
+    const counter   = document.getElementById('slideCounter');
+    const hamburger = document.getElementById('hamburger');
+    const drawer    = document.getElementById('drawer');
+    const overlay   = document.getElementById('drawerOverlay');
 
-    // Theme Logic
+    // ── Theme ───────────────────────────────────────────────
     (function initTheme(){
-      const root = document.documentElement, btn = document.getElementById("themeToggle"),
-            ico = document.getElementById("themeIcon"), lbl = document.getElementById("themeLabel");
+      const root = document.documentElement;
+      const btn  = document.getElementById("themeToggle");
+      const ico  = document.getElementById("themeIcon");
+      const lbl  = document.getElementById("themeLabel");
       function setTheme(t){
         root.setAttribute("data-theme", t);
         ico.textContent = t === "light" ? "☀" : "☾";
@@ -273,17 +735,47 @@
       setTheme(localStorage.getItem("smkg_theme") || "dark");
     })();
 
-    function renderSlider() {
+    // ── Hamburger / Drawer ──────────────────────────────────
+    function openDrawer(){
+      hamburger.classList.add('open');
+      drawer.classList.add('open');
+      overlay.classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
+    function closeDrawer(){
+      hamburger.classList.remove('open');
+      drawer.classList.remove('open');
+      overlay.classList.remove('open');
+      document.body.style.overflow = '';
+    }
+    hamburger.addEventListener('click', () => {
+      drawer.classList.contains('open') ? closeDrawer() : openDrawer();
+    });
+    overlay.addEventListener('click', closeDrawer);
+    hamburger.addEventListener('keydown', e => { if(e.key==='Enter'||e.key===' ') { e.preventDefault(); hamburger.click(); } });
+
+    // ── Slider ──────────────────────────────────────────────
+    function renderSlider(){
       track.innerHTML = ""; pills.innerHTML = "";
       SLIDES.forEach((s, i) => {
         const slide = document.createElement("section");
         slide.className = "slide" + (i === slideIdx ? " active" : "");
-        slide.innerHTML = `<div class="img" style="background-image:url('${s.bg}')"></div><div class="overlay"></div>
-          <div class="content"><div class="card"><div class="kicker">${s.kicker}</div><div class="title">${s.title}</div>
-          <p class="note">${s.note}</p><ul class="bullets">${s.bullets.map(b => `<li>${b}</li>`).join("")}</ul></div></div>`;
+        slide.innerHTML = `
+          <div class="img" style="background-image:url('${s.bg}')"></div>
+          <div class="overlay"></div>
+          <div class="content">
+            <div class="card">
+              <div class="kicker-row"><span class="kicker">${s.kicker}</span></div>
+              <div class="title">${s.title}</div>
+              <p class="note">${s.note}</p>
+              <ul class="bullets">${s.bullets.map(b=>`<li>${b}</li>`).join("")}</ul>
+            </div>
+          </div>`;
         track.appendChild(slide);
+
         const p = document.createElement("button");
         p.className = "pill" + (i === slideIdx ? " active" : "");
+        p.setAttribute('aria-label', `Slide ${i+1}`);
         p.innerHTML = `<span class="bar"></span>`;
         p.onclick = () => { slideIdx = i; updateSlider(); restartAuto(); };
         pills.appendChild(p);
@@ -291,47 +783,99 @@
       updateSlider(); restartAuto();
     }
 
-    function updateSlider() {
+    function updateSlider(){
       track.style.transform = `translateX(-${slideIdx * 100}vw)`;
-      [...track.children].forEach((s, i) => s.classList.toggle("active", i === slideIdx));
-      [...pills.children].forEach((p, i) => {
+      [...track.children].forEach((s,i) => s.classList.toggle("active", i === slideIdx));
+      [...pills.children].forEach((p,i) => {
         p.classList.toggle("active", i === slideIdx);
         p.classList.remove("running");
         const bar = p.querySelector(".bar");
-        if(bar) { bar.style.animation = "none"; void bar.offsetHeight; bar.style.animation = ""; }
+        if(bar){ bar.style.animation="none"; void bar.offsetHeight; bar.style.animation=""; }
       });
       const active = pills.children[slideIdx];
-      if (active) { active.classList.add("running"); active.querySelector(".bar").style.animationDuration = AUTO_MS + "ms"; }
+      if(active){ active.classList.add("running"); active.querySelector(".bar").style.animationDuration = AUTO_MS + "ms"; }
+      if(counter) counter.textContent = `${String(slideIdx+1).padStart(2,'0')} / ${String(SLIDES.length).padStart(2,'0')}`;
     }
 
     function restartAuto(){
       clearInterval(autoTimer);
-      autoTimer = setInterval(() => { if(currentSection === 0) { slideIdx = (slideIdx + 1) % SLIDES.length; updateSlider(); } }, AUTO_MS);
+      autoTimer = setInterval(() => {
+        if(currentSection === 0){ slideIdx = (slideIdx+1) % SLIDES.length; updateSlider(); }
+      }, AUTO_MS);
     }
 
-    function goToSection(index) {
-      if (isScrolling || index === currentSection || index < 0 || index > 1) return;
+    // ── Section scroll ──────────────────────────────────────
+    function goToSection(index){
+      if(isScrolling || index === currentSection || index < 0 || index > 1) return;
       isScrolling = true; currentSection = index;
       vTrack.style.transform = `translateY(-${currentSection * 100}vh)`;
-      if (currentSection === 1) {
-        s2.classList.add('active'); pills.style.opacity = "0"; uiControls.style.opacity = "0";
+      if(currentSection === 1){
+        s2.classList.add('active');
+        pills.style.opacity="0"; uiControls.style.opacity="0";
+        counter && (counter.style.opacity="0");
       } else {
-        s2.classList.remove('active'); pills.style.opacity = "1"; uiControls.style.opacity = "1";
+        s2.classList.remove('active');
+        pills.style.opacity="1"; uiControls.style.opacity="1";
+        counter && (counter.style.opacity="1");
       }
       setTimeout(() => { isScrolling = false; }, 1100);
     }
 
-    window.addEventListener('wheel', e => goToSection(e.deltaY > 0 ? 1 : 0));
-    document.getElementById('next').onclick = () => { slideIdx = (slideIdx + 1) % SLIDES.length; updateSlider(); restartAuto(); };
-    document.getElementById('prev').onclick = () => { slideIdx = (slideIdx - 1 + SLIDES.length) % SLIDES.length; updateSlider(); restartAuto(); };
-    
+    window.addEventListener('wheel', e => {
+      if(drawer.classList.contains('open')) return;
+      goToSection(e.deltaY > 0 ? 1 : 0);
+    });
+
+    document.getElementById('next').onclick = () => { slideIdx = (slideIdx+1) % SLIDES.length; updateSlider(); restartAuto(); };
+    document.getElementById('prev').onclick = () => { slideIdx = (slideIdx-1+SLIDES.length) % SLIDES.length; updateSlider(); restartAuto(); };
+
+    // ── Page Transitions ────────────────────────────────────
     document.querySelectorAll('a[data-trans="true"]').forEach(a => {
       a.onclick = (e) => {
+        if(a.getAttribute('href')==='#') return;
         e.preventDefault();
+        closeDrawer();
         pageTrans.classList.add("run");
         setTimeout(() => { window.location.href = a.href; }, 520);
       };
     });
+
+    // ── Ticker ──────────────────────────────────────────────
+    const DEFAULT_TICKER = [
+      { icon: "👥", label: "Pelajar", value: "1,204" },
+      { icon: "📢", label: "Pengumuman", value: "Mesyuarat Panitia — 8 April 2026" },
+      { icon: "⭐", label: "GPS", value: "3.20" },
+      { icon: "🏅", label: "Aktiviti", value: "Sukan Daerah Keningau — 12 April" },
+      { icon: "📊", label: "GPMP", value: "Sasaran 2.95 — TOV 3.20" },
+      { icon: "🎓", label: "SPM", value: "100% Gred A — Matematik Tambahan" }
+    ];
+
+    function buildTicker(items){
+      const tickerTrack = document.getElementById('tickerTrack');
+      if(!tickerTrack) return;
+      // Duplicate for seamless loop
+      const html = [...items, ...items].map((it, i) => `
+        <span class="ticker-item">
+          <span class="ti-icon">${it.icon}</span>
+          <span class="ti-label">${it.label}</span>
+          <span class="ti-value">${it.value}</span>
+        </span>
+        ${i < items.length * 2 - 1 ? '<span class="ticker-divider"></span>' : ''}
+      `).join('');
+      tickerTrack.innerHTML = html;
+      // Adjust animation duration based on item count
+      const dur = Math.max(24, items.length * 6);
+      tickerTrack.style.animationDuration = dur + 's';
+    }
+
+    function loadTicker(){
+      try {
+        const saved = localStorage.getItem('smkg_ticker');
+        return saved ? JSON.parse(saved) : DEFAULT_TICKER;
+      } catch(e){ return DEFAULT_TICKER; }
+    }
+
+    buildTicker(loadTicker());
 
     renderSlider();
   </script>

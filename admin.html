@@ -1,0 +1,1034 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Admin · Dashboard SMKG</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;800;900&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --ease: cubic-bezier(.2,.8,.2,1);
+      --ease2: cubic-bezier(.16,1,.3,1);
+      --sideW: 220px;
+      --sideCollapsed: 60px;
+      --navH: 56px;
+      --radius: 12px;
+      --radius-lg: 16px;
+      --radius-sm: 8px;
+      --transition: 220ms var(--ease);
+
+      /* DARK (default) */
+      --bg0: #0a0b0f;
+      --bg1: #0f1017;
+      --bg2: #13141c;
+      --surface: rgba(255,255,255,.04);
+      --surface-hover: rgba(255,255,255,.07);
+      --surface-active: rgba(99,102,241,.10);
+      --border: rgba(255,255,255,.07);
+      --border-strong: rgba(255,255,255,.13);
+      --text: rgba(255,255,255,.95);
+      --muted: rgba(255,255,255,.50);
+      --muted2: rgba(255,255,255,.28);
+      --navBg: rgba(10,11,15,.90);
+      --navBorder: rgba(255,255,255,.07);
+      --accent: #6366f1;
+      --accent2: #8b5cf6;
+      --accent-glow: rgba(99,102,241,.18);
+      --accent-text: #818cf8;
+      --green: #22c55e;
+      --green-bg: rgba(34,197,94,.10);
+      --amber: #f59e0b;
+      --amber-bg: rgba(245,158,11,.10);
+      --red: #ef4444;
+      --red-bg: rgba(239,68,68,.10);
+      --blue: #3b82f6;
+      --blue-bg: rgba(59,130,246,.10);
+      --input-bg: rgba(255,255,255,.05);
+      --input-border: rgba(255,255,255,.10);
+      --input-focus: rgba(99,102,241,.40);
+      --tag-bg: rgba(99,102,241,.12);
+      --tag-text: #818cf8;
+      --gridLine: rgba(255,255,255,.04);
+      --bg-r1: rgba(99,102,241,.10);
+      --bg-r2: rgba(139,92,246,.07);
+    }
+    html[data-theme="light"]{
+      --bg0: #f5f5fa;
+      --bg1: #ffffff;
+      --bg2: #f8f8fd;
+      --surface: rgba(0,0,0,.035);
+      --surface-hover: rgba(0,0,0,.06);
+      --surface-active: rgba(99,102,241,.08);
+      --border: rgba(0,0,0,.07);
+      --border-strong: rgba(0,0,0,.12);
+      --text: rgba(10,10,15,.95);
+      --muted: rgba(10,10,15,.50);
+      --muted2: rgba(10,10,15,.28);
+      --navBg: rgba(255,255,255,.92);
+      --navBorder: rgba(0,0,0,.07);
+      --accent-text: #4f46e5;
+      --tag-bg: rgba(99,102,241,.08);
+      --tag-text: #4f46e5;
+      --input-bg: rgba(0,0,0,.03);
+      --input-border: rgba(0,0,0,.10);
+      --input-focus: rgba(99,102,241,.30);
+      --gridLine: rgba(0,0,0,.04);
+      --bg-r1: rgba(99,102,241,.06);
+      --bg-r2: rgba(139,92,246,.04);
+      --green-bg: rgba(34,197,94,.07);
+      --amber-bg: rgba(245,158,11,.07);
+      --red-bg: rgba(239,68,68,.07);
+      --blue-bg: rgba(59,130,246,.07);
+    }
+
+    *{ box-sizing: border-box; margin:0; padding:0; }
+    html,body{
+      height:100%; font-family: 'Geist', system-ui, sans-serif;
+      background: var(--bg0); color: var(--text);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── Background ─────────────────────────────────────── */
+    .bg{
+      position: fixed; inset:0; z-index:0; pointer-events:none;
+      background:
+        radial-gradient(ellipse 700px 500px at 5% 10%, var(--bg-r1), transparent 60%),
+        radial-gradient(ellipse 600px 400px at 95% 20%, var(--bg-r2), transparent 55%),
+        var(--bg0);
+    }
+    .grid{
+      position: fixed; inset:0; z-index:0; pointer-events:none;
+      background-image:
+        linear-gradient(to right, var(--gridLine) 1px, transparent 1px),
+        linear-gradient(to bottom, var(--gridLine) 1px, transparent 1px);
+      background-size: 60px 60px;
+    }
+
+    /* ── Top Nav ────────────────────────────────────────── */
+    .topbar{
+      position: fixed; top:0; left:0; right:0; height: var(--navH); z-index:100;
+      display:flex; align-items:center; gap:12px;
+      padding: 0 20px 0 0;
+      background: var(--navBg);
+      border-bottom: 1px solid var(--navBorder);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+    }
+    .sidebar-toggle{
+      width: var(--sideW); flex-shrink:0; height:100%;
+      display:flex; align-items:center; gap:10px;
+      padding: 0 16px;
+      border-right: 1px solid var(--navBorder);
+      cursor:pointer; transition: background var(--transition);
+      background: transparent; border-top:0; border-bottom:0; border-left:0;
+      color: var(--text);
+    }
+    .sidebar-toggle:hover{ background: var(--surface); }
+    .st-mark{
+      width: 28px; height: 28px; border-radius: 9px; flex-shrink:0;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      display:flex; align-items:center; justify-content:center;
+      font-size:12px; color:#fff; font-weight:700;
+      box-shadow: 0 0 16px var(--accent-glow);
+    }
+    .st-text{ display:flex; flex-direction:column; gap:1px; text-align:left; }
+    .st-name{ font-size:12.5px; font-weight:700; letter-spacing:-.01em; }
+    .st-sub { font-size:10px; color:var(--muted); font-family:'Geist Mono',monospace; letter-spacing:.05em; text-transform:uppercase; }
+
+    .topbar-center{ flex:1; display:flex; align-items:center; gap:10px; }
+    .breadcrumb{
+      display:flex; align-items:center; gap:6px;
+      font-size:13px; color:var(--muted);
+    }
+    .breadcrumb .bc-sep{ color:var(--muted2); }
+    .breadcrumb .bc-current{ color:var(--text); font-weight:500; }
+
+    .topbar-right{ display:flex; align-items:center; gap:8px; }
+    .icon-btn{
+      width:34px; height:34px; border-radius:var(--radius-sm);
+      border:1px solid var(--border); background:var(--surface);
+      color:var(--muted); cursor:pointer; font-size:14px;
+      display:flex; align-items:center; justify-content:center;
+      transition: all var(--transition);
+    }
+    .icon-btn:hover{ background:var(--surface-hover); color:var(--text); border-color:var(--border-strong); }
+
+    .themeBtn{
+      display:flex; align-items:center; gap:6px;
+      padding:6px 12px; border-radius:var(--radius-sm);
+      border:1px solid var(--border); background:var(--surface);
+      color:var(--muted); font-size:12px;
+      font-family:'Geist',sans-serif; cursor:pointer;
+      transition: all var(--transition);
+    }
+    .themeBtn:hover{ background:var(--surface-hover); color:var(--text); }
+
+    .nav-user{
+      display:flex; align-items:center; gap:8px;
+      padding:5px 10px; border-radius:var(--radius-sm);
+      border:1px solid var(--border); background:var(--surface);
+      cursor:pointer; transition:all var(--transition);
+    }
+    .nav-user:hover{ background:var(--surface-hover); }
+    .user-avatar{
+      width:24px; height:24px; border-radius:50%;
+      background:linear-gradient(135deg,var(--accent),var(--accent2));
+      display:flex; align-items:center; justify-content:center;
+      font-size:10px; color:#fff; font-weight:700; flex-shrink:0;
+    }
+    .user-name{ font-size:12px; font-weight:500; color:var(--text); }
+
+    /* ── Shell ──────────────────────────────────────────── */
+    .shell{
+      display:flex; height:100vh; padding-top:var(--navH);
+      position:relative; z-index:1;
+    }
+
+    /* ── Sidebar ────────────────────────────────────────── */
+    .sidebar{
+      width: var(--sideW); flex-shrink:0;
+      background: var(--bg1);
+      border-right: 1px solid var(--border);
+      display:flex; flex-direction:column;
+      overflow:hidden; height:100%;
+      transition: width 0.4s var(--ease2);
+      position: relative;
+    }
+    .sidebar.collapsed{ width: var(--sideCollapsed); }
+
+    .side-section{ padding:8px; flex-shrink:0; }
+    .side-section + .side-section{ border-top:1px solid var(--border); }
+
+    .side-label{
+      font-size:10px; font-weight:600; letter-spacing:.1em;
+      text-transform:uppercase; color:var(--muted2);
+      padding:8px 10px 4px;
+      font-family:'Geist Mono',monospace;
+      white-space:nowrap; overflow:hidden;
+      transition:opacity 0.2s;
+    }
+    .sidebar.collapsed .side-label{ opacity:0; }
+
+    .side-item{
+      display:flex; align-items:center; gap:10px;
+      padding:9px 10px; border-radius:var(--radius-sm);
+      color:var(--muted); cursor:pointer;
+      transition:all var(--transition);
+      text-decoration:none; border:1px solid transparent;
+      white-space:nowrap; overflow:hidden;
+    }
+    .side-item:hover{ background:var(--surface-hover); color:var(--text); }
+    .side-item.active{
+      background:var(--surface-active); color:var(--accent-text);
+      border-color:rgba(99,102,241,.18);
+    }
+    .side-icon{
+      width:28px; height:28px; border-radius:8px; flex-shrink:0;
+      border:1px solid var(--border); background:var(--surface);
+      display:flex; align-items:center; justify-content:center;
+      font-size:13px; transition:all var(--transition);
+    }
+    .side-item.active .side-icon{
+      background:var(--accent-glow); border-color:rgba(99,102,241,.25);
+    }
+    .side-item-text{ font-size:13px; font-weight:500; transition:opacity 0.2s; }
+    .sidebar.collapsed .side-item-text{ opacity:0; width:0; }
+    .side-badge{
+      margin-left:auto; font-size:10px; padding:2px 7px;
+      border-radius:100px; background:var(--tag-bg); color:var(--tag-text);
+      font-family:'Geist Mono',monospace; font-weight:600;
+      transition:opacity 0.2s;
+    }
+    .sidebar.collapsed .side-badge{ opacity:0; }
+
+    .side-footer{ margin-top:auto; padding:12px 8px; border-top:1px solid var(--border); }
+    .side-version{
+      font-size:10px; color:var(--muted2); text-align:center;
+      font-family:'Geist Mono',monospace; letter-spacing:.04em;
+      transition:opacity 0.2s;
+    }
+    .sidebar.collapsed .side-version{ opacity:0; }
+
+    /* ── Main Content ────────────────────────────────────── */
+    .main{
+      flex:1; overflow-y:auto; min-width:0;
+      padding:28px 28px;
+    }
+
+    /* ── Page Header ────────────────────────────────────── */
+    .page-header{ margin-bottom:24px; }
+    .page-title{ font-size:22px; font-weight:800; letter-spacing:-.03em; margin-bottom:4px; }
+    .page-desc{ font-size:13px; color:var(--muted); }
+
+    /* ── Stat Cards ─────────────────────────────────────── */
+    .stat-grid{
+      display:grid; grid-template-columns:repeat(4,minmax(0,1fr));
+      gap:12px; margin-bottom:24px;
+    }
+    @media(max-width:900px){ .stat-grid{ grid-template-columns:repeat(2,1fr); } }
+
+    .stat-card{
+      background:var(--bg1); border:1px solid var(--border);
+      border-radius:var(--radius); padding:16px 18px;
+      display:flex; flex-direction:column; gap:8px;
+      transition:border-color var(--transition);
+      position:relative; overflow:hidden;
+    }
+    .stat-card:hover{ border-color:var(--border-strong); }
+    .stat-card::before{
+      content:''; position:absolute; top:0; left:0; right:0; height:2px;
+      border-radius:2px 2px 0 0;
+    }
+    .stat-card.green::before{ background:var(--green); }
+    .stat-card.amber::before{ background:var(--amber); }
+    .stat-card.blue::before { background:var(--blue); }
+    .stat-card.purple::before{ background:var(--accent); }
+
+    .stat-top{ display:flex; align-items:center; justify-content:space-between; }
+    .stat-label{ font-size:11px; font-weight:600; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); font-family:'Geist Mono',monospace; }
+    .stat-icon{ font-size:16px; }
+    .stat-value{ font-size:28px; font-weight:800; letter-spacing:-.04em; font-variant-numeric:tabular-nums; }
+    .stat-card.green .stat-value{ color:var(--green); }
+    .stat-card.amber .stat-value{ color:var(--amber); }
+    .stat-card.blue  .stat-value{ color:var(--blue); }
+    .stat-card.purple .stat-value{ color:var(--accent-text); }
+    .stat-sub{ font-size:11px; color:var(--muted); }
+    .stat-badge{
+      display:inline-flex; align-items:center; gap:3px;
+      font-size:11px; padding:2px 7px; border-radius:100px;
+      font-weight:600; font-family:'Geist Mono',monospace;
+    }
+    .badge-up{ background:var(--green-bg); color:var(--green); }
+    .badge-down{ background:var(--red-bg); color:var(--red); }
+    .badge-neu{ background:var(--amber-bg); color:var(--amber); }
+
+    /* ── Ticker Editor Card ──────────────────────────────── */
+    .editor-grid{
+      display:grid; grid-template-columns:1fr 340px;
+      gap:16px; margin-bottom:24px;
+      align-items:start;
+    }
+    @media(max-width:860px){ .editor-grid{ grid-template-columns:1fr; } }
+
+    .card{
+      background:var(--bg1); border:1px solid var(--border);
+      border-radius:var(--radius-lg); overflow:hidden;
+    }
+    .card-header{
+      display:flex; align-items:center; justify-content:space-between;
+      padding:16px 20px; border-bottom:1px solid var(--border);
+    }
+    .card-title-row{ display:flex; align-items:center; gap:10px; }
+    .card-icon{
+      width:30px; height:30px; border-radius:8px;
+      background:var(--accent-glow); border:1px solid rgba(99,102,241,.20);
+      display:flex; align-items:center; justify-content:center; font-size:13px;
+    }
+    .card-title{ font-size:14px; font-weight:700; }
+    .card-subtitle{ font-size:12px; color:var(--muted); }
+    .card-body{ padding:20px; }
+
+    /* ── Ticker Item Editor ─────────────────────────────── */
+    .ticker-list{ display:flex; flex-direction:column; gap:8px; }
+
+    .ticker-row{
+      display:grid; grid-template-columns:36px 110px 1fr auto;
+      gap:8px; align-items:center;
+      padding:10px 12px;
+      background:var(--surface);
+      border:1px solid var(--border);
+      border-radius:var(--radius-sm);
+      transition:all var(--transition);
+    }
+    .ticker-row:hover{ border-color:var(--border-strong); background:var(--surface-hover); }
+    .ticker-row.drag-over{ border-color:var(--accent); background:var(--accent-glow); }
+
+    .tr-drag{
+      color:var(--muted2); cursor:grab; font-size:14px;
+      display:flex; align-items:center; justify-content:center;
+      padding:4px; border-radius:4px;
+    }
+    .tr-drag:hover{ color:var(--muted); background:var(--surface-hover); }
+    .tr-drag:active{ cursor:grabbing; }
+
+    .tr-input{
+      background:var(--input-bg); border:1px solid var(--input-border);
+      border-radius:var(--radius-sm); color:var(--text);
+      font-family:'Geist',sans-serif; font-size:12px;
+      padding:6px 10px; width:100%;
+      transition:border-color var(--transition);
+      outline:none;
+    }
+    .tr-input:focus{ border-color:var(--accent); box-shadow:0 0 0 3px var(--input-focus); }
+    .tr-input.icon-input{ text-align:center; font-size:16px; padding:4px 6px; }
+
+    .tr-del{
+      width:28px; height:28px; border-radius:6px;
+      border:1px solid var(--border); background:transparent;
+      color:var(--muted2); cursor:pointer; font-size:14px;
+      display:flex; align-items:center; justify-content:center;
+      transition:all var(--transition); flex-shrink:0;
+    }
+    .tr-del:hover{ background:var(--red-bg); color:var(--red); border-color:rgba(239,68,68,.25); }
+
+    .add-row-btn{
+      display:flex; align-items:center; justify-content:center; gap:8px;
+      width:100%; padding:10px; border-radius:var(--radius-sm);
+      border:1px dashed var(--border); background:transparent;
+      color:var(--muted); font-size:13px; font-family:'Geist',sans-serif;
+      cursor:pointer; transition:all var(--transition); margin-top:4px;
+    }
+    .add-row-btn:hover{ border-color:var(--accent); color:var(--accent-text); background:var(--accent-glow); }
+
+    /* ── Save Bar ───────────────────────────────────────── */
+    .save-bar{
+      display:flex; align-items:center; justify-content:space-between;
+      padding:14px 20px; background:var(--bg1);
+      border-top:1px solid var(--border);
+    }
+    .save-hint{ font-size:12px; color:var(--muted); }
+
+    .btn-primary{
+      display:flex; align-items:center; gap:7px;
+      padding:9px 18px; border-radius:var(--radius-sm);
+      background:var(--accent); color:#fff;
+      border:none; font-family:'Geist',sans-serif;
+      font-size:13px; font-weight:600; cursor:pointer;
+      transition:all var(--transition); box-shadow:0 0 20px var(--accent-glow);
+    }
+    .btn-primary:hover{ filter:brightness(1.1); transform:translateY(-1px); }
+    .btn-primary:active{ transform:translateY(0); filter:brightness(.95); }
+    .btn-secondary{
+      display:flex; align-items:center; gap:7px;
+      padding:8px 14px; border-radius:var(--radius-sm);
+      background:var(--surface); color:var(--muted);
+      border:1px solid var(--border); font-family:'Geist',sans-serif;
+      font-size:12px; font-weight:500; cursor:pointer;
+      transition:all var(--transition);
+    }
+    .btn-secondary:hover{ background:var(--surface-hover); color:var(--text); }
+
+    .btn-row{ display:flex; gap:8px; align-items:center; }
+
+    /* ── Live Preview Card ──────────────────────────────── */
+    .preview-ticker{
+      height:36px; background:var(--bg0);
+      border:1px solid var(--border); border-radius:var(--radius-sm);
+      overflow:hidden; position:relative;
+      display:flex; align-items:center;
+    }
+    .preview-track{
+      display:flex; align-items:center; white-space:nowrap;
+      animation:ticker-scroll 28s linear infinite;
+    }
+    .preview-ticker:hover .preview-track{ animation-play-state:paused; }
+    @keyframes ticker-scroll{ 0%{transform:translateX(0)} 100%{transform:translateX(-50%)} }
+    .prev-item{
+      display:inline-flex; align-items:center; gap:5px;
+      padding:0 20px; font-size:11px; color:var(--muted);
+      font-family:'Geist Mono',monospace;
+    }
+    .prev-item .pi-value{ color:var(--text); font-weight:500; }
+    .prev-item .pi-label{ color:var(--muted2); font-size:9px; text-transform:uppercase; letter-spacing:.08em; }
+    .prev-divider{ display:inline-block; width:1px; height:10px; background:var(--border-strong); }
+
+    /* ── Info panel cards ───────────────────────────────── */
+    .info-row{ display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:10px; }
+    .info-item{
+      display:flex; flex-direction:column; gap:2px;
+      padding:10px 12px; background:var(--surface);
+      border:1px solid var(--border); border-radius:var(--radius-sm);
+    }
+    .info-label{ font-size:10px; font-weight:600; letter-spacing:.08em; text-transform:uppercase; color:var(--muted2); font-family:'Geist Mono',monospace; }
+    .info-value{ font-size:13px; font-weight:600; color:var(--text); }
+
+    /* ── Future sections placeholder ─────────────────────── */
+    .future-grid{
+      display:grid; grid-template-columns:repeat(3,1fr); gap:12px;
+    }
+    @media(max-width:860px){ .future-grid{ grid-template-columns:1fr; } }
+
+    .future-card{
+      background:var(--bg1); border:1px solid var(--border);
+      border-radius:var(--radius); padding:20px;
+      display:flex; flex-direction:column; gap:10px;
+      position:relative; overflow:hidden;
+    }
+    .future-card::after{
+      content:'Akan Datang'; position:absolute; top:12px; right:12px;
+      font-size:9px; font-weight:600; letter-spacing:.1em; text-transform:uppercase;
+      background:var(--amber-bg); color:var(--amber);
+      padding:3px 8px; border-radius:100px;
+      font-family:'Geist Mono',monospace;
+    }
+    .fc-icon{ font-size:24px; }
+    .fc-title{ font-size:14px; font-weight:700; }
+    .fc-desc{ font-size:12px; color:var(--muted); line-height:1.5; }
+
+    /* ── Toast ──────────────────────────────────────────── */
+    .toast{
+      position:fixed; bottom:24px; right:24px; z-index:999;
+      display:flex; align-items:center; gap:10px;
+      padding:12px 18px; border-radius:var(--radius);
+      background:var(--bg1); border:1px solid var(--border-strong);
+      box-shadow:0 16px 48px rgba(0,0,0,.40);
+      font-size:13px; color:var(--text);
+      transform:translateY(80px); opacity:0;
+      transition:all 0.4s var(--ease2);
+      pointer-events:none;
+    }
+    .toast.show{ transform:translateY(0); opacity:1; pointer-events:auto; }
+    .toast-dot{ width:8px; height:8px; border-radius:50%; background:var(--green); flex-shrink:0; }
+
+    /* ── Scrollbar ──────────────────────────────────────── */
+    .main::-webkit-scrollbar{ width:5px; }
+    .main::-webkit-scrollbar-track{ background:transparent; }
+    .main::-webkit-scrollbar-thumb{ background:var(--border-strong); border-radius:10px; }
+    .main::-webkit-scrollbar-thumb:hover{ background:var(--muted2); }
+
+    /* ── Section visibility ─────────────────────────────── */
+    .admin-section{ display:none; }
+    .admin-section.active{ display:block; }
+
+    /* ── Responsive sidebar collapse ────────────────────── */
+    @media(max-width:768px){
+      :root{ --sideW:200px; }
+      .sidebar{ position:fixed; top:var(--navH); left:0; height:calc(100vh - var(--navH)); z-index:50; transform:translateX(-100%); transition:transform 0.4s var(--ease2); }
+      .sidebar.open{ transform:translateX(0); }
+      .sidebar.collapsed{ width:var(--sideW); transform:translateX(-100%); }
+    }
+  </style>
+</head>
+<body>
+  <div class="bg"></div>
+  <div class="grid"></div>
+
+  <!-- TOP NAV -->
+  <header class="topbar">
+    <button class="sidebar-toggle" id="sidebarToggle">
+      <div class="st-mark">◆</div>
+      <div class="st-text">
+        <div class="st-name">Dashboard SMKG</div>
+        <div class="st-sub">Admin Panel</div>
+      </div>
+    </button>
+    <div class="topbar-center">
+      <div class="breadcrumb">
+        <span>SMKG</span>
+        <span class="bc-sep">›</span>
+        <span id="breadcrumbCurrent" class="bc-current">Ticker Editor</span>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <a href="index.html" class="icon-btn" title="Lihat Landing Page" style="text-decoration:none">🏠</a>
+      <button class="themeBtn" id="themeToggle">
+        <span id="themeIcon">☾</span>
+        <span id="themeLabel">Dark</span>
+      </button>
+      <div class="nav-user">
+        <div class="user-avatar">AD</div>
+        <span class="user-name">Admin</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- SHELL -->
+  <div class="shell">
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+      <div class="side-section">
+        <div class="side-label">Dashboard</div>
+        <a class="side-item active" data-section="ticker" href="#">
+          <div class="side-icon">📢</div>
+          <span class="side-item-text">Ticker & Pengumuman</span>
+        </a>
+        <a class="side-item" data-section="stats" href="#">
+          <div class="side-icon">📊</div>
+          <span class="side-item-text">Statistik Sekolah</span>
+          <span class="side-badge">WIP</span>
+        </a>
+        <a class="side-item" data-section="kurikulum" href="#">
+          <div class="side-icon">📚</div>
+          <span class="side-item-text">Kurikulum</span>
+          <span class="side-badge">WIP</span>
+        </a>
+      </div>
+
+      <div class="side-section">
+        <div class="side-label">Unit Khas</div>
+        <a class="side-item" data-section="hem" href="#">
+          <div class="side-icon">🏫</div>
+          <span class="side-item-text">HEM</span>
+          <span class="side-badge">WIP</span>
+        </a>
+        <a class="side-item" data-section="koku" href="#">
+          <div class="side-icon">🏆</div>
+          <span class="side-item-text">Ko-Kurikulum</span>
+          <span class="side-badge">WIP</span>
+        </a>
+        <a class="side-item" data-section="kaunseling" href="#">
+          <div class="side-icon">💬</div>
+          <span class="side-item-text">Kaunseling</span>
+          <span class="side-badge">WIP</span>
+        </a>
+        <a class="side-item" data-section="ppki" href="#">
+          <div class="side-icon">♿</div>
+          <span class="side-item-text">PPKI</span>
+          <span class="side-badge">WIP</span>
+        </a>
+      </div>
+
+      <div class="side-section">
+        <div class="side-label">Sistem</div>
+        <a class="side-item" data-section="settings" href="#">
+          <div class="side-icon">⚙</div>
+          <span class="side-item-text">Tetapan</span>
+        </a>
+      </div>
+
+      <div class="side-footer">
+        <div class="side-version">SMKG Admin · v2.0 · 2026</div>
+      </div>
+    </aside>
+
+    <!-- MAIN AREA -->
+    <main class="main">
+
+      <!-- ── SECTION: TICKER EDITOR ── -->
+      <div class="admin-section active" id="section-ticker">
+        <div class="page-header">
+          <div class="page-title">Ticker &amp; Pengumuman</div>
+          <div class="page-desc">Edit teks skrol di landing page. Klik simpan untuk update serta-merta.</div>
+        </div>
+
+        <!-- Stat cards -->
+        <div class="stat-grid">
+          <div class="stat-card green">
+            <div class="stat-top">
+              <span class="stat-label">Pelajar</span>
+              <span class="stat-icon">👥</span>
+            </div>
+            <div class="stat-value" id="sv-students">1,204</div>
+            <div class="stat-sub">
+              Enrolmen 2026
+              <span class="stat-badge badge-up">↑ +12</span>
+            </div>
+          </div>
+          <div class="stat-card amber">
+            <div class="stat-top">
+              <span class="stat-label">GPS Semasa</span>
+              <span class="stat-icon">⭐</span>
+            </div>
+            <div class="stat-value" id="sv-gps">3.20</div>
+            <div class="stat-sub">
+              Sasaran 2.95
+              <span class="stat-badge badge-neu">TOV 3.20</span>
+            </div>
+          </div>
+          <div class="stat-card blue">
+            <div class="stat-top">
+              <span class="stat-label">Ticker Items</span>
+              <span class="stat-icon">📢</span>
+            </div>
+            <div class="stat-value" id="sv-items">6</div>
+            <div class="stat-sub">items aktif dalam skrol</div>
+          </div>
+          <div class="stat-card purple">
+            <div class="stat-top">
+              <span class="stat-label">Disimpan</span>
+              <span class="stat-icon">💾</span>
+            </div>
+            <div class="stat-value" id="sv-saved" style="font-size:13px;font-weight:600;padding-top:6px">—</div>
+            <div class="stat-sub">Kali terakhir disimpan</div>
+          </div>
+        </div>
+
+        <!-- Editor + Preview grid -->
+        <div class="editor-grid">
+          <!-- TICKER EDITOR -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title-row">
+                <div class="card-icon">📢</div>
+                <div>
+                  <div class="card-title">Edit Ticker Items</div>
+                  <div class="card-subtitle">Seret untuk susun semula · Klik ✕ untuk padam</div>
+                </div>
+              </div>
+              <button class="btn-secondary" onclick="resetToDefault()">↺ Reset</button>
+            </div>
+            <div class="card-body">
+              <div class="ticker-list" id="tickerList"></div>
+              <button class="add-row-btn" onclick="addItem()">
+                <span style="font-size:16px">+</span> Tambah Item
+              </button>
+            </div>
+            <div class="save-bar">
+              <span class="save-hint" id="saveHint">Belum disimpan — perubahan belum di-publish</span>
+              <div class="btn-row">
+                <button class="btn-secondary" onclick="previewTicker()">👁 Preview</button>
+                <button class="btn-primary" onclick="saveTicker()">
+                  <span>💾</span> Simpan &amp; Publish
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- RIGHT PANEL -->
+          <div style="display:flex;flex-direction:column;gap:14px;">
+            <!-- Live Preview -->
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title-row">
+                  <div class="card-icon">👁</div>
+                  <div>
+                    <div class="card-title">Live Preview</div>
+                    <div class="card-subtitle">Hover untuk henti</div>
+                  </div>
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="preview-ticker">
+                  <div class="preview-track" id="previewTrack"></div>
+                </div>
+                <p style="font-size:11px;color:var(--muted);margin-top:10px;font-family:'Geist Mono',monospace;">
+                  Preview ini dikemas kini secara automatik semasa anda menaip.
+                </p>
+              </div>
+            </div>
+
+            <!-- Stats info -->
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title-row">
+                  <div class="card-icon">📋</div>
+                  <div>
+                    <div class="card-title">Maklumat Pantas</div>
+                  </div>
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="info-row">
+                  <div class="info-item">
+                    <span class="info-label">Tahun</span>
+                    <span class="info-value">2026</span>
+                  </div>
+                  <div class="info-item">
+                    <span class="info-label">Tingkatan</span>
+                    <span class="info-value">1 – 6</span>
+                  </div>
+                </div>
+                <div class="info-row">
+                  <div class="info-item">
+                    <span class="info-label">Daerah</span>
+                    <span class="info-value">Keningau</span>
+                  </div>
+                  <div class="info-item">
+                    <span class="info-label">Negeri</span>
+                    <span class="info-value">Sabah</span>
+                  </div>
+                </div>
+                <a href="index.html" style="display:flex;align-items:center;gap:6px;padding:9px 12px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--surface);color:var(--muted);font-size:12px;text-decoration:none;transition:all var(--transition);margin-top:4px;" onmouseover="this.style.background='var(--surface-hover)';this.style.color='var(--text)'" onmouseout="this.style.background='var(--surface)';this.style.color='var(--muted)'">
+                  🏠 <span>Buka Landing Page</span>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Future panels -->
+        <div class="page-header" style="margin-top:8px;margin-bottom:16px;">
+          <div class="page-title" style="font-size:16px;">Panel Masa Hadapan</div>
+          <div class="page-desc">Bahagian ini akan dibangunkan secara berperingkat.</div>
+        </div>
+        <div class="future-grid">
+          <div class="future-card">
+            <div class="fc-icon">📊</div>
+            <div class="fc-title">Dashboard KPI</div>
+            <div class="fc-desc">GPMP trend, heatmap mata pelajaran, dan perbandingan TOV vs sasaran secara visual.</div>
+          </div>
+          <div class="future-card">
+            <div class="fc-icon">🎯</div>
+            <div class="fc-title">Pelan Intervensi</div>
+            <div class="fc-desc">Jadual intervensi mingguan, pemilikan panel, dan semakan impak secara berkala.</div>
+          </div>
+          <div class="future-card">
+            <div class="fc-icon">📅</div>
+            <div class="fc-title">Kalendar Aktiviti</div>
+            <div class="fc-desc">Pengurusan aktiviti ko-kurikulum, peperiksaan, dan program sekolah dalam satu paparan.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── SECTION: WIP placeholders ── -->
+      <div class="admin-section" id="section-stats">
+        <div class="page-header">
+          <div class="page-title">Statistik Sekolah</div>
+          <div class="page-desc">Paparan data akan dibangunkan tidak lama lagi.</div>
+        </div>
+        <div style="height:300px;display:flex;align-items:center;justify-content:center;border:1px dashed var(--border);border-radius:var(--radius-lg);color:var(--muted);font-size:14px;flex-direction:column;gap:8px;">
+          <span style="font-size:48px">📊</span>
+          <span>Akan Datang</span>
+        </div>
+      </div>
+
+      <div class="admin-section" id="section-kurikulum">
+        <div class="page-header"><div class="page-title">Kurikulum</div></div>
+        <div style="height:300px;display:flex;align-items:center;justify-content:center;border:1px dashed var(--border);border-radius:var(--radius-lg);color:var(--muted);font-size:14px;flex-direction:column;gap:8px;">
+          <span style="font-size:48px">📚</span><span>Akan Datang</span>
+        </div>
+      </div>
+      <div class="admin-section" id="section-hem">
+        <div class="page-header"><div class="page-title">HEM</div></div>
+        <div style="height:300px;display:flex;align-items:center;justify-content:center;border:1px dashed var(--border);border-radius:var(--radius-lg);color:var(--muted);font-size:14px;flex-direction:column;gap:8px;">
+          <span style="font-size:48px">🏫</span><span>Akan Datang</span>
+        </div>
+      </div>
+      <div class="admin-section" id="section-koku">
+        <div class="page-header"><div class="page-title">Ko-Kurikulum</div></div>
+        <div style="height:300px;display:flex;align-items:center;justify-content:center;border:1px dashed var(--border);border-radius:var(--radius-lg);color:var(--muted);font-size:14px;flex-direction:column;gap:8px;">
+          <span style="font-size:48px">🏆</span><span>Akan Datang</span>
+        </div>
+      </div>
+      <div class="admin-section" id="section-kaunseling">
+        <div class="page-header"><div class="page-title">Kaunseling</div></div>
+        <div style="height:300px;display:flex;align-items:center;justify-content:center;border:1px dashed var(--border);border-radius:var(--radius-lg);color:var(--muted);font-size:14px;flex-direction:column;gap:8px;">
+          <span style="font-size:48px">💬</span><span>Akan Datang</span>
+        </div>
+      </div>
+      <div class="admin-section" id="section-ppki">
+        <div class="page-header"><div class="page-title">PPKI</div></div>
+        <div style="height:300px;display:flex;align-items:center;justify-content:center;border:1px dashed var(--border);border-radius:var(--radius-lg);color:var(--muted);font-size:14px;flex-direction:column;gap:8px;">
+          <span style="font-size:48px">♿</span><span>Akan Datang</span>
+        </div>
+      </div>
+      <div class="admin-section" id="section-settings">
+        <div class="page-header"><div class="page-title">Tetapan</div></div>
+        <div style="height:300px;display:flex;align-items:center;justify-content:center;border:1px dashed var(--border);border-radius:var(--radius-lg);color:var(--muted);font-size:14px;flex-direction:column;gap:8px;">
+          <span style="font-size:48px">⚙</span><span>Akan Datang</span>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- TOAST -->
+  <div class="toast" id="toast">
+    <div class="toast-dot"></div>
+    <span id="toastMsg">Disimpan berjaya!</span>
+  </div>
+
+  <script>
+    // ── Theme ─────────────────────────────────────────────────
+    (function initTheme(){
+      const root = document.documentElement;
+      const btn = document.getElementById('themeToggle');
+      const ico = document.getElementById('themeIcon');
+      const lbl = document.getElementById('themeLabel');
+      function setTheme(t){
+        root.setAttribute('data-theme', t);
+        ico.textContent = t === 'light' ? '☀' : '☾';
+        lbl.textContent = t === 'light' ? 'Light' : 'Dark';
+        localStorage.setItem('smkg_theme', t);
+      }
+      btn.onclick = () => setTheme(root.getAttribute('data-theme') === 'light' ? 'dark' : 'light');
+      setTheme(localStorage.getItem('smkg_theme') || 'dark');
+    })();
+
+    // ── Sidebar ───────────────────────────────────────────────
+    const sidebar = document.getElementById('sidebar');
+    let sidebarOpen = true;
+    document.getElementById('sidebarToggle').onclick = () => {
+      sidebarOpen = !sidebarOpen;
+      sidebar.classList.toggle('collapsed', !sidebarOpen);
+    };
+
+    // ── Section routing ───────────────────────────────────────
+    const sectionLabels = {
+      ticker:'Ticker & Pengumuman', stats:'Statistik Sekolah',
+      kurikulum:'Kurikulum', hem:'HEM', koku:'Ko-Kurikulum',
+      kaunseling:'Kaunseling', ppki:'PPKI', settings:'Tetapan'
+    };
+    document.querySelectorAll('.side-item[data-section]').forEach(item => {
+      item.onclick = e => {
+        e.preventDefault();
+        const sec = item.dataset.section;
+        document.querySelectorAll('.side-item').forEach(i => i.classList.remove('active'));
+        item.classList.add('active');
+        document.querySelectorAll('.admin-section').forEach(s => s.classList.remove('active'));
+        const target = document.getElementById('section-' + sec);
+        if(target) target.classList.add('active');
+        document.getElementById('breadcrumbCurrent').textContent = sectionLabels[sec] || sec;
+        window.scrollTo(0,0);
+      };
+    });
+
+    // ── Ticker Data ───────────────────────────────────────────
+    const DEFAULT_TICKER = [
+      { icon:'👥', label:'Pelajar',      value:'1,204' },
+      { icon:'📢', label:'Pengumuman',   value:'Mesyuarat Panitia — 8 April 2026' },
+      { icon:'⭐', label:'GPS',          value:'3.20' },
+      { icon:'🏅', label:'Aktiviti',     value:'Sukan Daerah Keningau — 12 April' },
+      { icon:'📊', label:'GPMP',         value:'Sasaran 2.95 — TOV 3.20' },
+      { icon:'🎓', label:'SPM',          value:'100% Gred A — Matematik Tambahan' }
+    ];
+
+    let tickerItems = [];
+    let dragSrc = null;
+    let hasUnsaved = false;
+
+    function loadTicker(){
+      try{
+        const s = localStorage.getItem('smkg_ticker');
+        return s ? JSON.parse(s) : JSON.parse(JSON.stringify(DEFAULT_TICKER));
+      }catch(e){ return JSON.parse(JSON.stringify(DEFAULT_TICKER)); }
+    }
+
+    function getItems(){
+      const rows = document.querySelectorAll('.ticker-row');
+      return [...rows].map(row => ({
+        icon:  row.querySelector('.icon-input').value.trim() || '📢',
+        label: row.querySelector('.label-input').value.trim() || 'Info',
+        value: row.querySelector('.value-input').value.trim() || '—'
+      }));
+    }
+
+    function markUnsaved(){
+      hasUnsaved = true;
+      document.getElementById('saveHint').textContent = 'Ada perubahan — belum disimpan';
+      document.getElementById('saveHint').style.color = 'var(--amber)';
+      updateStats();
+      previewTicker();
+    }
+
+    function renderList(items){
+      const list = document.getElementById('tickerList');
+      list.innerHTML = '';
+      items.forEach((item, idx) => {
+        const row = document.createElement('div');
+        row.className = 'ticker-row';
+        row.draggable = true;
+        row.innerHTML = `
+          <div class="tr-drag" title="Seret untuk susun">⣿</div>
+          <input class="tr-input icon-input" type="text" value="${escHtml(item.icon)}" placeholder="🎯" maxlength="4" title="Emoji icon"/>
+          <input class="tr-input label-input" type="text" value="${escHtml(item.label)}" placeholder="Label" title="Label (contoh: GPS)"/>
+          <input class="tr-input value-input" type="text" value="${escHtml(item.value)}" placeholder="Nilai atau teks" style="width:100%" title="Nilai"/>
+          <button class="tr-del" onclick="delItem(this)" title="Padam">✕</button>
+        `;
+        // Drag events
+        row.addEventListener('dragstart', e => {
+          dragSrc = row; row.style.opacity = '.4';
+          e.dataTransfer.effectAllowed = 'move';
+        });
+        row.addEventListener('dragend', () => {
+          row.style.opacity = '1';
+          document.querySelectorAll('.ticker-row').forEach(r => r.classList.remove('drag-over'));
+        });
+        row.addEventListener('dragover', e => { e.preventDefault(); row.classList.add('drag-over'); });
+        row.addEventListener('dragleave', () => row.classList.remove('drag-over'));
+        row.addEventListener('drop', e => {
+          e.preventDefault();
+          if(dragSrc === row) return;
+          row.classList.remove('drag-over');
+          const items2 = getItems();
+          const rows = [...document.querySelectorAll('.ticker-row')];
+          const srcIdx = rows.indexOf(dragSrc);
+          const dstIdx = rows.indexOf(row);
+          const [moved] = items2.splice(srcIdx, 1);
+          items2.splice(dstIdx, 0, moved);
+          renderList(items2); markUnsaved();
+        });
+        // Input listeners
+        row.querySelectorAll('input').forEach(inp => inp.addEventListener('input', markUnsaved));
+        list.appendChild(row);
+      });
+      updateStats();
+    }
+
+    function escHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+    function addItem(){
+      const items = getItems();
+      items.push({ icon:'📌', label:'Baru', value:'Masukkan teks di sini...' });
+      renderList(items); markUnsaved();
+      // Scroll to bottom of list
+      const list = document.getElementById('tickerList');
+      list.lastElementChild?.scrollIntoView({ behavior:'smooth' });
+    }
+
+    function delItem(btn){
+      const row = btn.closest('.ticker-row');
+      const items = getItems().filter((_,i) => i !== [...document.querySelectorAll('.ticker-row')].indexOf(row));
+      renderList(items); markUnsaved();
+    }
+
+    function resetToDefault(){
+      if(confirm('Reset ke ticker asal? Semua perubahan akan hilang.'))
+        { renderList(JSON.parse(JSON.stringify(DEFAULT_TICKER))); markUnsaved(); }
+    }
+
+    function updateStats(){
+      const items = getItems();
+      document.getElementById('sv-items').textContent = items.length;
+      // Pull GPS and students from items if available
+      const gpsItem = items.find(i => i.label.toLowerCase().includes('gps'));
+      if(gpsItem) document.getElementById('sv-gps').textContent = gpsItem.value;
+      const stuItem = items.find(i => i.label.toLowerCase().includes('pelajar') || i.label.toLowerCase().includes('student'));
+      if(stuItem) document.getElementById('sv-students').textContent = stuItem.value;
+    }
+
+    function previewTicker(){
+      const items = getItems();
+      const track = document.getElementById('previewTrack');
+      if(!track) return;
+      const html = [...items, ...items].map((it, i) => `
+        <span class="prev-item">
+          <span>${it.icon}</span>
+          <span class="pi-label">${it.label}</span>
+          <span class="pi-value">${it.value}</span>
+        </span>
+        <span class="prev-divider"></span>
+      `).join('');
+      track.innerHTML = html;
+      const dur = Math.max(16, items.length * 5);
+      track.style.animationDuration = dur + 's';
+    }
+
+    function saveTicker(){
+      const items = getItems();
+      try{
+        localStorage.setItem('smkg_ticker', JSON.stringify(items));
+        const now = new Date();
+        const ts = now.toLocaleTimeString('ms-MY', { hour:'2-digit', minute:'2-digit' });
+        document.getElementById('sv-saved').textContent = ts;
+        document.getElementById('saveHint').textContent = 'Disimpan pada ' + ts + ' — landing page dikemas kini';
+        document.getElementById('saveHint').style.color = 'var(--green)';
+        hasUnsaved = false;
+        showToast('Ticker disimpan dan di-publish! 🎉');
+      }catch(e){
+        showToast('Ralat simpan — cuba semula.', true);
+      }
+    }
+
+    function showToast(msg, isError = false){
+      const t = document.getElementById('toast');
+      const dot = t.querySelector('.toast-dot');
+      document.getElementById('toastMsg').textContent = msg;
+      dot.style.background = isError ? 'var(--red)' : 'var(--green)';
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 3200);
+    }
+
+    // ── Init ──────────────────────────────────────────────────
+    const saved = localStorage.getItem('smkg_ticker_saved_time');
+    if(saved) document.getElementById('sv-saved').textContent = saved;
+
+    tickerItems = loadTicker();
+    renderList(tickerItems);
+    previewTicker();
+
+    // Warn on unsaved close
+    window.onbeforeunload = e => { if(hasUnsaved){ e.preventDefault(); return ''; } };
+  </script>
+</body>
+</html>
