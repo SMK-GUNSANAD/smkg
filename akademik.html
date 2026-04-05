@@ -268,6 +268,35 @@ tbody tr:hover .row-actions{opacity:1}
 .quick-arrow{margin-left:auto;font-size:12px;color:var(--text-3);flex-shrink:0;transition:transform .18s,color .18s}
 .quick-card:hover .quick-arrow{transform:translateX(2px);color:var(--accent)}
 
+/* ── WELCOME PANEL ── */
+.welcome-panel{position:absolute;inset:0;z-index:10;overflow-y:auto;padding:28px 32px;display:flex;flex-direction:column;gap:18px;background:var(--bg-panel)}
+.welcome-panel.gone{display:none}
+.wp-greeting{font-size:10px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}
+.wp-title{font-size:24px;font-weight:900;letter-spacing:-.03em;color:var(--text-1);line-height:1.1;margin-top:4px}
+.wp-sub{font-size:12px;color:var(--text-2);margin-top:5px;line-height:1.6}
+.wp-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.wp-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-md);padding:14px 16px}
+.wp-card-label{font-size:10px;font-weight:700;color:var(--text-3);letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px}
+.wp-card-value{font-size:28px;font-weight:900;letter-spacing:-.04em;color:var(--text-1);line-height:1}
+.wp-card-note{font-size:10px;color:var(--text-3);margin-top:5px}
+.wp-card-note strong{font-weight:700;color:var(--text-2)}
+.wp-cd-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.wp-cd{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-md);padding:14px 16px;position:relative;overflow:hidden}
+.wp-cd::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+.wp-cd.spm::before{background:linear-gradient(90deg,var(--accent),#7c5ce8)}
+.wp-cd.stpm::before{background:linear-gradient(90deg,var(--blue),#3b6fd4)}
+.wp-cd-label{font-size:10px;font-weight:800;letter-spacing:.10em;text-transform:uppercase;margin-bottom:4px}
+.wp-cd.spm .wp-cd-label{color:var(--accent)}
+.wp-cd.stpm .wp-cd-label{color:var(--blue)}
+.wp-cd-name{font-size:12px;font-weight:700;color:var(--text-1);margin-bottom:12px}
+.wp-cd-blocks{display:flex;gap:6px}
+.wp-cd-block{flex:1;background:var(--bg-hover);border:1px solid var(--border);border-radius:var(--r-sm);padding:8px 4px;text-align:center}
+.wp-cd-num{display:block;font-size:20px;font-weight:900;letter-spacing:-.04em;color:var(--text-1);line-height:1}
+.wp-cd-unit{display:block;font-size:9px;color:var(--text-3);font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-top:3px}
+.wp-cd-since{font-size:10px;color:var(--text-3);margin-top:8px}
+.wp-hint{font-size:11px;color:var(--text-3);text-align:center;padding:4px 0}
+.wp-hint strong{color:var(--text-2);font-weight:600}
+
 /* login overlay */
 .login-overlay{position:fixed;inset:0;z-index:500;background:var(--bg-app);display:flex;align-items:center;justify-content:center;transition:opacity .4s,transform .4s}
 .login-overlay.off{opacity:0;pointer-events:none;transform:scale(.98)}
@@ -361,105 +390,51 @@ tbody tr:hover .row-actions{opacity:1}
   </aside>
 
   <!-- MAIN -->
-  <main class="main">
+  <main class="main" style="position:relative">
 
-    <!-- ══ WELCOME SCREEN ══ -->
-    <div class="welcome" id="welcomeScreen" style="display:none">
-
-      <div class="welcome-top">
-        <div class="welcome-title-block">
-          <div class="welcome-eyebrow">Kurikulum — SMKG</div>
-          <div class="welcome-title">Selamat Datang,<br>Portal Akademik</div>
-          <div class="welcome-sub">Pilih mata pelajaran di sebelah kiri untuk mengakses fail panel, atau lihat ringkasan di bawah.</div>
-        </div>
-        <div class="welcome-date" id="welcomeDate"></div>
+    <!-- ── WELCOME PANEL ── shown on load, hidden when a subject is clicked -->
+    <div class="welcome-panel" id="welcomePanel">
+      <div>
+        <div class="wp-greeting">Portal Akademik — SMKG</div>
+        <div class="wp-title">Selamat Datang</div>
+        <div class="wp-sub">Pilih mata pelajaran di sebelah kiri untuk mula.</div>
       </div>
-
-      <!-- Enrolment stats -->
-      <div class="stat-row">
-        <div class="stat-card">
-          <div class="stat-label">Total Pelajar</div>
-          <div class="stat-value" id="statTotal">1,240</div>
-          <div class="stat-delta blue">Sesi 2025/2026 · <strong>SMKG</strong></div>
+      <div class="wp-cards">
+        <div class="wp-card">
+          <div class="wp-card-label">Jumlah Pelajar</div>
+          <div class="wp-card-value">1,240</div>
+          <div class="wp-card-note">Sesi <strong>2025/2026</strong></div>
         </div>
-        <div class="stat-card">
-          <div class="stat-label">Sesi Pagi</div>
-          <div class="stat-value" id="statPagi">728</div>
-          <div class="stat-delta green">Tingkatan <strong>1 – 3 & 6</strong></div>
+        <div class="wp-card">
+          <div class="wp-card-label">Sesi Pagi</div>
+          <div class="wp-card-value">728</div>
+          <div class="wp-card-note">Tingkatan <strong>1 – 3 &amp; 6</strong></div>
         </div>
-        <div class="stat-card">
-          <div class="stat-label">Sesi Petang</div>
-          <div class="stat-value" id="statPetang">512</div>
-          <div class="stat-delta amber">Tingkatan <strong>4 – 5</strong></div>
+        <div class="wp-card">
+          <div class="wp-card-label">Sesi Petang</div>
+          <div class="wp-card-value">512</div>
+          <div class="wp-card-note">Tingkatan <strong>4 – 5</strong></div>
         </div>
       </div>
-
-      <!-- Countdowns -->
-      <div class="countdown-row">
-        <div class="cd-card spm">
-          <div class="cd-label">SPM 2025</div>
-          <div class="cd-exam-name">Sijil Pelajaran Malaysia</div>
-          <div class="cd-blocks" id="cdSPM"></div>
-          <div class="cd-date-note" id="cdSPMdate"></div>
+      <div class="wp-cd-row">
+        <div class="wp-cd spm">
+          <div class="wp-cd-label">SPM 2025</div>
+          <div class="wp-cd-name">Sijil Pelajaran Malaysia</div>
+          <div class="wp-cd-blocks" id="cdSPM"></div>
+          <div class="wp-cd-since" id="cdSPMnote"></div>
         </div>
-        <div class="cd-card stpm">
-          <div class="cd-label">STPM 2025</div>
-          <div class="cd-exam-name">Sijil Tinggi Persekolahan Malaysia</div>
-          <div class="cd-blocks" id="cdSTPM"></div>
-          <div class="cd-date-note" id="cdSTPMdate"></div>
+        <div class="wp-cd stpm">
+          <div class="wp-cd-label">STPM 2025</div>
+          <div class="wp-cd-name">Sijil Tinggi Persekolahan Malaysia</div>
+          <div class="wp-cd-blocks" id="cdSTPM"></div>
+          <div class="wp-cd-since" id="cdSTPMnote"></div>
         </div>
       </div>
-
-      <!-- Quick access to subjects -->
-      <div style="font-size:10px;font-weight:800;letter-spacing:.10em;text-transform:uppercase;color:var(--text-3);flex-shrink:0">Quick Access — Pilih Mata Pelajaran</div>
-      <div class="quick-row">
-        <div class="quick-card" onclick="quickSelect('fiz')">
-          <div class="quick-ico">🔬</div>
-          <div><div class="quick-name">Fizik</div><div class="quick-desc">Sains Matematik</div></div>
-          <span class="quick-arrow">›</span>
-        </div>
-        <div class="quick-card" onclick="quickSelect('kim')">
-          <div class="quick-ico">⚗️</div>
-          <div><div class="quick-name">Kimia</div><div class="quick-desc">Sains Matematik</div></div>
-          <span class="quick-arrow">›</span>
-        </div>
-        <div class="quick-card" onclick="quickSelect('bm')">
-          <div class="quick-ico">📖</div>
-          <div><div class="quick-name">Bahasa Melayu</div><div class="quick-desc">Bidang Bahasa</div></div>
-          <span class="quick-arrow">›</span>
-        </div>
-        <div class="quick-card" onclick="quickSelect('mt')">
-          <div class="quick-ico">📐</div>
-          <div><div class="quick-name">Matematik</div><div class="quick-desc">Sains Matematik</div></div>
-          <span class="quick-arrow">›</span>
-        </div>
-        <div class="quick-card" onclick="quickSelect('bi')">
-          <div class="quick-ico">🌐</div>
-          <div><div class="quick-name">Bahasa Inggeris</div><div class="quick-desc">Bidang Bahasa</div></div>
-          <span class="quick-arrow">›</span>
-        </div>
-        <div class="quick-card" onclick="quickSelect('bio')">
-          <div class="quick-ico">🧬</div>
-          <div><div class="quick-name">Biologi</div><div class="quick-desc">Sains Matematik</div></div>
-          <span class="quick-arrow">›</span>
-        </div>
-        <div class="quick-card" onclick="quickSelect('sej')">
-          <div class="quick-ico">🏛️</div>
-          <div><div class="quick-name">Sejarah</div><div class="quick-desc">Sains Sosial</div></div>
-          <span class="quick-arrow">›</span>
-        </div>
-        <div class="quick-card" onclick="quickSelect('mt2')">
-          <div class="quick-ico">➕</div>
-          <div><div class="quick-name">Mat. Tambahan</div><div class="quick-desc">Sains Matematik</div></div>
-          <span class="quick-arrow">›</span>
-        </div>
-      </div>
-
+      <div class="wp-hint">← <strong>Klik mana-mana mata pelajaran</strong> di sebelah kiri untuk mula</div>
     </div>
-    <!-- ══ END WELCOME ══ -->
 
-    <!-- Module tabs — hidden until a subject is selected -->
-    <div class="mod-tabs hidden" id="modTabs" style="display:none">
+    <!-- Module tabs -->
+    <div class="mod-tabs" id="modTabs">
       <div class="m-tab active" data-mod="pengurusan">🏛️ Pengurusan Am</div>
       <div class="m-tab" data-mod="pekeliling">📋 Pekeliling</div>
       <div class="m-tab" data-mod="mesyuarat">📝 Minit Mesyuarat</div>
@@ -469,7 +444,7 @@ tbody tr:hover .row-actions{opacity:1}
     </div>
 
     <!-- Toolbar -->
-    <div class="toolbar" id="mainToolbar" style="display:none">
+    <div class="toolbar" id="mainToolbar">
       <!-- Upload — only shown when inside a subfolder -->
       <label class="tool-btn primary" id="uploadBtn" style="cursor:pointer;display:none">
         <svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M6 2v8M2 6h8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
@@ -504,7 +479,7 @@ tbody tr:hover .row-actions{opacity:1}
     </div>
 
     <!-- File/Folder Area -->
-    <div class="file-area" id="fileArea" style="display:none">
+    <div class="file-area" id="fileArea">
 
       <!-- Location bar — shows current subfolder path -->
       <div class="location-bar" id="locationBar">
@@ -871,12 +846,16 @@ function filterSidebar(v) { renderSidebar(v); }
    SUBJECT + MODULE SELECTION
    ════════════════════════════════════════════════════ */
 function selectSubject(key) {
+  // Hide welcome panel when any subject is picked
+  const wp = document.getElementById("welcomePanel");
+  if (wp) wp.style.display = "none";
   curSubject = key;
   document.getElementById("bcSubject").textContent = SUBJECT_LABEL[key] || key;
   goUpToFolderView(false);
   renderSidebar(document.getElementById("sbSearch").value);
   updateStatus();
   showToast(SUBJECT_LABEL[key] || key);
+  showFolderView();
 }
 
 document.querySelectorAll(".m-tab").forEach(tab => {
@@ -1211,108 +1190,44 @@ function showToast(msg) {
 }
 
 /* ════════════════════════════════════════════════════
-   WELCOME SCREEN
-   ════════════════════════════════════════════════════ */
-
-// Editable school data — update these values
-const SCHOOL_DATA = {
-  totalPelajar: 1240,
-  sesiPagi:      728,   // T1–T3 & T6
-  sesiPetang:    512,   // T4–T5
-  // SPM first paper date (update each year)
-  spmDate: new Date("2025-11-10T08:00:00"),
-  // STPM first paper date (update each year)
-  stpmDate: new Date("2025-10-13T08:00:00"),
-};
-
-function buildWelcomeDate() {
-  const now = new Date();
-  const days = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
-  const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-  document.getElementById("welcomeDate").innerHTML =
-    `<div>${days[now.getDay()]}</div>`+
-    `<div><strong>${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()}</strong></div>`+
-    `<div>Sesi <strong>2025/2026</strong></div>`;
-}
-
-function buildCountdown(targetDate, containerId, noteId) {
-  function update() {
-    const now  = new Date();
-    const diff = targetDate - now;
-    if (diff <= 0) {
-      document.getElementById(containerId).innerHTML =
-        `<div class="cd-block" style="flex:2"><span class="cd-num" style="font-size:14px;color:var(--green)">Sedang Berlangsung</span></div>`;
-      document.getElementById(noteId).textContent = "Peperiksaan sedang berlangsung";
-      return;
-    }
-    const days  = Math.floor(diff / 86400000);
-    const hours = Math.floor((diff % 86400000) / 3600000);
-    const mins  = Math.floor((diff % 3600000)  / 60000);
-    const secs  = Math.floor((diff % 60000)    / 1000);
-
-    document.getElementById(containerId).innerHTML =
-      `<div class="cd-block"><span class="cd-num">${String(days).padStart(2,"0")}</span><span class="cd-unit">Hari</span></div>`+
-      `<div class="cd-block"><span class="cd-num">${String(hours).padStart(2,"0")}</span><span class="cd-unit">Jam</span></div>`+
-      `<div class="cd-block"><span class="cd-num">${String(mins).padStart(2,"0")}</span><span class="cd-unit">Min</span></div>`+
-      `<div class="cd-block"><span class="cd-num">${String(secs).padStart(2,"0")}</span><span class="cd-unit">Saat</span></div>`;
-
-    const opts = {day:"numeric",month:"long",year:"numeric"};
-    document.getElementById(noteId).textContent =
-      "Bermula " + targetDate.toLocaleDateString("ms-MY", opts);
-  }
-  update();
-  setInterval(update, 1000);
-}
-
-function showWelcome() {
-  document.getElementById("welcomeScreen").style.display  = "flex";
-  document.getElementById("modTabs").style.display        = "none";
-  document.getElementById("mainToolbar").style.display    = "none";
-  document.getElementById("fileArea").style.display       = "none";
-  document.getElementById("bcSubject").textContent = "Kurikulum";
-  document.getElementById("bcModule").textContent  = "Laman Utama";
-  document.querySelectorAll(".sb-item").forEach(i=>i.classList.remove("active"));
-  curSubject = null;
-}
-
-function hidWelcome() {
-  document.getElementById("welcomeScreen").style.display  = "none";
-  document.getElementById("modTabs").style.display        = "";
-  document.getElementById("mainToolbar").style.display    = "";
-  document.getElementById("fileArea").style.display       = "";
-}
-
-// Quick select from welcome cards
-function quickSelect(key) {
-  hidWelcome();
-  selectSubject(key);
-}
-
-// Override selectSubject to dismiss welcome when sidebar is clicked
-const _origSelectSubject = selectSubject;
-// We patch it inline below by redefining
-
-/* patch sidebar clicks to also dismiss welcome */
-function selectSubject(key) {
-  hidWelcome();
-  curSubject = key;
-  document.getElementById("bcSubject").textContent = SUBJECT_LABEL[key] || key;
-  goUpToFolderView(false);
-  renderSidebar(document.getElementById("sbSearch").value);
-  updateStatus();
-  showToast(SUBJECT_LABEL[key] || key);
-  showFolderView();
-}
-
-/* ════════════════════════════════════════════════════
    INIT
    ════════════════════════════════════════════════════ */
+
+// ── Countdown (SPM / STPM) ──
+// Update these dates each year
+const SPM_DATE  = new Date("2025-11-10T08:00:00");
+const STPM_DATE = new Date("2025-10-13T08:00:00");
+
+function runCountdown(targetDate, blocksId, noteId) {
+  function tick() {
+    const diff = targetDate - new Date();
+    const el = document.getElementById(blocksId);
+    const ne = document.getElementById(noteId);
+    if (!el) return;
+    if (diff <= 0) {
+      el.innerHTML = `<div class="wp-cd-block" style="flex:2"><span class="wp-cd-num" style="font-size:13px;color:var(--green)">Sedang Berlangsung</span></div>`;
+      if (ne) ne.textContent = "Peperiksaan sedang berlangsung";
+      return;
+    }
+    const d = Math.floor(diff/86400000);
+    const h = Math.floor((diff%86400000)/3600000);
+    const m = Math.floor((diff%3600000)/60000);
+    const s = Math.floor((diff%60000)/1000);
+    el.innerHTML =
+      `<div class="wp-cd-block"><span class="wp-cd-num">${String(d).padStart(2,"0")}</span><span class="wp-cd-unit">Hari</span></div>`+
+      `<div class="wp-cd-block"><span class="wp-cd-num">${String(h).padStart(2,"0")}</span><span class="wp-cd-unit">Jam</span></div>`+
+      `<div class="wp-cd-block"><span class="wp-cd-num">${String(m).padStart(2,"0")}</span><span class="wp-cd-unit">Min</span></div>`+
+      `<div class="wp-cd-block"><span class="wp-cd-num">${String(s).padStart(2,"0")}</span><span class="wp-cd-unit">Saat</span></div>`;
+    if (ne) ne.textContent = "Bermula " + targetDate.toLocaleDateString("ms-MY",{day:"numeric",month:"long",year:"numeric"});
+  }
+  tick();
+  setInterval(tick, 1000);
+}
+
 renderSidebar();
-buildWelcomeDate();
-buildCountdown(SCHOOL_DATA.spmDate,  "cdSPM",  "cdSPMdate");
-buildCountdown(SCHOOL_DATA.stpmDate, "cdSTPM", "cdSTPMdate");
-// Show welcome on load — no subject pre-selected
-showWelcome();
+runCountdown(SPM_DATE,  "cdSPM",  "cdSPMnote");
+runCountdown(STPM_DATE, "cdSTPM", "cdSTPMnote");
+// Welcome panel is visible by default — selectSubject() hides it
 </script>
 </body>
 </html>
