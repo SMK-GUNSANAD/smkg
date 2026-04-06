@@ -1,1233 +1,684 @@
 <!doctype html>
-<html lang="ms" data-theme="dark">
+<html lang="ms">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Akademik — SMKG</title>
-
-<!--
-╔══════════════════════════════════════════════════════════╗
-║  GOOGLE OAUTH SETUP (one-time, ~15 min)                  ║
-║                                                          ║
-║  1. Go to: console.cloud.google.com                      ║
-║  2. Create project → Enable "Google Drive API"           ║
-║  3. OAuth consent screen → External                      ║
-║     Scopes: .../auth/drive.file                          ║
-║  4. Credentials → OAuth 2.0 Client ID → Web Application  ║
-║     Authorised JS origins: https://yourdomain.com        ║
-║     (use http://localhost for local testing)             ║
-║  5. Copy the Client ID                                   ║
-║  6. Paste it as GOOGLE_CLIENT_ID below                   ║
-╚══════════════════════════════════════════════════════════╝
--->
-
-<style>
-:root{
-  --accent:#9b72f5;--accent-dim:rgba(155,114,245,.13);--accent-hi:rgba(155,114,245,.26);
-  --bg-app:#08090d;--bg-panel:#0f1117;--bg-topbar:#0c0d12;--bg-sidebar:#0a0b0f;
-  --bg-hover:rgba(255,255,255,.055);--bg-sel:rgba(155,114,245,.15);
-  --bg-input:rgba(0,0,0,.4);--bg-card:rgba(255,255,255,.038);
-  --border:rgba(255,255,255,.09);--border-md:rgba(255,255,255,.14);
-  --text-1:rgba(255,255,255,.92);--text-2:rgba(255,255,255,.55);--text-3:rgba(255,255,255,.30);
-  --navH:40px;--sideW:210px;--r-sm:4px;--r-md:6px;
-  --green:#4ec94e;--red:#e05555;--amber:#f5a623;--blue:#5b8df5;
-}
-html[data-theme="light"]{
-  --bg-app:#f0f1f6;--bg-panel:#ffffff;--bg-topbar:#ffffff;--bg-sidebar:#f5f5f8;
-  --bg-hover:rgba(0,0,0,.045);--bg-sel:rgba(155,114,245,.11);--bg-input:rgba(0,0,0,.05);
-  --bg-card:rgba(0,0,0,.028);--border:rgba(0,0,0,.09);--border-md:rgba(0,0,0,.14);
-  --text-1:rgba(0,0,0,.88);--text-2:rgba(0,0,0,.50);--text-3:rgba(0,0,0,.28);
-}
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%;overflow:hidden;font-family:-apple-system,system-ui,sans-serif;font-size:12px;background:var(--bg-app);color:var(--text-1)}
-button{font:inherit;cursor:pointer;border:none;background:none;color:inherit}
-input,select{font:inherit;color:inherit}
-a{color:inherit;text-decoration:none}
-svg{display:block}
-*{scrollbar-width:thin;scrollbar-color:var(--border-md) transparent}
-
-/* ── SHELL ── */
-.app{display:grid;grid-template-rows:var(--navH) 1fr;grid-template-columns:var(--sideW) 1fr;height:100vh}
-
-/* ── TOPBAR ── */
-.topbar{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;height:var(--navH);padding:0 12px;gap:8px;background:var(--bg-topbar);border-bottom:1px solid var(--border);z-index:200}
-.tb-left{display:flex;align-items:center;gap:8px;min-width:0;overflow:hidden}
-.tb-right{display:flex;align-items:center;gap:6px;flex-shrink:0}
-.app-icon{width:22px;height:22px;border-radius:var(--r-sm);background:var(--accent);display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 0 0 1px rgba(155,114,245,.35),0 4px 14px rgba(155,114,245,.22)}
-.app-name{font-size:12px;font-weight:700;white-space:nowrap}
-.app-sub{font-size:11px;color:var(--text-3);white-space:nowrap}
-.tb-div{width:1px;height:16px;background:var(--border);flex-shrink:0}
-.breadcrumb{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--text-2);overflow:hidden;min-width:0}
-.breadcrumb .sep{color:var(--text-3);flex-shrink:0}
-.bc-crumb{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.bc-crumb.active{color:var(--text-1);font-weight:600}
-.bc-crumb.link{cursor:pointer}
-.bc-crumb.link:hover{color:var(--accent);text-decoration:underline}
-.tb-btn{display:flex;align-items:center;gap:5px;padding:4px 9px;border-radius:var(--r-sm);font-size:11px;color:var(--text-2);border:1px solid transparent;transition:background .14s,color .14s;white-space:nowrap;cursor:pointer}
-.tb-btn:hover{background:var(--bg-hover);color:var(--text-1)}
-.user-badge{display:flex;align-items:center;gap:7px;padding:3px 9px 3px 3px;border-radius:99px;border:1px solid var(--border);background:var(--bg-hover);font-size:11px;font-weight:600;white-space:nowrap}
-.avatar{width:22px;height:22px;border-radius:50%;background:var(--accent-dim);border:1px solid var(--accent-hi);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:var(--accent)}
-
-/* ── SIDEBAR ── */
-.sidebar{background:var(--bg-sidebar);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
-.sb-search{display:flex;align-items:center;gap:6px;padding:7px 8px;border-bottom:1px solid var(--border);flex-shrink:0}
-.sb-search input{flex:1;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--r-sm);padding:4px 8px;font-size:11px;color:var(--text-1);outline:none;transition:border-color .15s}
-.sb-search input:focus{border-color:var(--accent)}
-.sb-search input::placeholder{color:var(--text-3)}
-.sb-scroll{flex:1;overflow-y:auto;padding:4px 0 8px}
-.sb-scroll::-webkit-scrollbar{width:3px}
-.sb-scroll::-webkit-scrollbar-thumb{background:var(--border-md);border-radius:3px}
-.sb-group{margin:0 4px 2px}
-.sb-group.drag-over{background:var(--accent-dim);outline:1px dashed var(--accent);border-radius:var(--r-sm)}
-.sb-group.dragging{opacity:.4}
-.group-head{display:flex;align-items:center;gap:4px;padding:6px 6px 5px;cursor:pointer;user-select:none;border-radius:var(--r-sm);transition:background .12s}
-.group-head:hover{background:var(--bg-hover)}
-.drag-handle{display:flex;flex-direction:column;gap:2.5px;padding:2px 3px;cursor:grab;opacity:.32;transition:opacity .14s;flex-shrink:0}
-.drag-handle:hover{opacity:.75}
-.drag-handle:active{cursor:grabbing}
-.drag-handle span{display:block;width:12px;height:1.5px;background:var(--text-2);border-radius:1px}
-.group-arrow{font-size:9px;color:var(--text-3);transition:transform .22s;flex-shrink:0}
-.sb-group.open .group-arrow{transform:rotate(90deg)}
-.group-label{font-size:10px;font-weight:700;color:var(--text-2);letter-spacing:.04em;text-transform:uppercase;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.group-count{font-size:9px;color:var(--text-3);background:var(--bg-hover);padding:1px 5px;border-radius:99px;flex-shrink:0}
-.group-body{overflow:hidden;max-height:0;transition:max-height .32s cubic-bezier(.16,1,.3,1)}
-.sb-group.open .group-body{max-height:800px}
-.subject-list{padding:2px 0 4px}
-.sb-item{display:flex;align-items:center;gap:8px;padding:5px 8px 5px 20px;font-size:11px;color:var(--text-2);cursor:pointer;border-radius:var(--r-sm);margin:0 4px;transition:background .11s,color .11s}
-.sb-item:hover{background:var(--bg-hover);color:var(--text-1)}
-.sb-item.active{background:var(--bg-sel);color:var(--accent);font-weight:600}
-.sb-item.active .sb-dot{background:var(--accent)}
-.sb-item.hidden{display:none}
-.sb-dot{width:5px;height:5px;border-radius:50%;background:var(--text-3);flex-shrink:0}
-
-/* ── MAIN ── */
-.main{display:flex;flex-direction:column;overflow:hidden;background:var(--bg-panel);min-width:0}
-
-/* module tabs */
-.mod-tabs{display:flex;align-items:center;padding:0 12px;border-bottom:1px solid var(--border);background:var(--bg-sidebar);flex-shrink:0;overflow-x:auto;gap:1px}
-.mod-tabs::-webkit-scrollbar{height:0}
-.m-tab{display:flex;align-items:center;gap:6px;padding:9px 12px;font-size:11px;color:var(--text-2);cursor:pointer;white-space:nowrap;border-bottom:2px solid transparent;transition:color .15s,border-color .15s;flex-shrink:0;user-select:none}
-.m-tab:hover{color:var(--text-1)}
-.m-tab.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:700}
-
-/* toolbar */
-.toolbar{display:flex;align-items:center;gap:3px;padding:0 12px;height:36px;border-bottom:1px solid var(--border);background:var(--bg-panel);flex-shrink:0}
-.tool-btn{display:flex;align-items:center;gap:5px;padding:4px 9px;border-radius:var(--r-sm);font-size:11px;color:var(--text-2);border:1px solid transparent;transition:background .12s,color .12s,border-color .12s;height:26px;cursor:pointer;white-space:nowrap;flex-shrink:0}
-.tool-btn:hover{background:var(--bg-hover);color:var(--text-1)}
-.tool-btn.primary{background:var(--accent);color:#fff;font-weight:700}
-.tool-btn.primary:hover{opacity:.88}
-.tool-btn.primary:disabled{opacity:.35;cursor:not-allowed}
-.tool-btn.danger:hover{background:rgba(224,85,85,.12);color:var(--red);border-color:rgba(224,85,85,.22)}
-.tool-btn.back-btn{background:var(--bg-hover);border-color:var(--border)}
-.tool-sep{width:1px;height:18px;background:var(--border);margin:0 3px;flex-shrink:0}
-.tool-spacer{flex:1}
-.tool-search{display:flex;align-items:center;gap:5px;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--r-sm);padding:3px 8px;height:26px;flex-shrink:0;transition:border-color .15s}
-.tool-search:focus-within{border-color:var(--accent)}
-.tool-search input{background:none;border:none;outline:none;font-size:11px;color:var(--text-1);width:150px}
-.tool-search input::placeholder{color:var(--text-3)}
-.dimmed{opacity:.38;pointer-events:none}
-
-/* ── FILE / FOLDER AREA ── */
-.file-area{flex:1;overflow:hidden;display:flex;flex-direction:column;min-height:0}
-
-/* location bar — shown when inside a subfolder */
-.location-bar{display:none;align-items:center;gap:8px;padding:7px 12px;background:var(--accent-dim);border-bottom:1px solid rgba(155,114,245,.2);flex-shrink:0;font-size:11px;color:var(--accent)}
-.location-bar.visible{display:flex}
-.loc-path{font-weight:700;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.loc-back{display:flex;align-items:center;gap:5px;padding:3px 9px;border-radius:var(--r-sm);border:1px solid var(--accent-hi);background:var(--accent-dim);cursor:pointer;transition:background .14s;font-size:11px;color:var(--accent);font-weight:600;flex-shrink:0}
-.loc-back:hover{background:var(--accent-hi)}
-
-/* drop zone */
-.drop-banner{margin:8px 12px 0;padding:8px 12px;border:1px dashed rgba(155,114,245,.28);border-radius:var(--r-md);background:var(--accent-dim);display:flex;align-items:center;gap:10px;cursor:pointer;transition:background .15s,border-color .15s;flex-shrink:0}
-.drop-banner:hover{background:var(--accent-hi);border-color:rgba(155,114,245,.5)}
-.drop-banner.hidden{display:none}
-.drop-banner input{display:none}
-.drop-ico{width:28px;height:28px;border-radius:var(--r-sm);border:1px solid var(--accent-hi);background:var(--accent-dim);display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.drop-text{font-size:11px;color:var(--accent)}
-.drop-text strong{font-weight:700}
-.drop-hint{font-size:10px;color:rgba(155,114,245,.6);margin-left:auto;flex-shrink:0}
-
-/* table */
-.file-table-wrap{flex:1;overflow-y:auto;min-height:0}
-.file-table-wrap::-webkit-scrollbar{width:5px}
-.file-table-wrap::-webkit-scrollbar-thumb{background:var(--border-md);border-radius:3px}
-table{width:100%;border-collapse:collapse}
-thead th{position:sticky;top:0;z-index:5;padding:7px 10px;text-align:left;font-size:10px;font-weight:700;color:var(--text-3);letter-spacing:.07em;text-transform:uppercase;background:var(--bg-panel);border-bottom:1px solid var(--border);white-space:nowrap;user-select:none}
-thead th.sortable{cursor:pointer}
-thead th.sortable:hover{color:var(--text-2)}
-thead th.sorted{color:var(--accent)}
-tbody tr{transition:background .1s}
-tbody tr:hover td{background:var(--bg-hover)}
-tbody tr.selected td{background:var(--bg-sel)}
-tbody td{padding:7px 10px;border-bottom:1px solid var(--border);font-size:11px;color:var(--text-1);vertical-align:middle;white-space:nowrap}
-html[data-theme="light"] tbody td{border-bottom:1px solid rgba(0,0,0,.06)}
-tbody tr:last-child td{border-bottom:none}
-
-/* folder row style */
-.folder-row{cursor:pointer}
-.folder-row:hover td{background:var(--bg-hover)}
-.folder-name{font-size:11px;font-weight:600;color:var(--text-1);display:inline-block}
-.folder-row:hover .folder-name{color:var(--accent)}
-.folder-ico{font-size:15px}
-.folder-arrow{color:var(--text-3);font-size:12px;opacity:0;transition:opacity .14s,transform .14s}
-.folder-row:hover .folder-arrow{opacity:1;transform:translateX(2px)}
-
-/* file row */
-.f-check{width:13px;height:13px;cursor:pointer;accent-color:var(--accent)}
-.f-ico{font-size:13px}
-.f-name{font-size:11px;font-weight:600;color:var(--text-1);max-width:240px;overflow:hidden;text-overflow:ellipsis;display:inline-block;vertical-align:middle;cursor:pointer}
-.f-name:hover{color:var(--accent);text-decoration:underline}
-.f-ext{display:inline-flex;padding:1px 5px;border-radius:3px;font-size:9px;font-weight:800;letter-spacing:.05em}
-.ext-pdf{background:rgba(224,85,85,.14);color:#e07070}
-.ext-docx{background:rgba(91,141,245,.14);color:#7aabee}
-.ext-xlsx{background:rgba(78,201,78,.14);color:#6ed46e}
-.ext-pptx{background:rgba(245,166,35,.14);color:#e0a060}
-.ext-folder{background:rgba(155,114,245,.14);color:var(--accent)}
-.ext-default{background:var(--bg-hover);color:var(--text-2)}
-.f-new{display:inline-flex;padding:1px 5px;border-radius:3px;font-size:9px;font-weight:800;background:var(--accent-dim);color:var(--accent);margin-left:6px;vertical-align:middle}
-.f-pending{display:inline-flex;padding:1px 5px;border-radius:3px;font-size:9px;font-weight:800;background:rgba(245,166,35,.14);color:var(--amber);margin-left:6px;vertical-align:middle}
-.row-actions{display:flex;align-items:center;gap:3px;opacity:0;transition:opacity .14s}
-tbody tr:hover .row-actions{opacity:1}
-.row-btn{padding:2px 7px;border-radius:var(--r-sm);border:1px solid var(--border);font-size:10px;color:var(--text-2);transition:background .12s,color .12s;cursor:pointer;background:none}
-.row-btn:hover{background:var(--bg-hover);color:var(--text-1)}
-
-/* loading / empty */
-.state-row td{text-align:center;padding:40px 20px}
-.spinner{width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 10px}
-@keyframes spin{to{transform:rotate(360deg)}}
-.empty-ico{font-size:28px;opacity:.4;margin-bottom:8px}
-.empty-title{font-size:13px;font-weight:600;color:var(--text-2);margin-bottom:4px}
-.empty-sub{font-size:11px;color:var(--text-3);max-width:260px;margin:0 auto;line-height:1.6}
-
-/* status bar */
-.statusbar{display:flex;align-items:center;gap:10px;padding:0 12px;height:24px;border-top:1px solid var(--border);background:var(--bg-topbar);flex-shrink:0;font-size:10px;color:var(--text-3)}
-.s-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
-.s-green{background:var(--green)}
-.s-amber{background:var(--amber)}
-.s-blue{background:var(--blue)}
-
-/* progress bar overlay */
-.upload-progress{position:fixed;bottom:32px;right:20px;z-index:900;background:var(--bg-topbar);border:1px solid var(--border-md);border-radius:var(--r-md);padding:10px 14px;min-width:220px;display:none}
-.upload-progress.visible{display:block}
-.up-title{font-size:11px;font-weight:700;margin-bottom:8px;color:var(--text-1)}
-.up-bar-track{height:4px;background:var(--border);border-radius:2px;overflow:hidden}
-.up-bar-fill{height:100%;background:var(--accent);border-radius:2px;transition:width .3s}
-.up-label{font-size:10px;color:var(--text-2);margin-top:5px}
-
-.hidden{display:none!important}
-.flex-hidden{visibility:hidden;pointer-events:none;height:0;overflow:hidden;padding:0;border:none}
-
-/* ── WELCOME SCREEN ── */
-.welcome{display:flex;flex-direction:column;overflow-y:auto;padding:24px 28px 28px;gap:20px;animation:fadeUp .5s cubic-bezier(.16,1,.3,1) both}
-.welcome.hidden{display:none}
-@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
-.welcome-top{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-shrink:0}
-.welcome-title-block{}
-.welcome-eyebrow{font-size:10px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);margin-bottom:6px}
-.welcome-title{font-size:clamp(22px,3vw,32px);font-weight:900;letter-spacing:-.03em;line-height:1.1;color:var(--text-1)}
-.welcome-sub{font-size:12px;color:var(--text-2);margin-top:6px;line-height:1.6}
-.welcome-date{text-align:right;font-size:11px;color:var(--text-3);line-height:1.8;flex-shrink:0}
-.welcome-date strong{color:var(--text-2);font-weight:700}
-
-/* stat cards row */
-.stat-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;flex-shrink:0}
-.stat-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-md);padding:14px 16px;cursor:default;transition:background .15s,border-color .15s}
-.stat-card:hover{background:var(--bg-hover);border-color:var(--border-md)}
-.stat-label{font-size:10px;font-weight:700;color:var(--text-3);letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px}
-.stat-value{font-size:26px;font-weight:900;letter-spacing:-.04em;color:var(--text-1);line-height:1}
-.stat-delta{font-size:10px;color:var(--text-3);margin-top:5px}
-.stat-delta strong{font-weight:700}
-.stat-delta.green strong{color:var(--green)}
-.stat-delta.amber strong{color:var(--amber)}
-.stat-delta.blue strong{color:var(--blue)}
-
-/* countdown cards */
-.countdown-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;flex-shrink:0}
-.cd-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-md);padding:16px;position:relative;overflow:hidden;transition:background .15s,border-color .15s}
-.cd-card:hover{background:var(--bg-hover);border-color:var(--border-md)}
-.cd-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;border-radius:var(--r-md) var(--r-md) 0 0}
-.cd-card.spm::before{background:linear-gradient(90deg,#9b72f5,#7c5ce8)}
-.cd-card.stpm::before{background:linear-gradient(90deg,#5b8df5,#3b6fd4)}
-.cd-label{font-size:10px;font-weight:800;letter-spacing:.10em;text-transform:uppercase;margin-bottom:10px}
-.cd-card.spm .cd-label{color:var(--accent)}
-.cd-card.stpm .cd-label{color:var(--blue)}
-.cd-exam-name{font-size:13px;font-weight:700;color:var(--text-1);margin-bottom:12px}
-.cd-blocks{display:flex;gap:8px}
-.cd-block{flex:1;background:var(--bg-hover);border:1px solid var(--border);border-radius:var(--r-sm);padding:8px 4px;text-align:center}
-.cd-num{font-size:22px;font-weight:900;letter-spacing:-.04em;color:var(--text-1);line-height:1;display:block}
-.cd-unit{font-size:9px;color:var(--text-3);font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-top:3px;display:block}
-.cd-date-note{font-size:10px;color:var(--text-3);margin-top:10px}
-
-/* quick access row */
-.quick-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;flex-shrink:0}
-.quick-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-md);padding:13px 14px;cursor:pointer;transition:background .15s,border-color .15s,transform .2s;display:flex;align-items:center;gap:10px}
-.quick-card:hover{background:var(--bg-hover);border-color:var(--accent-hi);transform:translateY(-2px)}
-.quick-ico{width:32px;height:32px;border-radius:var(--r-sm);background:var(--accent-dim);border:1px solid var(--accent-hi);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
-.quick-name{font-size:12px;font-weight:700;color:var(--text-1)}
-.quick-desc{font-size:10px;color:var(--text-3);margin-top:2px}
-.quick-arrow{margin-left:auto;font-size:12px;color:var(--text-3);flex-shrink:0;transition:transform .18s,color .18s}
-.quick-card:hover .quick-arrow{transform:translateX(2px);color:var(--accent)}
-
-/* ── WELCOME PANEL ── */
-.welcome-panel{position:absolute;inset:0;z-index:10;overflow-y:auto;padding:28px 32px;display:flex;flex-direction:column;gap:18px;background:var(--bg-panel)}
-.welcome-panel.gone{display:none}
-.wp-greeting{font-size:10px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}
-.wp-title{font-size:24px;font-weight:900;letter-spacing:-.03em;color:var(--text-1);line-height:1.1;margin-top:4px}
-.wp-sub{font-size:12px;color:var(--text-2);margin-top:5px;line-height:1.6}
-.wp-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-.wp-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-md);padding:14px 16px}
-.wp-card-label{font-size:10px;font-weight:700;color:var(--text-3);letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px}
-.wp-card-value{font-size:28px;font-weight:900;letter-spacing:-.04em;color:var(--text-1);line-height:1}
-.wp-card-note{font-size:10px;color:var(--text-3);margin-top:5px}
-.wp-card-note strong{font-weight:700;color:var(--text-2)}
-.wp-cd-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.wp-cd{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-md);padding:14px 16px;position:relative;overflow:hidden}
-.wp-cd::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
-.wp-cd.spm::before{background:linear-gradient(90deg,var(--accent),#7c5ce8)}
-.wp-cd.stpm::before{background:linear-gradient(90deg,var(--blue),#3b6fd4)}
-.wp-cd-label{font-size:10px;font-weight:800;letter-spacing:.10em;text-transform:uppercase;margin-bottom:4px}
-.wp-cd.spm .wp-cd-label{color:var(--accent)}
-.wp-cd.stpm .wp-cd-label{color:var(--blue)}
-.wp-cd-name{font-size:12px;font-weight:700;color:var(--text-1);margin-bottom:12px}
-.wp-cd-blocks{display:flex;gap:6px}
-.wp-cd-block{flex:1;background:var(--bg-hover);border:1px solid var(--border);border-radius:var(--r-sm);padding:8px 4px;text-align:center}
-.wp-cd-num{display:block;font-size:20px;font-weight:900;letter-spacing:-.04em;color:var(--text-1);line-height:1}
-.wp-cd-unit{display:block;font-size:9px;color:var(--text-3);font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-top:3px}
-.wp-cd-since{font-size:10px;color:var(--text-3);margin-top:8px}
-.wp-hint{font-size:11px;color:var(--text-3);text-align:center;padding:4px 0}
-.wp-hint strong{color:var(--text-2);font-weight:600}
-
-/* login overlay */
-.login-overlay{position:fixed;inset:0;z-index:500;background:var(--bg-app);display:flex;align-items:center;justify-content:center;transition:opacity .4s,transform .4s}
-.login-overlay.off{opacity:0;pointer-events:none;transform:scale(.98)}
-.login-box{width:300px;background:var(--bg-panel);border:1px solid var(--border-md);border-radius:var(--r-md);overflow:hidden}
-.login-hdr{padding:14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
-.login-ico{width:26px;height:26px;border-radius:var(--r-sm);background:var(--accent);display:flex;align-items:center;justify-content:center}
-.login-title{font-size:12px;font-weight:700}
-.login-sub2{font-size:10px;color:var(--text-3);margin-top:1px}
-.login-body{padding:14px;display:flex;flex-direction:column;gap:11px}
-.login-desc{font-size:11px;color:var(--text-2);line-height:1.6}
-.google-btn{display:flex;align-items:center;justify-content:center;gap:9px;padding:8px 14px;border-radius:var(--r-sm);border:1px solid var(--border-md);background:var(--bg-hover);color:var(--text-1);font-size:12px;font-weight:700;cursor:pointer;transition:background .15s;width:100%}
-.google-btn:hover{background:rgba(255,255,255,.08)}
-.login-footer{padding:9px 14px;border-top:1px solid var(--border);background:var(--bg-sidebar);font-size:10px;color:var(--text-3);display:flex;align-items:center;gap:5px}
-
-/* toast */
-.toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%) translateY(6px);background:var(--bg-topbar);border:1px solid var(--border-md);color:var(--text-1);padding:7px 14px;border-radius:var(--r-md);font-size:11px;font-weight:600;z-index:999;pointer-events:none;opacity:0;transition:opacity .22s,transform .22s}
-.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-</style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Kurikulum · Dashboard SMKG</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;800;900&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --navH:56px; --leftW:280px;
+      --ease:cubic-bezier(.2,.8,.2,1); --ease2:cubic-bezier(.16,1,.3,1);
+      --radius:12px; --radius-lg:16px; --radius-sm:8px; --dur:220ms;
+      --bg0:#0a0b0f; --bg1:#0f1017; --bg2:#13141c;
+      --surface:rgba(255,255,255,.04); --surface-hover:rgba(255,255,255,.07);
+      --border:rgba(255,255,255,.07); --border-strong:rgba(255,255,255,.13);
+      --text:rgba(255,255,255,.95); --muted:rgba(255,255,255,.50); --muted2:rgba(255,255,255,.28);
+      --navBg:rgba(10,11,15,.90); --navBorder:rgba(255,255,255,.07);
+      --accent:#6366f1; --accent2:#8b5cf6;
+      --accent-glow:rgba(99,102,241,.18); --accent-text:#818cf8; --accent-border:rgba(99,102,241,.22);
+      --input-bg:rgba(255,255,255,.05); --input-border:rgba(255,255,255,.10); --input-focus:rgba(99,102,241,.35);
+      --gridLine:rgba(255,255,255,.04); --bg-r1:rgba(99,102,241,.10); --bg-r2:rgba(139,92,246,.07);
+      --c-lang-bg:rgba(99,102,241,.12); --c-lang-border:rgba(99,102,241,.22); --c-lang-text:#818cf8;
+      --c-sains-bg:rgba(34,197,94,.10); --c-sains-border:rgba(34,197,94,.20); --c-sains-text:#4ade80;
+      --c-sosial-bg:rgba(245,158,11,.10); --c-sosial-border:rgba(245,158,11,.18); --c-sosial-text:#fbbf24;
+      --c-tvet-bg:rgba(239,68,68,.09); --c-tvet-border:rgba(239,68,68,.18); --c-tvet-text:#f87171;
+      --c-pp-bg:rgba(20,184,166,.11); --c-pp-border:rgba(20,184,166,.22); --c-pp-text:#2dd4bf;
+    }
+    html[data-theme="light"]{
+      --bg0:#f5f5fa; --bg1:#ffffff; --bg2:#f8f8fd;
+      --surface:rgba(0,0,0,.03); --surface-hover:rgba(0,0,0,.055);
+      --border:rgba(0,0,0,.07); --border-strong:rgba(0,0,0,.12);
+      --text:rgba(10,10,15,.95); --muted:rgba(10,10,15,.50); --muted2:rgba(10,10,15,.28);
+      --navBg:rgba(255,255,255,.92); --navBorder:rgba(0,0,0,.07);
+      --accent-text:#4f46e5; --accent-glow:rgba(99,102,241,.10); --accent-border:rgba(99,102,241,.18);
+      --input-bg:rgba(0,0,0,.03); --input-border:rgba(0,0,0,.10); --input-focus:rgba(99,102,241,.25);
+      --gridLine:rgba(0,0,0,.04); --bg-r1:rgba(99,102,241,.06); --bg-r2:rgba(139,92,246,.04);
+      --c-lang-bg:rgba(99,102,241,.08); --c-lang-text:#4f46e5;
+      --c-sains-bg:rgba(34,197,94,.07); --c-sains-text:#16a34a;
+      --c-sosial-bg:rgba(245,158,11,.07); --c-sosial-text:#d97706;
+      --c-tvet-bg:rgba(239,68,68,.06); --c-tvet-text:#dc2626;
+      --c-pp-bg:rgba(20,184,166,.07); --c-pp-text:#0f766e;
+    }
+    *{box-sizing:border-box;margin:0;padding:0;}
+    html,body{height:100%;font-family:'Geist',system-ui,sans-serif;background:var(--bg0);color:var(--text);-webkit-font-smoothing:antialiased;overflow:hidden;}
+    .bg{position:fixed;inset:0;z-index:0;pointer-events:none;background:radial-gradient(ellipse 800px 600px at 10% 15%,var(--bg-r1),transparent 60%),radial-gradient(ellipse 600px 500px at 90% 25%,var(--bg-r2),transparent 55%),var(--bg0);}
+    .grid{position:fixed;inset:0;z-index:0;pointer-events:none;background-image:linear-gradient(to right,var(--gridLine) 1px,transparent 1px),linear-gradient(to bottom,var(--gridLine) 1px,transparent 1px);background-size:60px 60px;}
+    /* NAV */
+    .topbar{position:fixed;top:0;left:0;right:0;height:var(--navH);z-index:100;display:flex;align-items:center;justify-content:space-between;padding:0 20px;background:var(--navBg);border-bottom:1px solid var(--navBorder);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);}
+    .brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--text);}
+    .mark{width:30px;height:30px;border-radius:9px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:13px;color:#fff;font-weight:700;box-shadow:0 0 16px var(--accent-glow);}
+    .brand-text{display:flex;flex-direction:column;gap:1px;}
+    .brand-name{font-size:13px;font-weight:700;letter-spacing:-.01em;line-height:1;}
+    .brand-sub{font-size:10px;color:var(--muted);font-family:'Geist Mono',monospace;letter-spacing:.06em;text-transform:uppercase;line-height:1;}
+    .nav-breadcrumb{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--muted);}
+    .bc-sep{color:var(--muted2);} .bc-current{color:var(--text);font-weight:600;}
+    .nav-right{display:flex;align-items:center;gap:8px;}
+    .nav-btn{display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--surface);color:var(--muted);font-size:12px;font-family:'Geist',sans-serif;cursor:pointer;text-decoration:none;transition:all var(--dur) var(--ease);}
+    .nav-btn:hover{background:var(--surface-hover);color:var(--text);border-color:var(--border-strong);}
+    .hamburger{width:34px;height:34px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--surface);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;transition:all var(--dur) var(--ease);position:relative;z-index:200;}
+    .hamburger:hover{background:var(--surface-hover);border-color:var(--border-strong);}
+    .hamburger span{display:block;width:14px;height:1.5px;background:var(--text);border-radius:2px;transition:all 0.35s var(--ease2);}
+    .hamburger.open span:nth-child(1){transform:translateY(5.5px) rotate(45deg);}
+    .hamburger.open span:nth-child(2){opacity:0;transform:scaleX(0);}
+    .hamburger.open span:nth-child(3){transform:translateY(-5.5px) rotate(-45deg);}
+    /* DRAWER */
+    .drawer-overlay{position:fixed;inset:0;z-index:150;background:rgba(0,0,0,.38);backdrop-filter:blur(4px);opacity:0;pointer-events:none;transition:opacity .35s var(--ease);}
+    .drawer-overlay.open{opacity:1;pointer-events:auto;}
+    .drawer{position:fixed;top:0;right:0;bottom:0;width:290px;z-index:160;background:var(--navBg);backdrop-filter:blur(32px);-webkit-backdrop-filter:blur(32px);border-left:1px solid var(--navBorder);transform:translateX(100%);transition:transform .45s var(--ease2);display:flex;flex-direction:column;}
+    .drawer.open{transform:translateX(0);}
+    .drawer-head{height:var(--navH);display:flex;align-items:center;padding:0 18px;border-bottom:1px solid var(--navBorder);font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-family:'Geist Mono',monospace;}
+    .drawer-body{flex:1;padding:12px;overflow-y:auto;display:flex;flex-direction:column;gap:3px;}
+    .drawer-link{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:var(--radius-sm);color:var(--text);text-decoration:none;font-size:13px;font-weight:500;border:1px solid transparent;transition:all .18s var(--ease);cursor:pointer;}
+    .drawer-link:hover{background:var(--surface-hover);border-color:var(--border);}
+    .dl-icon{width:28px;height:28px;border-radius:7px;border:1px solid var(--border);background:var(--surface);display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;}
+    .dl-meta .dl-title{font-size:13px;font-weight:500;}
+    .dl-meta .dl-sub{font-size:10.5px;color:var(--muted);margin-top:1px;}
+    .drawer-sep{height:1px;background:var(--border);margin:6px 0;}
+    .drawer-footer{padding:14px;border-top:1px solid var(--navBorder);}
+    .drawer-version{font-size:10px;color:var(--muted2);text-align:center;font-family:'Geist Mono',monospace;}
+    /* SHELL */
+    .shell{position:relative;z-index:1;display:grid;grid-template-columns:var(--leftW) 1fr;height:100vh;padding-top:var(--navH);}
+    /* LEFT */
+    .left{background:var(--bg1);border-right:1px solid var(--border);display:flex;flex-direction:column;height:100%;overflow:hidden;}
+    .left-top{padding:20px 16px 14px;flex-shrink:0;border-bottom:1px solid var(--border);}
+    .left-tag{display:inline-flex;align-items:center;gap:5px;background:var(--accent-glow);border:1px solid var(--accent-border);border-radius:100px;padding:3px 9px;font-size:9.5px;font-weight:600;letter-spacing:.1em;color:var(--accent-text);text-transform:uppercase;font-family:'Geist Mono',monospace;margin-bottom:10px;}
+    .left-tag-dot{width:4px;height:4px;border-radius:50%;background:var(--accent);}
+    .left-title{font-size:21px;font-weight:800;letter-spacing:-.04em;line-height:1.1;margin-bottom:5px;}
+    .left-desc{font-size:11.5px;color:var(--muted);line-height:1.5;margin-bottom:12px;}
+    .search-wrap{position:relative;}
+    .search-ico{position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:12px;color:var(--muted2);pointer-events:none;}
+    .search-input{width:100%;padding:8px 10px 8px 30px;background:var(--input-bg);border:1px solid var(--input-border);border-radius:var(--radius-sm);color:var(--text);font-family:'Geist',sans-serif;font-size:12px;outline:none;transition:border-color var(--dur);}
+    .search-input::placeholder{color:var(--muted2);}
+    .search-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--input-focus);}
+    .sort-hint{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--muted2);font-family:'Geist Mono',monospace;letter-spacing:.04em;margin-top:8px;}
+    .sort-hint-dot{width:5px;height:5px;border-radius:50%;background:var(--muted2);}
+    /* ACCORDION */
+    .bidang-list{flex:1;overflow-y:auto;padding:10px;display:flex;flex-direction:column;gap:4px;user-select:none;}
+    .bidang-list::-webkit-scrollbar{width:4px;}
+    .bidang-list::-webkit-scrollbar-thumb{background:var(--border-strong);border-radius:4px;}
+    .bidang{border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;transition:border-color var(--dur);}
+    .bidang.open{border-color:var(--border-strong);}
+    .bhead{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 12px;cursor:pointer;border:0;background:transparent;color:var(--text);width:100%;text-align:left;transition:background var(--dur);}
+    .bhead:hover{background:var(--surface);}
+    .bhead-left{display:flex;align-items:center;gap:9px;}
+    .bicon{width:24px;height:24px;border-radius:6px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:12px;border:1px solid;}
+    .bicon.lang{background:var(--c-lang-bg);border-color:var(--c-lang-border);}
+    .bicon.sains{background:var(--c-sains-bg);border-color:var(--c-sains-border);}
+    .bicon.sosial{background:var(--c-sosial-bg);border-color:var(--c-sosial-border);}
+    .bicon.tvet{background:var(--c-tvet-bg);border-color:var(--c-tvet-border);}
+    .bicon.pp{background:var(--c-pp-bg);border-color:var(--c-pp-border);}
+    .bhead-label{font-size:12.5px;font-weight:600;}
+    .bhead-right{display:flex;align-items:center;gap:6px;flex-shrink:0;}
+    .bcount{font-size:10px;font-family:'Geist Mono',monospace;background:var(--surface);border:1px solid var(--border);border-radius:100px;padding:1px 7px;color:var(--muted);}
+    .barrow{width:20px;height:20px;display:flex;align-items:center;justify-content:center;color:var(--muted2);font-size:10px;transition:transform .28s var(--ease2);}
+    .bidang.open .barrow{transform:rotate(180deg);}
+    .bbody{max-height:0;overflow:hidden;transition:max-height .32s var(--ease2);}
+    .binner{padding:4px 10px 10px;display:flex;flex-direction:column;gap:3px;}
+    .subj{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:var(--radius-sm);border:1px solid transparent;cursor:pointer;transition:all .18s var(--ease);background:transparent;text-decoration:none;color:var(--text);}
+    .subj:hover{background:var(--surface-hover);border-color:var(--border);}
+    .subj.active{background:var(--accent-glow);border-color:var(--accent-border);color:var(--accent-text);}
+    .subj-dot{width:5px;height:5px;border-radius:50%;background:var(--muted2);flex-shrink:0;transition:background .18s;}
+    .subj.active .subj-dot{background:var(--accent);}
+    .subj-name{font-size:12px;font-weight:500;}
+    .subj.hidden{display:none;}
+    /* DRAG */
+    .drag-handle{width:20px;height:20px;flex-shrink:0;display:flex;align-items:center;justify-content:center;cursor:grab;border-radius:4px;color:var(--muted2);font-size:12px;transition:color .15s,background .15s;margin-right:2px;}
+    .drag-handle:hover{color:var(--muted);background:var(--surface-hover);}
+    .drag-handle:active{cursor:grabbing;}
+    .bidang.dragging{opacity:.35;}
+    .bidang.drag-over-above{box-shadow:0 -2px 0 var(--accent);}
+    .bidang.drag-over-below{box-shadow:0 2px 0 var(--accent);}
+    /* RIGHT */
+    .right{display:flex;flex-direction:column;height:100%;overflow:hidden;background:var(--bg0);}
+    .right-head{padding:20px 24px 16px;flex-shrink:0;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;justify-content:space-between;gap:16px;}
+    .rh-kicker{display:inline-flex;align-items:center;gap:5px;background:var(--accent-glow);border:1px solid var(--accent-border);border-radius:100px;padding:3px 9px;margin-bottom:8px;font-size:9.5px;font-weight:600;letter-spacing:.1em;color:var(--accent-text);text-transform:uppercase;font-family:'Geist Mono',monospace;}
+    .rh-kicker-dot{width:4px;height:4px;border-radius:50%;background:var(--accent);}
+    .right-title{font-size:22px;font-weight:800;letter-spacing:-.04em;line-height:1.1;transition:opacity .25s;}
+    .right-sub{font-size:12px;color:var(--muted);margin-top:4px;}
+    .active-badge{display:inline-flex;align-items:center;gap:6px;flex-shrink:0;padding:7px 13px;border-radius:100px;background:var(--accent-glow);border:1px solid var(--accent-border);font-size:12px;font-weight:700;color:var(--accent-text);font-family:'Geist Mono',monospace;letter-spacing:.02em;white-space:nowrap;}
+    .badge-dot{width:6px;height:6px;border-radius:50%;background:var(--accent);}
+    /* HOME PANEL */
+    .home-panel{flex:1;overflow-y:auto;padding:20px 24px;display:flex;flex-direction:column;gap:20px;}
+    .home-panel::-webkit-scrollbar{width:5px;}
+    .home-panel::-webkit-scrollbar-thumb{background:var(--border-strong);border-radius:4px;}
+    .home-panel.hidden{display:none;}
+    .home-stat-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;}
+    .hstat{background:var(--bg1);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;display:flex;flex-direction:column;gap:6px;position:relative;overflow:hidden;transition:border-color var(--dur);}
+    .hstat:hover{border-color:var(--border-strong);}
+    .hstat::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;border-radius:2px 2px 0 0;}
+    .hstat.blue::before{background:#3b82f6;} .hstat.green::before{background:#22c55e;} .hstat.amber::before{background:#f59e0b;} .hstat.purple::before{background:var(--accent);}
+    .hstat-label{font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-family:'Geist Mono',monospace;}
+    .hstat-val{font-size:26px;font-weight:800;letter-spacing:-.04em;font-variant-numeric:tabular-nums;}
+    .hstat.blue .hstat-val{color:#3b82f6;} .hstat.green .hstat-val{color:#22c55e;} .hstat.amber .hstat-val{color:#f59e0b;} .hstat.purple .hstat-val{color:var(--accent-text);}
+    .hstat-sub{font-size:11px;color:var(--muted);}
+    /* COUNTDOWN */
+    .home-cd-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;}
+    .cd-card{background:var(--bg1);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;display:flex;flex-direction:column;gap:10px;transition:border-color var(--dur);}
+    .cd-card:hover{border-color:var(--border-strong);}
+    .cd-top{display:flex;align-items:center;justify-content:space-between;}
+    .cd-name-row{display:flex;align-items:center;gap:8px;}
+    .cd-icon{width:28px;height:28px;border-radius:7px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:13px;border:1px solid var(--border);background:var(--surface);}
+    .cd-name{font-size:13px;font-weight:700;}
+    .cd-date-tag{font-size:10px;font-family:'Geist Mono',monospace;font-weight:600;padding:2px 8px;border-radius:100px;border:1px solid var(--border);background:var(--surface);color:var(--muted);}
+    .cd-digits{display:flex;align-items:flex-end;gap:6px;}
+    .cd-unit{display:flex;flex-direction:column;align-items:center;gap:2px;flex:1;}
+    .cd-num{font-size:clamp(18px,2.5vw,26px);font-weight:800;letter-spacing:-.04em;font-variant-numeric:tabular-nums;line-height:1;background:var(--surface);border:1px solid var(--border);border-radius:6px;width:100%;text-align:center;padding:8px 4px;transition:color .3s;}
+    .cd-unit-label{font-size:9px;font-family:'Geist Mono',monospace;color:var(--muted2);letter-spacing:.06em;text-transform:uppercase;}
+    .cd-card.spm .cd-num{color:#818cf8;} .cd-card.stpm .cd-num{color:#4ade80;} .cd-card.ppsa .cd-num{color:#fbbf24;} .cd-card.pasa .cd-num{color:#f87171;}
+    html[data-theme="light"] .cd-card.spm .cd-num{color:#4f46e5;} html[data-theme="light"] .cd-card.stpm .cd-num{color:#16a34a;} html[data-theme="light"] .cd-card.ppsa .cd-num{color:#d97706;} html[data-theme="light"] .cd-card.pasa .cd-num{color:#dc2626;}
+    .cd-progress{height:3px;background:var(--border);border-radius:2px;overflow:hidden;}
+    .cd-bar{height:100%;border-radius:2px;transition:width 1s linear;}
+    .cd-card.spm .cd-bar{background:#6366f1;} .cd-card.stpm .cd-bar{background:#22c55e;} .cd-card.ppsa .cd-bar{background:#f59e0b;} .cd-card.pasa .cd-bar{background:#ef4444;}
+    /* STD / PP PANELS */
+    .std-panel{display:flex;flex-direction:column;height:100%;}
+    .std-panel.hidden{display:none;}
+    .pp-panel{display:none;flex-direction:column;height:100%;}
+    .pp-panel.active{display:flex;}
+    .module-area{flex:1;overflow-y:auto;padding:20px 24px;}
+    .module-area::-webkit-scrollbar{width:5px;}
+    .module-area::-webkit-scrollbar-thumb{background:var(--border-strong);border-radius:4px;}
+    .module-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;}
+    .mcard{background:var(--bg1);border:1px solid var(--border);border-radius:var(--radius);padding:16px 16px 14px;cursor:pointer;position:relative;overflow:hidden;transition:all .2s var(--ease);display:flex;flex-direction:column;gap:10px;}
+    .mcard:hover{border-color:var(--border-strong);background:var(--bg2);transform:translateY(-2px);box-shadow:0 12px 36px rgba(0,0,0,.18);}
+    .mcard::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;border-radius:2px 2px 0 0;background:var(--accent);opacity:0;transition:opacity .2s;}
+    .mcard:hover::before{opacity:.7;}
+    .mcard-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;}
+    .mcard-icon{width:32px;height:32px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--surface);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;transition:all .2s var(--ease);}
+    .mcard:hover .mcard-icon{background:var(--accent-glow);border-color:var(--accent-border);}
+    .mcard-arrow{font-size:11px;color:var(--muted2);transition:transform .2s var(--ease),color .2s;}
+    .mcard:hover .mcard-arrow{transform:translate(2px,-2px);color:var(--accent-text);}
+    .mcard-title{font-size:13px;font-weight:700;margin-bottom:4px;}
+    .mcard-sub{font-size:11px;color:var(--muted);line-height:1.5;}
+    .mcard-tag{display:inline-flex;align-items:center;gap:4px;margin-top:8px;font-size:9.5px;font-family:'Geist Mono',monospace;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted2);background:var(--surface);border:1px solid var(--border);padding:2px 7px;border-radius:4px;transition:all .2s;}
+    .mcard:hover .mcard-tag{color:var(--accent-text);background:var(--accent-glow);border-color:var(--accent-border);}
+    .status-strip{flex-shrink:0;padding:10px 24px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--bg1);}
+    .status-hint{font-size:11px;color:var(--muted2);font-family:'Geist Mono',monospace;}
+    .status-pills{display:flex;gap:6px;}
+    .s-pill{font-size:10px;font-family:'Geist Mono',monospace;font-weight:600;padding:3px 9px;border-radius:100px;border:1px solid var(--border);background:var(--surface);color:var(--muted);}
+    .s-pill.green{background:rgba(34,197,94,.08);border-color:rgba(34,197,94,.18);color:#4ade80;}
+    html[data-theme="light"] .s-pill.green{color:#16a34a;}
+    /* PP SECTION */
+    .pp-section-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;padding:20px 24px;overflow-y:auto;flex:1;}
+    .pp-section-grid::-webkit-scrollbar{width:5px;}
+    .pp-section-grid::-webkit-scrollbar-thumb{background:var(--border-strong);border-radius:4px;}
+    .pp-sec{background:var(--bg1);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;transition:border-color var(--dur);}
+    .pp-sec.open{border-color:var(--border-strong);}
+    .pp-sec-head{display:flex;align-items:center;gap:10px;padding:14px 16px;cursor:pointer;transition:background var(--dur);}
+    .pp-sec-head:hover{background:var(--surface);}
+    .pp-sec-num{width:26px;height:26px;border-radius:7px;flex-shrink:0;background:var(--c-pp-bg);border:1px solid var(--c-pp-border);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--c-pp-text);font-family:'Geist Mono',monospace;}
+    .pp-sec-title{font-size:12.5px;font-weight:700;flex:1;line-height:1.3;}
+    .pp-sec-arrow{font-size:10px;color:var(--muted2);flex-shrink:0;transition:transform .28s var(--ease2);}
+    .pp-sec.open .pp-sec-arrow{transform:rotate(180deg);}
+    .pp-sec-body{max-height:0;overflow:hidden;transition:max-height .32s var(--ease2);}
+    .pp-sec-inner{padding:4px 12px 12px;display:flex;flex-direction:column;gap:6px;border-top:1px solid var(--border);}
+    .pp-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--surface);cursor:pointer;text-decoration:none;color:var(--text);transition:all .18s var(--ease);font-size:12px;font-weight:500;}
+    .pp-item:hover{background:var(--surface-hover);border-color:var(--border-strong);}
+    .pp-item .pi-ico{font-size:13px;flex-shrink:0;}
+    .pp-item .pi-label{flex:1;line-height:1.35;}
+    .pp-item .pi-tag{font-size:9px;font-family:'Geist Mono',monospace;font-weight:600;padding:2px 6px;border-radius:4px;background:var(--c-pp-bg);color:var(--c-pp-text);border:1px solid var(--c-pp-border);flex-shrink:0;}
+    .pp-item .pi-tag.modal-tag{background:var(--accent-glow);color:var(--accent-text);border-color:var(--accent-border);}
+    .pp-item .pi-tag.gallery-tag{background:rgba(245,158,11,.10);color:#fbbf24;border-color:rgba(245,158,11,.22);}
+    html[data-theme="light"] .pp-item .pi-tag.gallery-tag{color:#d97706;}
+    /* MODAL */
+    .modal-overlay{position:fixed;inset:0;z-index:400;background:rgba(0,0,0,.52);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .3s var(--ease);}
+    .modal-overlay.open{opacity:1;pointer-events:auto;}
+    .modal-box{background:var(--bg1);border:1px solid var(--border-strong);border-radius:var(--radius-lg);width:min(480px,90vw);max-height:80vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 32px 80px rgba(0,0,0,.45);transform:translateY(16px) scale(.97);transition:transform .3s var(--ease2);}
+    .modal-overlay.open .modal-box{transform:translateY(0) scale(1);}
+    .modal-head{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border);flex-shrink:0;}
+    .modal-title-row{display:flex;align-items:center;gap:10px;}
+    .modal-icon{width:30px;height:30px;border-radius:8px;background:var(--accent-glow);border:1px solid var(--accent-border);display:flex;align-items:center;justify-content:center;font-size:13px;}
+    .modal-title{font-size:14px;font-weight:700;}
+    .modal-close{width:28px;height:28px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--muted);cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;transition:all .18s;}
+    .modal-close:hover{background:var(--surface-hover);color:var(--text);}
+    .modal-body{padding:16px 20px;overflow-y:auto;flex:1;}
+    .modal-list{display:flex;flex-direction:column;gap:6px;}
+    .modal-row{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--surface);font-size:13px;}
+    .modal-row-num{width:22px;height:22px;border-radius:5px;flex-shrink:0;background:var(--accent-glow);border:1px solid var(--accent-border);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--accent-text);font-family:'Geist Mono',monospace;}
+    .modal-row-text{flex:1;color:var(--text);font-weight:500;}
+    .modal-empty{font-size:13px;color:var(--muted);text-align:center;padding:24px 0;}
+    /* TOAST */
+    .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(60px);z-index:500;display:flex;align-items:center;gap:8px;padding:10px 16px;border-radius:var(--radius);background:var(--bg1);border:1px solid var(--border-strong);box-shadow:0 16px 48px rgba(0,0,0,.35);font-size:12.5px;color:var(--text);font-weight:500;opacity:0;pointer-events:none;transition:all .4s var(--ease2);white-space:nowrap;}
+    .toast.show{opacity:1;transform:translateX(-50%) translateY(0);pointer-events:auto;}
+    .toast-dot{width:7px;height:7px;border-radius:50%;background:var(--accent);flex-shrink:0;}
+    .page-trans{position:fixed;inset:0;z-index:999;pointer-events:none;transform:translateY(-100%);background:var(--bg0);transition:transform .5s var(--ease2);}
+    .page-trans.run{transform:translateY(0);pointer-events:auto;}
+    @media(max-width:900px){.home-stat-grid{grid-template-columns:repeat(2,1fr);}}
+    @media(max-width:640px){.home-cd-grid{grid-template-columns:1fr;}}
+    @media(max-width:860px){:root{--leftW:240px;}.module-grid{grid-template-columns:repeat(2,minmax(0,1fr));}}
+    @media(max-width:640px){:root{--leftW:100%;}.shell{grid-template-columns:1fr;}html,body{overflow:auto;}.left{height:auto;border-right:0;border-bottom:1px solid var(--border);}.bidang-list{max-height:280px;}.right{height:auto;}.module-grid{grid-template-columns:repeat(2,minmax(0,1fr));}}
+  </style>
 </head>
 <body>
+  <div class="bg"></div>
+  <div class="grid"></div>
+  <div class="page-trans" id="pageTrans"></div>
 
-<div class="toast" id="toast"></div>
-
-<!-- Upload progress -->
-<div class="upload-progress" id="uploadProgress">
-  <div class="up-title" id="upTitle">Uploading...</div>
-  <div class="up-bar-track"><div class="up-bar-fill" id="upBar" style="width:0%"></div></div>
-  <div class="up-label" id="upLabel"></div>
-</div>
-
-<!-- LOGIN -->
-<div class="login-overlay" id="loginOverlay">
-  <div class="login-box">
-    <div class="login-hdr">
-      <div class="login-ico"><svg viewBox="0 0 16 16" fill="none" width="12" height="12"><path d="M8 1L15 5v6L8 15 1 11V5L8 1Z" fill="rgba(255,255,255,.95)"/></svg></div>
-      <div><div class="login-title">Portal Akademik — SMKG</div><div class="login-sub2">Panel Management & File Access</div></div>
-    </div>
-    <div class="login-body">
-      <div class="login-desc">Sign in with your school Google account to browse and upload files to specific Drive folders.</div>
-      <button class="google-btn" id="loginBtn">
-        <svg width="16" height="16" viewBox="0 0 18 18" fill="none">
-          <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 01-1.796 2.716v2.259h2.908C16.658 14.017 17.64 11.71 17.64 9.2z" fill="#4285F4"/>
-          <path d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 009 18z" fill="#34A853"/>
-          <path d="M3.964 10.706A5.41 5.41 0 013.682 9c0-.593.102-1.17.282-1.706V4.962H.957A8.996 8.996 0 000 9c0 1.452.348 2.827.957 4.038l3.007-2.332z" fill="#FBBC05"/>
-          <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 00.957 4.962L3.964 7.294C4.672 5.163 6.656 3.58 9 3.58z" fill="#EA4335"/>
-        </svg>
-        Continue with Google
-      </button>
-    </div>
-    <div class="login-footer">
-      <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><rect x="1" y="4" width="8" height="6" rx="1" stroke="currentColor" stroke-width="1"/><path d="M3 4V3a2 2 0 014 0v1" stroke="currentColor" stroke-width="1"/></svg>
-      Only @smkg.edu.my accounts allowed
-    </div>
-  </div>
-</div>
-
-<div class="app">
-  <!-- TOPBAR -->
   <header class="topbar">
-    <div class="tb-left">
-      <div class="app-icon"><svg viewBox="0 0 16 16" fill="none"><path d="M8 1L15 5v6L8 15 1 11V5L8 1Z" fill="rgba(255,255,255,.95)"/></svg></div>
-      <span class="app-name">SMKG</span><span class="app-sub">/ Akademik</span>
-      <div class="tb-div"></div>
-      <div class="breadcrumb" id="breadcrumb">
-        <span class="bc-crumb">Panel</span>
-        <span class="sep">›</span>
-        <span class="bc-crumb active" id="bcSubject">—</span>
-        <span class="sep">›</span>
-        <span class="bc-crumb active" id="bcModule">—</span>
+    <a class="brand" href="index.html" data-trans="true">
+      <div class="mark">◆</div>
+      <div class="brand-text">
+        <div class="brand-name">Dashboard SMKG</div>
+        <div class="brand-sub">Kurikulum · Akademik</div>
       </div>
-    </div>
-    <div class="tb-right">
-      <button class="tb-btn" id="themeBtn"><span id="themeLbl">Dark</span></button>
-      <div class="tb-div"></div>
-      <div class="user-badge" id="userBadge" style="display:none">
-        <div class="avatar" id="userAv">T</div>
-        <span id="userName">Teacher</span>
-      </div>
-      <button class="tb-btn" id="logoutBtn" style="display:none" onclick="logout()">Sign Out</button>
-      <a class="tb-btn" href="index.html">← Back</a>
+    </a>
+    <nav class="nav-breadcrumb">
+      <span>SMKG</span><span class="bc-sep">›</span><span class="bc-current">Kurikulum</span>
+    </nav>
+    <div class="nav-right">
+      <button class="nav-btn" id="themeToggle"><span id="themeIcon">☾</span><span id="themeLabel">Dark</span></button>
+      <a class="nav-btn" href="index.html" data-trans="true">← Kembali</a>
+      <div class="hamburger" id="hamburger"><span></span><span></span><span></span></div>
     </div>
   </header>
 
-  <!-- SIDEBAR -->
-  <aside class="sidebar">
-    <div class="sb-search">
-      <svg width="12" height="12" viewBox="0 0 12 12" fill="none" style="color:var(--text-3);flex-shrink:0"><circle cx="5" cy="5" r="3.5" stroke="currentColor" stroke-width="1.2"/><path d="M8 8l2 2" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
-      <input type="text" id="sbSearch" placeholder="Search subjects..." oninput="filterSidebar(this.value)">
+  <div class="drawer-overlay" id="drawerOverlay"></div>
+  <aside class="drawer" id="drawer">
+    <div class="drawer-head">Navigation</div>
+    <div class="drawer-body">
+      <a class="drawer-link" href="index.html" data-trans="true"><div class="dl-icon">🏠</div><div class="dl-meta"><div class="dl-title">Dashboard</div><div class="dl-sub">Halaman utama</div></div></a>
+      <a class="drawer-link" href="akademik.html"><div class="dl-icon">📚</div><div class="dl-meta"><div class="dl-title">Kurikulum</div><div class="dl-sub">Portal akses semasa</div></div></a>
+      <div class="drawer-sep"></div>
+      <a class="drawer-link" href="#"><div class="dl-icon">🏫</div><div class="dl-meta"><div class="dl-title">HEM</div><div class="dl-sub">Hal Ehwal Murid</div></div></a>
+      <a class="drawer-link" href="#"><div class="dl-icon">🏆</div><div class="dl-meta"><div class="dl-title">Ko-Kurikulum</div><div class="dl-sub">Aktiviti & persatuan</div></div></a>
+      <a class="drawer-link" href="#"><div class="dl-icon">💬</div><div class="dl-meta"><div class="dl-title">Kaunseling</div><div class="dl-sub">Bimbingan & sokongan</div></div></a>
     </div>
-    <div class="sb-scroll" id="sbScroll"></div>
+    <div class="drawer-footer"><div class="drawer-version">SMKG · Kurikulum · 2026</div></div>
   </aside>
 
-  <!-- MAIN -->
-  <main class="main" style="position:relative">
-
-    <!-- ── WELCOME PANEL ── shown on load, hidden when a subject is clicked -->
-    <div class="welcome-panel" id="welcomePanel">
-      <div>
-        <div class="wp-greeting">Portal Akademik — SMKG</div>
-        <div class="wp-title">Selamat Datang</div>
-        <div class="wp-sub">Pilih mata pelajaran di sebelah kiri untuk mula.</div>
-      </div>
-      <div class="wp-cards">
-        <div class="wp-card">
-          <div class="wp-card-label">Jumlah Pelajar</div>
-          <div class="wp-card-value">1,240</div>
-          <div class="wp-card-note">Sesi <strong>2025/2026</strong></div>
+  <div class="shell">
+    <aside class="left">
+      <div class="left-top">
+        <div class="left-tag"><span class="left-tag-dot"></span>Kurikulum</div>
+        <div class="left-title">Group Access<br>Portal</div>
+        <div class="left-desc">Pilih mata pelajaran, kemudian klik modul untuk buka folder Drive.</div>
+        <div class="search-wrap">
+          <span class="search-ico">🔍</span>
+          <input class="search-input" id="searchInput" type="text" placeholder="Cari mata pelajaran…" autocomplete="off" />
         </div>
-        <div class="wp-card">
-          <div class="wp-card-label">Sesi Pagi</div>
-          <div class="wp-card-value">728</div>
-          <div class="wp-card-note">Tingkatan <strong>1 – 3 &amp; 6</strong></div>
+        <div class="sort-hint"><span class="sort-hint-dot"></span>Seret ⠿ untuk susun semula</div>
+      </div>
+      <div class="bidang-list" id="bidangList">
+
+        <div class="bidang" data-bidang="bahasa">
+          <button class="bhead" type="button">
+            <div class="bhead-left"><div class="drag-handle" aria-label="Seret">⠿</div><div class="bicon lang">🗣</div><span class="bhead-label">Bidang Bahasa</span></div>
+            <div class="bhead-right"><span class="bcount">5</span><span class="barrow">▾</span></div>
+          </button>
+          <div class="bbody"><div class="binner">
+            <a class="subj" href="#" data-subject="bm"><span class="subj-dot"></span><span class="subj-name">Bahasa Melayu</span></a>
+            <a class="subj" href="#" data-subject="bi"><span class="subj-dot"></span><span class="subj-name">Bahasa Inggeris</span></a>
+            <a class="subj" href="#" data-subject="ba"><span class="subj-dot"></span><span class="subj-name">Bahasa Arab</span></a>
+            <a class="subj" href="#" data-subject="km"><span class="subj-dot"></span><span class="subj-name">Kesusteraan Melayu</span></a>
+            <a class="subj" href="#" data-subject="bkd"><span class="subj-dot"></span><span class="subj-name">BKD</span></a>
+          </div></div>
         </div>
-        <div class="wp-card">
-          <div class="wp-card-label">Sesi Petang</div>
-          <div class="wp-card-value">512</div>
-          <div class="wp-card-note">Tingkatan <strong>4 – 5</strong></div>
+
+        <div class="bidang" data-bidang="sains">
+          <button class="bhead" type="button">
+            <div class="bhead-left"><div class="drag-handle" aria-label="Seret">⠿</div><div class="bicon sains">🔬</div><span class="bhead-label">Sains Matematik</span></div>
+            <div class="bhead-right"><span class="bcount">6</span><span class="barrow">▾</span></div>
+          </button>
+          <div class="bbody"><div class="binner">
+            <a class="subj" href="#" data-subject="mt"><span class="subj-dot"></span><span class="subj-name">Matematik</span></a>
+            <a class="subj" href="#" data-subject="sc"><span class="subj-dot"></span><span class="subj-name">Sains</span></a>
+            <a class="subj" href="#" data-subject="bio"><span class="subj-dot"></span><span class="subj-name">Biologi</span></a>
+            <a class="subj" href="#" data-subject="fiz"><span class="subj-dot"></span><span class="subj-name">Fizik</span></a>
+            <a class="subj" href="#" data-subject="kim"><span class="subj-dot"></span><span class="subj-name">Kimia</span></a>
+            <a class="subj" href="#" data-subject="mt2"><span class="subj-dot"></span><span class="subj-name">Matematik Tambahan</span></a>
+          </div></div>
+        </div>
+
+        <div class="bidang" data-bidang="sosial">
+          <button class="bhead" type="button">
+            <div class="bhead-left"><div class="drag-handle" aria-label="Seret">⠿</div><div class="bicon sosial">🌐</div><span class="bhead-label">Sains Sosial</span></div>
+            <div class="bhead-right"><span class="bcount">7</span><span class="barrow">▾</span></div>
+          </button>
+          <div class="bbody"><div class="binner">
+            <a class="subj" href="#" data-subject="sej"><span class="subj-dot"></span><span class="subj-name">Sejarah</span></a>
+            <a class="subj" href="#" data-subject="geo"><span class="subj-dot"></span><span class="subj-name">Geografi</span></a>
+            <a class="subj" href="#" data-subject="pai"><span class="subj-dot"></span><span class="subj-name">Pendidikan Islam</span></a>
+            <a class="subj" href="#" data-subject="pm"><span class="subj-dot"></span><span class="subj-name">Pendidikan Moral</span></a>
+            <a class="subj" href="#" data-subject="psv"><span class="subj-dot"></span><span class="subj-name">Pendidikan Seni Visual</span></a>
+            <a class="subj" href="#" data-subject="pjpk"><span class="subj-dot"></span><span class="subj-name">PJPK</span></a>
+            <a class="subj" href="#" data-subject="ss"><span class="subj-dot"></span><span class="subj-name">Sains Sukan</span></a>
+          </div></div>
+        </div>
+
+        <div class="bidang" data-bidang="tvet">
+          <button class="bhead" type="button">
+            <div class="bhead-left"><div class="drag-handle" aria-label="Seret">⠿</div><div class="bicon tvet">⚙</div><span class="bhead-label">TVET</span></div>
+            <div class="bhead-right"><span class="bcount">7</span><span class="barrow">▾</span></div>
+          </button>
+          <div class="bbody"><div class="binner">
+            <a class="subj" href="#" data-subject="prt"><span class="subj-dot"></span><span class="subj-name">Pertanian</span></a>
+            <a class="subj" href="#" data-subject="per"><span class="subj-dot"></span><span class="subj-name">Perniagaan</span></a>
+            <a class="subj" href="#" data-subject="eko"><span class="subj-dot"></span><span class="subj-name">Ekonomi</span></a>
+            <a class="subj" href="#" data-subject="ak"><span class="subj-dot"></span><span class="subj-name">Asas Kelestarian</span></a>
+            <a class="subj" href="#" data-subject="kdp"><span class="subj-dot"></span><span class="subj-name">Katering dan Penyajian</span></a>
+            <a class="subj" href="#" data-subject="ldn"><span class="subj-dot"></span><span class="subj-name">Landskap dan Nursery</span></a>
+            <a class="subj" href="#" data-subject="rbt"><span class="subj-dot"></span><span class="subj-name">RBT</span></a>
+          </div></div>
+        </div>
+
+        <div class="bidang" data-bidang="pp">
+          <button class="bhead" type="button">
+            <div class="bhead-left"><div class="drag-handle" aria-label="Seret">⠿</div><div class="bicon pp">🌅</div><span class="bhead-label">Perdana Petang</span></div>
+            <div class="bhead-right"><span class="bcount">5</span><span class="barrow">▾</span></div>
+          </button>
+          <div class="bbody"><div class="binner">
+            <a class="subj" href="#" data-subject="pp"><span class="subj-dot"></span><span class="subj-name">Buka Portal Perdana Petang</span></a>
+          </div></div>
+        </div>
+
+      </div>
+    </aside>
+
+    <main class="right">
+
+      <!-- HOME PANEL -->
+      <div id="homePanel" style="display:flex;flex-direction:column;height:100%;">
+        <div class="right-head">
+          <div class="rh-left">
+            <div class="rh-kicker"><span class="rh-kicker-dot"></span>Gambaran Keseluruhan</div>
+            <div class="right-title">Selamat Datang</div>
+            <div class="right-sub">Pilih bidang di sebelah kiri untuk akses modul panitia</div>
+          </div>
+          <div class="active-badge" style="background:var(--surface);border-color:var(--border);color:var(--muted);">
+            <div class="badge-dot" style="background:var(--muted2)"></div>
+            <span style="font-family:'Geist Mono',monospace;font-size:10px;">SMKG 2026</span>
+          </div>
+        </div>
+        <div class="home-panel">
+          <div class="home-stat-grid">
+            <div class="hstat blue"><div class="hstat-label">Jumlah Pelajar</div><div class="hstat-val" id="hs-total">1,204</div><div class="hstat-sub">Enrolmen 2026</div></div>
+            <div class="hstat green"><div class="hstat-label">Sesi Pagi</div><div class="hstat-val" id="hs-pagi">786</div><div class="hstat-sub">Tingkatan 1 – 5</div></div>
+            <div class="hstat amber"><div class="hstat-label">Sesi Petang</div><div class="hstat-val" id="hs-petang">324</div><div class="hstat-sub">Perdana Petang</div></div>
+            <div class="hstat purple"><div class="hstat-label">Pra-U / T6</div><div class="hstat-val" id="hs-prau">94</div><div class="hstat-sub">Tingkatan 6 Atas &amp; Bawah</div></div>
+          </div>
+          <div class="home-cd-grid">
+            <div class="cd-card spm">
+              <div class="cd-top"><div class="cd-name-row"><div class="cd-icon">🎓</div><div class="cd-name">SPM 2025</div></div><div class="cd-date-tag" id="spm-date-tag">—</div></div>
+              <div class="cd-digits">
+                <div class="cd-unit"><div class="cd-num" id="spm-d">—</div><div class="cd-unit-label">Hari</div></div>
+                <div class="cd-unit"><div class="cd-num" id="spm-h">—</div><div class="cd-unit-label">Jam</div></div>
+                <div class="cd-unit"><div class="cd-num" id="spm-m">—</div><div class="cd-unit-label">Min</div></div>
+                <div class="cd-unit"><div class="cd-num" id="spm-s">—</div><div class="cd-unit-label">Saat</div></div>
+              </div>
+              <div class="cd-progress"><div class="cd-bar" id="spm-bar" style="width:0%"></div></div>
+            </div>
+            <div class="cd-card stpm">
+              <div class="cd-top"><div class="cd-name-row"><div class="cd-icon">🎓</div><div class="cd-name">STPM 2025</div></div><div class="cd-date-tag" id="stpm-date-tag">—</div></div>
+              <div class="cd-digits">
+                <div class="cd-unit"><div class="cd-num" id="stpm-d">—</div><div class="cd-unit-label">Hari</div></div>
+                <div class="cd-unit"><div class="cd-num" id="stpm-h">—</div><div class="cd-unit-label">Jam</div></div>
+                <div class="cd-unit"><div class="cd-num" id="stpm-m">—</div><div class="cd-unit-label">Min</div></div>
+                <div class="cd-unit"><div class="cd-num" id="stpm-s">—</div><div class="cd-unit-label">Saat</div></div>
+              </div>
+              <div class="cd-progress"><div class="cd-bar" id="stpm-bar" style="width:0%"></div></div>
+            </div>
+            <div class="cd-card ppsa">
+              <div class="cd-top"><div class="cd-name-row"><div class="cd-icon">📝</div><div class="cd-name">PPSA 2025</div></div><div class="cd-date-tag" id="ppsa-date-tag">—</div></div>
+              <div class="cd-digits">
+                <div class="cd-unit"><div class="cd-num" id="ppsa-d">—</div><div class="cd-unit-label">Hari</div></div>
+                <div class="cd-unit"><div class="cd-num" id="ppsa-h">—</div><div class="cd-unit-label">Jam</div></div>
+                <div class="cd-unit"><div class="cd-num" id="ppsa-m">—</div><div class="cd-unit-label">Min</div></div>
+                <div class="cd-unit"><div class="cd-num" id="ppsa-s">—</div><div class="cd-unit-label">Saat</div></div>
+              </div>
+              <div class="cd-progress"><div class="cd-bar" id="ppsa-bar" style="width:0%"></div></div>
+            </div>
+            <div class="cd-card pasa">
+              <div class="cd-top"><div class="cd-name-row"><div class="cd-icon">📝</div><div class="cd-name">PASA 2025</div></div><div class="cd-date-tag" id="pasa-date-tag">—</div></div>
+              <div class="cd-digits">
+                <div class="cd-unit"><div class="cd-num" id="pasa-d">—</div><div class="cd-unit-label">Hari</div></div>
+                <div class="cd-unit"><div class="cd-num" id="pasa-h">—</div><div class="cd-unit-label">Jam</div></div>
+                <div class="cd-unit"><div class="cd-num" id="pasa-m">—</div><div class="cd-unit-label">Min</div></div>
+                <div class="cd-unit"><div class="cd-num" id="pasa-s">—</div><div class="cd-unit-label">Saat</div></div>
+              </div>
+              <div class="cd-progress"><div class="cd-bar" id="pasa-bar" style="width:0%"></div></div>
+            </div>
+          </div>
         </div>
       </div>
-      <div class="wp-cd-row">
-        <div class="wp-cd spm">
-          <div class="wp-cd-label">SPM 2025</div>
-          <div class="wp-cd-name">Sijil Pelajaran Malaysia</div>
-          <div class="wp-cd-blocks" id="cdSPM"></div>
-          <div class="wp-cd-since" id="cdSPMnote"></div>
+
+      <!-- STD PANEL -->
+      <div class="std-panel hidden" id="stdPanel">
+        <div class="right-head">
+          <div class="rh-left">
+            <div class="rh-kicker"><span class="rh-kicker-dot"></span>Modul Panitia</div>
+            <div class="right-title" id="rightTitle">Bahasa Melayu</div>
+            <div class="right-sub">Pilih modul di bawah untuk buka folder Google Drive</div>
+          </div>
+          <div class="active-badge" id="activeBadge"><div class="badge-dot"></div><span id="badgeText">BM</span></div>
         </div>
-        <div class="wp-cd stpm">
-          <div class="wp-cd-label">STPM 2025</div>
-          <div class="wp-cd-name">Sijil Tinggi Persekolahan Malaysia</div>
-          <div class="wp-cd-blocks" id="cdSTPM"></div>
-          <div class="wp-cd-since" id="cdSTPMnote"></div>
+        <div class="module-area">
+          <div class="module-grid">
+            <div class="mcard" data-module="pengurusan"><div class="mcard-top"><div class="mcard-icon">🏛️</div><span class="mcard-arrow">↗</span></div><div class="mcard-body"><div class="mcard-title">Pengurusan Am</div><div class="mcard-sub">Dokumen asas, borang, SOP dan rujukan harian panitia.</div><div class="mcard-tag">Drive →</div></div></div>
+            <div class="mcard" data-module="pekeliling"><div class="mcard-top"><div class="mcard-icon">📌</div><span class="mcard-arrow">↗</span></div><div class="mcard-body"><div class="mcard-title">Pekeliling</div><div class="mcard-sub">Surat pekeliling, arahan rasmi &amp; garis panduan KPM.</div><div class="mcard-tag">Drive →</div></div></div>
+            <div class="mcard" data-module="mesyuarat"><div class="mcard-top"><div class="mcard-icon">🗓️</div><span class="mcard-arrow">↗</span></div><div class="mcard-body"><div class="mcard-title">Mesyuarat</div><div class="mcard-sub">Minit, agenda, tindakan susulan &amp; rekod keputusan.</div><div class="mcard-tag">Drive →</div></div></div>
+            <div class="mcard" data-module="pentaksiran"><div class="mcard-top"><div class="mcard-icon">📝</div><span class="mcard-arrow">↗</span></div><div class="mcard-body"><div class="mcard-title">Pentaksiran</div><div class="mcard-sub">Ujian, analisis, PBD, SPM/STPM &amp; eviden pentaksiran.</div><div class="mcard-tag">Drive →</div></div></div>
+            <div class="mcard" data-module="perancangan"><div class="mcard-top"><div class="mcard-icon">🎯</div><span class="mcard-arrow">↗</span></div><div class="mcard-body"><div class="mcard-title">Perancangan Strategik</div><div class="mcard-sub">Pelan tindakan, KPI, timeline &amp; pemantauan panitia.</div><div class="mcard-tag">Drive →</div></div></div>
+            <div class="mcard" data-module="kewangan"><div class="mcard-top"><div class="mcard-icon">💳</div><span class="mcard-arrow">↗</span></div><div class="mcard-body"><div class="mcard-title">Kewangan</div><div class="mcard-sub">Bajet, perolehan, laporan &amp; rekod kewangan panitia.</div><div class="mcard-tag">Drive →</div></div></div>
+          </div>
+        </div>
+        <div class="status-strip">
+          <span class="status-hint">← Pilih mata pelajaran · Klik modul → buka Drive</span>
+          <div class="status-pills">
+            <span class="s-pill green" id="activeLabel">—</span>
+            <span class="s-pill">6 modul</span>
+            <span class="s-pill">Google Drive</span>
+          </div>
         </div>
       </div>
-      <div class="wp-hint">← <strong>Klik mana-mana mata pelajaran</strong> di sebelah kiri untuk mula</div>
-    </div>
 
-    <!-- Module tabs -->
-    <div class="mod-tabs" id="modTabs">
-      <div class="m-tab active" data-mod="pengurusan">🏛️ Pengurusan Am</div>
-      <div class="m-tab" data-mod="pekeliling">📋 Pekeliling</div>
-      <div class="m-tab" data-mod="mesyuarat">📝 Minit Mesyuarat</div>
-      <div class="m-tab" data-mod="pentaksiran">📊 Pentaksiran</div>
-      <div class="m-tab" data-mod="perancangan">🗓️ Perancangan</div>
-      <div class="m-tab" data-mod="kewangan">💰 Kewangan</div>
-    </div>
-
-    <!-- Toolbar -->
-    <div class="toolbar" id="mainToolbar">
-      <!-- Upload — only shown when inside a subfolder -->
-      <label class="tool-btn primary" id="uploadBtn" style="cursor:pointer;display:none">
-        <svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M6 2v8M2 6h8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
-        Upload here
-        <input type="file" multiple style="display:none" id="fileInput" onchange="handleUpload(this)">
-      </label>
-
-      <!-- Delete — shown when files selected -->
-      <button class="tool-btn danger" id="deleteBtn" style="display:none" onclick="handleDelete()">
-        <svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M2 3h8M5 3V2h2v1M10 3L9 10H3L2 3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        Delete (<span id="selCount">0</span>)
-      </button>
-
-      <!-- Open in Drive — always available -->
-      <button class="tool-btn" id="openDriveBtn" onclick="openDrive()">
-        <svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M7 2h3v3M10 2L6 6M5 3H3a1 1 0 00-1 1v5a1 1 0 001 1h6a1 1 0 001-1V7" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        Open in Drive
-      </button>
-
-      <button class="tool-btn" id="refreshBtn" onclick="refreshView()">
-        <svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M10 6A4 4 0 112 6" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><path d="M10 3v3h-3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        Refresh
-      </button>
-
-      <div class="tool-spacer"></div>
-
-      <!-- File search — only visible in file view -->
-      <div class="tool-search" id="fileSearchBox" style="display:none">
-        <svg width="11" height="11" viewBox="0 0 12 12" fill="none" style="color:var(--text-3)"><circle cx="5" cy="5" r="3.5" stroke="currentColor" stroke-width="1.2"/><path d="M8 8l2 2" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
-        <input type="text" placeholder="Search files..." id="fileSearch" oninput="filterFiles(this.value)">
-      </div>
-    </div>
-
-    <!-- File/Folder Area -->
-    <div class="file-area" id="fileArea">
-
-      <!-- Location bar — shows current subfolder path -->
-      <div class="location-bar" id="locationBar">
-        <div class="loc-path" id="locPath"></div>
-        <button class="loc-back" onclick="goUpToFolderView()">
-          <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M6 2L2 5l4 3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          Back to folders
-        </button>
+      <!-- PP PANEL -->
+      <div class="pp-panel" id="ppPanel">
+        <div class="right-head">
+          <div class="rh-left">
+            <div class="rh-kicker" style="background:var(--c-pp-bg);border-color:var(--c-pp-border);color:var(--c-pp-text)"><span style="width:4px;height:4px;border-radius:50%;background:var(--c-pp-text);display:inline-block"></span> Perdana Petang</div>
+            <div class="right-title">Perdana Petang</div>
+            <div class="right-sub">Pilih bahagian di bawah untuk lihat senarai dan dokumen</div>
+          </div>
+          <div class="active-badge" style="background:var(--c-pp-bg);border-color:var(--c-pp-border);color:var(--c-pp-text)"><div class="badge-dot" style="background:var(--c-pp-text)"></div><span>PP</span></div>
+        </div>
+        <div class="pp-section-grid">
+          <div class="pp-sec">
+            <div class="pp-sec-head"><div class="pp-sec-num">1</div><div class="pp-sec-title">Maklumat Pentadbiran</div><span class="pp-sec-arrow">▾</span></div>
+            <div class="pp-sec-body"><div class="pp-sec-inner">
+              <a class="pp-item" href="#" data-pp-url="jadual-pdp"><span class="pi-ico">🗓️</span><span class="pi-label">Jadual PdP (Guru dan Kelas)</span><span class="pi-tag">Drive →</span></a>
+              <a class="pp-item" href="#" data-pp-url="takwim"><span class="pi-ico">📅</span><span class="pi-label">Takwim Pengurusan Perdana Petang</span><span class="pi-tag">Drive →</span></a>
+              <a class="pp-item" href="#" data-pp-url="jadual-bertugas"><span class="pi-ico">📋</span><span class="pi-label">Jadual Agihan Bertugas Mingguan</span><span class="pi-tag">Drive →</span></a>
+            </div></div>
+          </div>
+          <div class="pp-sec">
+            <div class="pp-sec-head"><div class="pp-sec-num">2</div><div class="pp-sec-title">Pengurusan Kurikulum</div><span class="pp-sec-arrow">▾</span></div>
+            <div class="pp-sec-body"><div class="pp-sec-inner">
+              <div class="pp-item" data-modal="penolong-ketua"><span class="pi-ico">👤</span><span class="pi-label">Penolong Ketua Panitia Mata Pelajaran</span><span class="pi-tag modal-tag">Senarai ↗</span></div>
+              <div class="pp-item" data-modal="senarai-matpel"><span class="pi-ico">📚</span><span class="pi-label">Senarai Mata Pelajaran</span><span class="pi-tag modal-tag">Senarai ↗</span></div>
+              <a class="pp-item" href="#" data-pp-url="program-akademik"><span class="pi-ico">🎯</span><span class="pi-label">Program Akademik</span><span class="pi-tag">Drive →</span></a>
+              <a class="pp-item" href="#" data-pp-url="headcount"><span class="pi-ico">📊</span><span class="pi-label">Headcount</span><span class="pi-tag">Drive →</span></a>
+            </div></div>
+          </div>
+          <div class="pp-sec">
+            <div class="pp-sec-head"><div class="pp-sec-num">3</div><div class="pp-sec-title">Pengurusan HEM</div><span class="pp-sec-arrow">▾</span></div>
+            <div class="pp-sec-body"><div class="pp-sec-inner">
+              <a class="pp-item" href="#" data-pp-url="disiplin"><span class="pi-ico">⚖️</span><span class="pi-label">Disiplin Pelajar</span><span class="pi-tag">Drive →</span></a>
+              <a class="pp-item" href="#" data-pp-url="kehadiran"><span class="pi-ico">📝</span><span class="pi-label">Kehadiran &amp; Rekod Pelajar</span><span class="pi-tag">Drive →</span></a>
+            </div></div>
+          </div>
+          <div class="pp-sec">
+            <div class="pp-sec-head"><div class="pp-sec-num">4</div><div class="pp-sec-title">Pengurusan Kokurikulum</div><span class="pp-sec-arrow">▾</span></div>
+            <div class="pp-sec-body"><div class="pp-sec-inner">
+              <a class="pp-item" href="#" data-pp-url="senarai-kelab"><span class="pi-ico">🏆</span><span class="pi-label">Senarai Kelab, Persatuan &amp; Unit Beruniform</span><span class="pi-tag">Drive →</span></a>
+              <a class="pp-item" href="#" data-pp-url="jadual-koku"><span class="pi-ico">📆</span><span class="pi-label">Jadual Aktiviti Kokurikulum</span><span class="pi-tag">Drive →</span></a>
+            </div></div>
+          </div>
+          <div class="pp-sec">
+            <div class="pp-sec-head"><div class="pp-sec-num">5</div><div class="pp-sec-title">Program dan Aktiviti</div><span class="pp-sec-arrow">▾</span></div>
+            <div class="pp-sec-body"><div class="pp-sec-inner">
+              <a class="pp-item" href="galleryp.html" data-trans="true"><span class="pi-ico">📄</span><span class="pi-label">Laporan Guru Bertugas Mingguan</span><span class="pi-tag gallery-tag">Gallery →</span></a>
+              <a class="pp-item" href="galleryp.html" data-trans="true"><span class="pi-ico">✨</span><span class="pi-label">Program Khas Perdana Petang</span><span class="pi-tag gallery-tag">Gallery →</span></a>
+              <a class="pp-item" href="galleryp.html" data-trans="true"><span class="pi-ico">📷</span><span class="pi-label">Aktiviti Semasa / Bergambar</span><span class="pi-tag gallery-tag">Gallery →</span></a>
+              <a class="pp-item" href="galleryp.html" data-trans="true"><span class="pi-ico">🎬</span><span class="pi-label">Video Program Sekolah</span><span class="pi-tag gallery-tag">Gallery →</span></a>
+            </div></div>
+          </div>
+        </div>
       </div>
 
-      <!-- Drop banner — shown in file view only -->
-      <label class="drop-banner hidden" id="dropBanner">
-        <div class="drop-ico"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 2v7M4 6l3-4 3 4M2 11h10" stroke="var(--accent)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-        <div class="drop-text"><strong>Drop files here</strong> to upload to this folder</div>
-        <div class="drop-hint" id="dropHint">Sign in to enable upload</div>
-        <input type="file" multiple onchange="handleUpload(this)">
-      </label>
-
-      <!-- Table -->
-      <div class="file-table-wrap">
-        <table>
-          <thead>
-            <tr id="tableHead">
-              <!-- injected by JS depending on mode -->
-            </tr>
-          </thead>
-          <tbody id="fileBody"></tbody>
-        </table>
+      <!-- MODAL -->
+      <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-box">
+          <div class="modal-head">
+            <div class="modal-title-row"><div class="modal-icon" id="modalIcon">👤</div><div class="modal-title" id="modalTitle">Senarai</div></div>
+            <button class="modal-close" id="modalClose">✕</button>
+          </div>
+          <div class="modal-body"><div class="modal-list" id="modalList"></div></div>
+        </div>
       </div>
-    </div>
 
-    <!-- Status bar -->
-    <div class="statusbar">
-      <div class="s-dot s-amber" id="statusDot"></div>
-      <span id="statusConn">Not signed in — browse only</span>
-      <span>|</span>
-      <span id="statusSel">—</span>
-      <span>|</span>
-      <span id="statusPath">—</span>
-      <div style="flex:1"></div>
-      <span id="statusCount"></span>
-    </div>
-  </main>
-</div>
+    </main>
+  </div>
 
-<!-- Google Identity Services -->
-<script src="https://accounts.google.com/gsi/client" async defer></script>
+  <div class="toast" id="toast"><div class="toast-dot"></div><span id="toastMsg">Dipilih</span></div>
 
-<script>
-/* ════════════════════════════════════════════════════
-   CONFIG — paste your Client ID here after setup
-   ════════════════════════════════════════════════════ */
-const GOOGLE_CLIENT_ID = "YOUR_CLIENT_ID_HERE.apps.googleusercontent.com";
-const DRIVE_SCOPE = "https://www.googleapis.com/auth/drive";
+  <script>
+    /* THEME */
+    (function(){
+      const root=document.documentElement,btn=document.getElementById('themeToggle'),ico=document.getElementById('themeIcon'),lbl=document.getElementById('themeLabel');
+      function set(t){root.setAttribute('data-theme',t);ico.textContent=t==='light'?'☀':'☾';lbl.textContent=t==='light'?'Light':'Dark';localStorage.setItem('smkg_theme',t);}
+      btn.onclick=()=>set(root.getAttribute('data-theme')==='light'?'dark':'light');
+      set(localStorage.getItem('smkg_theme')||'dark');
+    })();
 
-/* ════════════════════════════════════════════════════
-   SUBJECT + MODULE DATA
-   ════════════════════════════════════════════════════ */
-const SUBJECT_LABEL = {
-  bm:"Bahasa Melayu",bi:"Bahasa Inggeris",ba:"Bahasa Arab",km:"Kesusteraan Melayu",bkd:"BKD",
-  mt:"Matematik",sc:"Sains",bio:"Biologi",fiz:"Fizik",kim:"Kimia",mt2:"Matematik Tambahan",
-  sej:"Sejarah",geo:"Geografi",pai:"Pend. Agama Islam",pm:"Pend. Moral",
-  psv:"Pend. Seni Visual",pjpk:"PJPK",ss:"Sains Sukan",
-  prt:"Pertanian",per:"Perniagaan",eko:"Ekonomi",ak:"Asas Kelestarian",
-  kdp:"Katering & Penyajian",ldn:"Landskap & Nursery",rbt:"RBT"
-};
+    /* HAMBURGER */
+    const hbg=document.getElementById('hamburger'),drawer=document.getElementById('drawer'),overlay=document.getElementById('drawerOverlay');
+    function openDrawer(){hbg.classList.add('open');drawer.classList.add('open');overlay.classList.add('open');}
+    function closeDrawer(){hbg.classList.remove('open');drawer.classList.remove('open');overlay.classList.remove('open');}
+    hbg.onclick=()=>drawer.classList.contains('open')?closeDrawer():openDrawer();
+    overlay.onclick=closeDrawer;
 
-const GROUPS = [
-  {id:"g1",label:"Bidang Sains Matematik",subjects:["mt","sc","bio","fiz","kim","mt2"]},
-  {id:"g2",label:"Bidang Bahasa",subjects:["bm","bi","ba","km","bkd"]},
-  {id:"g3",label:"Bidang Sains Sosial",subjects:["sej","geo","pai","pm","psv","pjpk","ss"]},
-  {id:"g4",label:"TVET",subjects:["prt","per","eko","ak","kdp","ldn","rbt"]}
-];
-
-/* All module Drive folder URLs — folder ID extracted automatically */
-const LINKS = {
-  bm:{pengurusan:"https://drive.google.com/drive/folders/1_mfA8XdLD-jNh9iAY-TQI8cVX4Cb1c2r?usp=sharing",pekeliling:"https://drive.google.com/drive/folders/103iYyYK_NDMH4vlD7EMk9KwhTfLD_Obp?usp=sharing",mesyuarat:"https://drive.google.com/drive/folders/1cu6yTjH0dr2xYDzLe65aGhJxMhHhRtRH?usp=sharing",pentaksiran:"https://drive.google.com/drive/folders/1QUKk5DTCA2ndC-zj1Td9Ez7ssBQffRD0?usp=sharing",perancangan:"https://drive.google.com/drive/folders/19AwsEnKQlmcjwFmolZWPD6BxEiz-s99d?usp=sharing",kewangan:"https://drive.google.com/drive/folders/19AwsEnKQlmcjwFmolZWPD6BxEiz-s99d?usp=sharing"},
-  bi:{pengurusan:"https://drive.google.com/drive/folders/1Jrzf9XJkqUuITL6uqj85z_IjDKV9LHJR?usp=drive_link",pekeliling:"https://drive.google.com/drive/folders/1EBQ6Nv86eNIwu_icHrNo-Yex0RTFVMel?usp=drive_link",mesyuarat:"https://drive.google.com/drive/folders/1XR-HA_oAuI8or8ugF4klvc5ebN2-JJdy?usp=drive_link",pentaksiran:"https://drive.google.com/drive/folders/1MjaF8yTgDCViCoAYDdkA3xV-_ez2HITC?usp=drive_link",perancangan:"https://drive.google.com/drive/folders/1ixR7lbf0Y_5XEFhl4jhy0Eh4ioY5w0AJ?usp=drive_link",kewangan:"https://drive.google.com/drive/folders/1ChosK1WBFnxj7SPL4Gz6_ZDj8Ap6P-Bp?usp=drive_link"},
-  ba:{pengurusan:"https://drive.google.com/drive/folders/1JOgzqG1g0-p2vjfhW5bsej9FWOBnW0h9?usp=drive_link",pekeliling:"https://drive.google.com/drive/folders/1AcYNdagBZ3hcNF86LorS9zFMQrdLJZJD?usp=drive_link",mesyuarat:"https://drive.google.com/drive/folders/1EXBic7wE77d6B39vAV5TCOCc6x0vo2hL?usp=drive_link",pentaksiran:"https://drive.google.com/drive/folders/1Ns8lr2lSoKLsih6ghzvG-PGkm1cwL0gd?usp=drive_link",perancangan:"https://drive.google.com/drive/folders/1BQm8Dp-Z51eeB-KZn1KOlcMXJi1zPV1X?usp=drive_link",kewangan:"https://drive.google.com/drive/folders/1_5USgbdVxFs1kYx3JhXF4isgKMhQz4OC?usp=drive_link"},
-  km:{pengurusan:"https://drive.google.com/drive/folders/1t20DcE4jbZy_pxcCtmD9yL2KVYqFl3tV?usp=drive_link",pekeliling:"https://drive.google.com/drive/folders/1jI3wDyqS6JDzGOZDKSsZdn44n9eyq663?usp=drive_link",mesyuarat:"https://drive.google.com/drive/folders/1ApIJltOXhWFY417iWnR8ZsgIwLpCkhew?usp=drive_link",pentaksiran:"https://drive.google.com/drive/folders/1xBPqe8QbnIpZz0cSVmv2iplHNiSb5WJt?usp=drive_link",perancangan:"https://drive.google.com/drive/folders/1FzcU2SsNaEe-fQ_lmHnTpwfL44cLf4iF?usp=drive_link",kewangan:"https://drive.google.com/drive/folders/1hrHY1dR1es2jYS1JZhfr9PZjZI_NY24t?usp=drive_link"},
-  bkd:{pengurusan:"https://drive.google.com/drive/folders/1kS4aapz5aNwRTghC5NhFsyWMxvfna2Xx?usp=drive_link",pekeliling:"https://drive.google.com/drive/folders/19pWW5GhLez80Lh2Ae6Ov42s8M9kMguRg?usp=drive_link",mesyuarat:"https://drive.google.com/drive/folders/1hUUuUFf6a7fIVL-Xpp4bKi2msIVmia_c?usp=drive_link",pentaksiran:"https://drive.google.com/drive/folders/1KIubcnvTDVMaGCeK8GqhBUUwPfTmnVmc?usp=drive_link",perancangan:"https://drive.google.com/drive/folders/1OxP_448r4ROCwhC5o27ISoaHQ5InQqAf?usp=drive_link",kewangan:"https://drive.google.com/drive/folders/1NGupwPHBMc4HYHIVrGkq-Bfv9Hty2s4w?usp=drive_link"},
-  mt:{pengurusan:"https://drive.google.com/drive/folders/1TnRcgg2BFhUDJc54gVardi1pWRJfhUfQ?usp=drive_link",pekeliling:"https://drive.google.com/drive/folders/1X66O0AUonabuhDDp1yQarw8LBrpMCdtE?usp=drive_link",mesyuarat:"https://drive.google.com/drive/folders/1D7JaE3sIeE6wTYWsz0QLH9BGPo3I2-MX?usp=drive_link",pentaksiran:"https://drive.google.com/drive/folders/1KUa7BwV9NoNuR0BmrguNE4b-aZE3rB1W?usp=drive_link",perancangan:"https://drive.google.com/drive/folders/1qEOq9vH9NgwLqvOFyzTGXn-afph1jMOH?usp=drive_link",kewangan:"https://drive.google.com/drive/folders/1NQHWVW1vgd_wdA06O-n_bWWXqtREe7jo?usp=drive_link"},
-  sc:{pengurusan:"https://drive.google.com/drive/folders/1z8QO3kvXUalvxdaM3TF1t_QGVsiv9Kx3?usp=drive_link",pekeliling:"https://drive.google.com/drive/folders/1zq3ZOMBd2YhMidwehJ6q_8pe2glnTSQT?usp=drive_link",mesyuarat:"https://drive.google.com/drive/folders/1Rr6AT-BUy1jNgjOOuxxIl4T63ZA-8taw?usp=drive_link",pentaksiran:"https://drive.google.com/drive/folders/1mrIJRKPLFZqM5BXJwr-waOWo8TO_Tv1W?usp=drive_link",perancangan:"https://drive.google.com/drive/folders/1RQdUJgHP9PoOHlA052TQphgyzHhi87KM?usp=drive_link",kewangan:"https://drive.google.com/drive/folders/15YQj6-QyGGsuFQ8BFNDCl6pb37Qfh2p3?usp=drive_link"},
-  bio:{pengurusan:"https://drive.google.com/drive/folders/1eNksELZJK-_5wEFr1CLOKW4tBo5iRkUH?usp=drive_link",pekeliling:"https://drive.google.com/drive/folders/1pEBv7ic4XYta4wvrvXpixrjzXjbgjsfa?usp=drive_link",mesyuarat:"https://drive.google.com/drive/folders/1vOhVPkBYGsr_S3bv53iJwcX8NNEbSJ3G?usp=drive_link",pentaksiran:"https://drive.google.com/drive/folders/1U0J0o7yjmmOcvSqMNfoxFza-mPeumHEH?usp=drive_link",perancangan:"https://drive.google.com/drive/folders/1RlB4JqERbNShD5kz9Y0THXnBRehIX0XA?usp=drive_link",kewangan:"https://drive.google.com/drive/folders/1lx1J9c0EGxeMvz8E1q-TISgtkrcg4J2O?usp=drive_link"},
-  fiz:{pengurusan:"https://drive.google.com/drive/folders/18Icqi_gFyJAc7wsLU7KP7IDlYoLt_wb8?usp=drive_link",pekeliling:"https://drive.google.com/drive/folders/1ohYLXQwP5GMic_QaJMHn1WZnYu2oPBCO?usp=drive_link",mesyuarat:"https://drive.google.com/drive/folders/1XJClmeOARQzo9WL_L99Eg6N-drV6vrP5?usp=drive_link",pentaksiran:"https://drive.google.com/drive/folders/1ilX-Webh6UHqRDTM-2BhKreg2ghHrk-m?usp=drive_link",perancangan:"https://drive.google.com/drive/folders/1zBvw2he5LjLZZT_eGVxPh0tT5wPKaCG0?usp=drive_link",kewangan:"https://drive.google.com/drive/folders/15ITYRv0AmbnnuVg7t9bEaBcBe4hFKrrK?usp=drive_link"},
-  kim:{pengurusan:"https://drive.google.com/drive/folders/1pvmBEmbnQpYgzVgfFEGPmF2uOHDtOjbS?usp=drive_link",pekeliling:"https://drive.google.com/drive/folders/1YKc73pL3n_OWET4SJ5VqzBAqwjVOuPbZ?usp=drive_link",mesyuarat:"https://drive.google.com/drive/folders/1PvR6ZO1Ri76uC5otosHCvt7jZ4vKo7yt?usp=drive_link",pentaksiran:"https://drive.google.com/drive/folders/10Pmrh5iAWuQV7mwAnnYojZihpZvxqNQA?usp=drive_link",perancangan:"https://drive.google.com/drive/folders/1XdMEjZsBfNr9fGwHYjs-m5EoRm4OSBz-?usp=drive_link",kewangan:"https://drive.google.com/drive/folders/14k34mwkrXiIBh8uix6cRmP7uIAT-V4R-?usp=drive_link"},
-  mt2:{pengurusan:"https://drive.google.com/drive/folders/1Ny7tO0fhq78T8SaFo7vx13xEVrx05aBF?usp=drive_link",pekeliling:"https://drive.google.com/drive/folders/1RtS0I1q4llwF-QR51ZZV8pRvgjQNxIAy?usp=drive_link",mesyuarat:"https://drive.google.com/drive/folders/1f1i3Z0PGJEHdRbcoSXOjlWtDLpqfsjwB?usp=drive_link",pentaksiran:"https://drive.google.com/drive/folders/1FaZfiFNcRiZb8ikVgMdyll_RDslMD3HZ?usp=drive_link",perancangan:"https://drive.google.com/drive/folders/19zsEm-5DrCPzIOyx_z5yVSy0eQiIsyNG?usp=drive_link",kewangan:"https://drive.google.com/drive/folders/1xyFJEP7fAectz62pPdXemyx6I0tZZen7?usp=drive_link"},
-  sej:{pengurusan:"https://drive.google.com/drive/folders/1KTel9kiZDhe0ouCdivVazxoHt7MC9poW?usp=drive_link",pekeliling:"https://drive.google.com/drive/folders/1pVURiDmgkBJau5DK0vm9EPkYXJP5x8ji?usp=drive_link",mesyuarat:"https://drive.google.com/drive/folders/1EBEpOm0Ob-QteA0OwOig_FJMP4Jk8dfK?usp=drive_link",pentaksiran:"https://drive.google.com/drive/folders/1Y-W7MmpU3cZnwuY1razNwYDb1_MSDcPb?usp=drive_link",perancangan:"https://drive.google.com/drive/folders/1_HE6H7NcxP5LmTyzUcX_j6sRnZbTCR70?usp=drive_link",kewangan:"https://drive.google.com/drive/folders/1hBSMFD6TH5mqxwdjWjKIgRHSry7QQ2Wl?usp=drive_link"},
-  geo:{pengurusan:"https://drive.google.com/drive/folders/17f0dewjc-0eqg0VxyjdYz9GI0_uE0lk-?usp=drive_link",pekeliling:"https://drive.google.com/drive/folders/1u_lTAWcBaaaFYtpddOLu4bFlROlp2ari?usp=drive_link",mesyuarat:"https://drive.google.com/drive/folders/1BXXHZNU4DOLg2Tf-qSh8zT1UlQRKIVqj?usp=drive_link",pentaksiran:"https://drive.google.com/drive/folders/1UbiWlTd9FkaCgD8X2pL8Ist6_p_kDnY3?usp=drive_link",perancangan:"https://drive.google.com/drive/folders/162UVv1rfHfd794jT_aiJXTMmbwR4raLq?usp=drive_link",kewangan:"https://drive.google.com/drive/folders/1gH5FokfV1BzNmX0q0Lrn2mjlLtwldwPE?usp=drive_link"},
-  pai:{pengurusan:"https://drive.google.com/drive/folders/12LMEF7c4YCDYhdGR4ehrO50BzfoQPiKc?usp=drive_link",pekeliling:"https://drive.google.com/drive/folders/1t4HB22JzxXvIgvbGGdNJJsd6wsOLmXAj?usp=drive_link",mesyuarat:"https://drive.google.com/drive/folders/1MdQSyZomeDOjskYepTeb_hiJQpmZIWbH?usp=drive_link",pentaksiran:"https://drive.google.com/drive/folders/1vPOCsrnziJH_IoV3XlC7xY4Er4d7JY5L?usp=drive_link",perancangan:"https://drive.google.com/drive/folders/1lG_eF6yGQ-oOdg964XnLTBWw49Gw_fNO?usp=drive_link",kewangan:"https://drive.google.com/drive/folders/1N-jq63AukTbwwyo3rfc3Cy97EunR1aiG?usp=drive_link"},
-  pm:{pengurusan:"https://drive.google.com/drive/folders/15QI9KmpF4GcATxmZ9l-K7oObMOV39Ce2?usp=drive_link",pekeliling:"https://drive.google.com/drive/folders/1APwoDhf5k3bkS-DJJyuZwaaGOYjavmTI?usp=drive_link",mesyuarat:"https://drive.google.com/drive/folders/1V1lVscIZcoDD5iBlGyRiYmSaWTdpYaZ5?usp=drive_link",pentaksiran:"https://drive.google.com/drive/folders/108Bsqo4U25cjXkRgM_N9wpwlQ2KkxbaB?usp=drive_link",perancangan:"https://drive.google.com/drive/folders/1VpcTDnQ-W16D6sy1Q1W_22j2JYT5vjuW?usp=drive_link",kewangan:"https://drive.google.com/drive/folders/1h8Nnm6xRI9w0pXp1yAbCU-uWEcDb4vcN?usp=drive_link"},
-  psv:{pengurusan:"https://drive.google.com/drive/folders/1FzhRwZlg6W_oSkzp5gkHPfehZ8mKR-2-?usp=drive_link",pekeliling:"https://drive.google.com/drive/folders/1galR46m5FPfB9N4fU2jTFsA51Old-xLa?usp=drive_link",mesyuarat:"https://drive.google.com/drive/folders/1C5ME9dujyawSo3Y-iPNAfi4rk8mm9_Wf?usp=drive_link",pentaksiran:"https://drive.google.com/drive/folders/1KVTBQVcnVtSgLlrBFSekvo_49XGjJ6Q_?usp=drive_link",perancangan:"https://drive.google.com/drive/folders/1HU4x52CiLPMDT6bkWdlRcfPEG0Q1QNcY?usp=drive_link",kewangan:"https://drive.google.com/drive/folders/1Czq2w2491N7jpAlkhDXsacKZqaOnOwqa?usp=drive_link"},
-  pjpk:{pengurusan:"https://drive.google.com/drive/folders/13npKMymjni_PdXKcea0vPdCqrpr441Ww?usp=drive_link",pekeliling:"https://drive.google.com/drive/folders/1Dt-Tz1MK-DntW67sazPdvmREJZwwWBYW?usp=drive_link",mesyuarat:"https://drive.google.com/drive/folders/1EN3Ua0TH4DSBhKpjqb3TE5sIKjcD67Ns?usp=drive_link",pentaksiran:"https://drive.google.com/drive/folders/12RhN87702DFqBwEnOJV_RRMzccuq5syS?usp=drive_link",perancangan:"https://drive.google.com/drive/folders/13KZmpFYYHNXqOHmxrfK-pepkqMDPaOSJ?usp=drive_link",kewangan:"https://drive.google.com/drive/folders/15IzUjI88DXRaThDRiX--zdkjjB0DDF0-?usp=drive_link"},
-  ss:{pengurusan:"https://drive.google.com/drive/folders/1jdj_uZ83RGZiKTwm-FCOc9MPDsI206qc?usp=drive_link",pekeliling:"https://drive.google.com/drive/folders/1Q7Vj5q0unWY9EljkRFw5ukgVbURPkA_8?usp=drive_link",mesyuarat:"https://drive.google.com/drive/folders/1ICuqkMkdh5gtAgWHZUesRSqVxlAWIVky?usp=drive_link",pentaksiran:"https://drive.google.com/drive/folders/1G8LC1nKOOc7mZwcdRmEBe7Epzr32nMTa?usp=drive_link",perancangan:"https://drive.google.com/drive/folders/10aLrVw5Xrpi4WoB3sJxBlsYq4lGqkesW?usp=drive_link",kewangan:"https://drive.google.com/drive/folders/16pNyRBWCbggWbSGolFMyESxvVi3UnUmr?usp=drive_link"},
-  prt:{pengurusan:"https://drive.google.com/drive/folders/1oMNIBSvSA4G_9aVRffcaNPbq0wN-9Skd?usp=drive_link",pekeliling:"https://drive.google.com/drive/folders/17pArf7jJ6BxYyJ97NvjghdGvIMKE1TH7?usp=drive_link",mesyuarat:"https://drive.google.com/drive/folders/1RV129OOnUsf78HfOeDVvoF3B9ZfB_SBj?usp=drive_link",pentaksiran:"https://drive.google.com/drive/folders/1sGPfZOh5lwYP4Nmh6PVOuv0f2g8KntbB?usp=drive_link",perancangan:"https://drive.google.com/drive/folders/1iPRoPJthj7stdKPOaWpS_SW6PNR1K94X?usp=drive_link",kewangan:"https://drive.google.com/drive/folders/1H-ka9gQdyRWjq0D3_WawHsxhDjvd3Ede?usp=drive_link"},
-  per:{pengurusan:"https://drive.google.com/drive/folders/1nrJaevWG1vQwrj9O0-2Lod2POwDp9MG2?usp=drive_link",pekeliling:"https://drive.google.com/drive/folders/1o0sjwn_JWz2vjiQO1jy7CDSHZURQhcvg?usp=drive_link",mesyuarat:"https://drive.google.com/drive/folders/1D0fAozAO1y5AViyskuSj_drGFjUpQAaf?usp=drive_link",pentaksiran:"https://drive.google.com/drive/folders/1mIavIjJHfWH4sBohUcfBJ41LBJV3qviz?usp=drive_link",perancangan:"https://drive.google.com/drive/folders/1cL1KTh4v6lt1KCeR3RLdeBInB61rBD3E?usp=drive_link",kewangan:"https://drive.google.com/drive/folders/1pQKxckJ0EF5BU338mbNzeBfDXnkzyIKk?usp=drive_link"},
-  eko:{pengurusan:"https://drive.google.com/drive/folders/15a4j0XLrNB7jKQEjEPoZ-aBIrRpPMW8v?usp=drive_link",pekeliling:"https://drive.google.com/drive/folders/1Xr7XP0FFg6ofmt-6whLZ__Yhj7WqD8pr?usp=drive_link",mesyuarat:"https://drive.google.com/drive/folders/1TdQ8pM43ZvAAKvEMcRD-jqxsZr4jKRqI?usp=drive_link",pentaksiran:"https://drive.google.com/drive/folders/1rHBdMODnpqIdnA6Au2XDC2RNDp45Q30b?usp=drive_link",perancangan:"https://drive.google.com/drive/folders/1hhlUK1T0yxwSa-o44Yf1kx_LrnKJrVe9?usp=drive_link",kewangan:"https://drive.google.com/drive/folders/1FZLV9t4trHAW7d9UlSG7aK0DNxY-rAFd?usp=drive_link"},
-  ak:{pengurusan:"https://drive.google.com/drive/folders/1Qgb9chYHZsHS4DLQJq6iycF1xRaNG93m?usp=drive_link",pekeliling:"https://drive.google.com/drive/folders/1671Y09-A6SBSeChkGT6Egq1srVvrtHHe?usp=drive_link",mesyuarat:"https://drive.google.com/drive/folders/17iKpnjhhhpXLy9hgWLVonVnIzti-MzXX?usp=drive_link",pentaksiran:"https://drive.google.com/drive/folders/15c-wySf5MjmP70PndJjJjnzZ9QpsU6eH?usp=drive_link",perancangan:"https://drive.google.com/drive/folders/1V3ZGoPitTFJrx_NydqkD1eAaz7N2SHJ4?usp=drive_link",kewangan:"https://drive.google.com/drive/folders/1VLIuebq2RRxmsbPSG0avRZKloBh-6e8Q?usp=drive_link"},
-  kdp:{pengurusan:"https://drive.google.com/drive/folders/1lC38AB3IPs7q62g5kubqLDe_qqsFIAWs?usp=drive_link",pekeliling:"https://drive.google.com/drive/folders/1M5QqjexIOOTBdenkwUqaBJretaGYJHed?usp=drive_link",mesyuarat:"https://drive.google.com/drive/folders/1WW1xhJ6ieXempqFPCA1wvvjASFg4ni9V?usp=drive_link",pentaksiran:"https://drive.google.com/drive/folders/1tP6cLsktVenCuz-W3JhdFOZ7abdomjHT?usp=drive_link",perancangan:"https://drive.google.com/drive/folders/1s--f45yr4qwVIQ2Mqo9YvmLNs1iD8DgZ?usp=drive_link",kewangan:"https://drive.google.com/drive/folders/1he5kMSEk0WXs4wUXjAzB0iKfGSacNbrh?usp=drive_link"},
-  ldn:{pengurusan:"https://drive.google.com/drive/folders/1hgegolySyLJLf1fpVIA4PRgjaT4KcVY4?usp=drive_link",pekeliling:"https://drive.google.com/drive/folders/1HdTE7kDGkaxnEkq-A274YJIMZ66Wpy3Y?usp=drive_link",mesyuarat:"https://drive.google.com/drive/folders/17VXQGhLokFqp5eRmJLCQmsgZtZLjLIrT?usp=drive_link",pentaksiran:"https://drive.google.com/drive/folders/15WOVVRA_zUiXtSMqvw252ocxpLe5l4I3?usp=drive_link",perancangan:"https://drive.google.com/drive/folders/1gJaRQF_g4ua-Hpm-w2cAGvqPDs6xhD4n?usp=drive_link",kewangan:"https://drive.google.com/drive/folders/14-v_YHvcPhafXS71rWHxv0a9LUvmKo8F?usp=drive_link"},
-  rbt:{pengurusan:"https://drive.google.com/drive/folders/11TZNYnBXLa192tT3lcpoosVggZ3qOMyL?usp=drive_link",pekeliling:"https://drive.google.com/drive/folders/1XWPsFmg5iNTW18mDgll-nIIUoA_47MK_?usp=drive_link",mesyuarat:"https://drive.google.com/drive/folders/1ahR7br4b3ttcvuTCJkwAeiQFOJggvmGZ?usp=drive_link",pentaksiran:"https://drive.google.com/drive/folders/14tlHFpWc_cYCvHCq8mTtTF54nOEYsC4P?usp=drive_link",perancangan:"https://drive.google.com/drive/folders/171pm2x3EYAyixXr3g2HTuenl8cz4k0Yr?usp=drive_link",kewangan:"https://drive.google.com/drive/folders/1rOWshS-ZmWmbSZElL7t5bZ3ZtQsnC9q2?usp=drive_link"}
-};
-
-/* ════════════════════════════════════════════════════
-   HELPERS
-   ════════════════════════════════════════════════════ */
-// Extract folder ID from any Drive URL
-function folderIdFromUrl(url) {
-  if (!url) return null;
-  const m = url.match(/\/folders\/([a-zA-Z0-9_-]+)/);
-  return m ? m[1] : null;
-}
-
-const EXT_ICONS = {PDF:"📄",DOCX:"📝",XLSX:"📊",PPTX:"📑",PNG:"🖼️",JPG:"🖼️",JPEG:"🖼️",GIF:"🖼️",ZIP:"🗜️",TXT:"📃"};
-const EXT_CLASS = {PDF:"ext-pdf",DOCX:"ext-docx",XLSX:"ext-xlsx",PPTX:"ext-pptx"};
-
-function extOf(name) { return (name.split(".").pop()||"").toUpperCase(); }
-function sizeStr(bytes) {
-  if (bytes < 1024) return bytes + " B";
-  if (bytes < 1048576) return Math.round(bytes/1024) + " KB";
-  return (bytes/1048576).toFixed(1) + " MB";
-}
-function dateStr(isoStr) {
-  if (!isoStr) return "—";
-  return new Date(isoStr).toLocaleDateString("en-GB",{day:"2-digit",month:"short",year:"numeric"});
-}
-
-/* ════════════════════════════════════════════════════
-   STATE
-   ════════════════════════════════════════════════════ */
-let curSubject  = "bm";
-let curModule   = "pengurusan";
-let viewMode    = "folders";   // "folders" | "files"
-let curFolderId = null;        // Drive folder ID currently shown
-let curFolderName = "";        // display name of current subfolder
-let selected    = new Set();
-let accessToken = null;
-let userInfo    = null;
-let allItems    = [];          // cached Drive API results
-let groupOrder  = ["g1","g2","g3","g4"];
-try { const s=localStorage.getItem("smkg_group_order"); if(s) groupOrder=JSON.parse(s); } catch(e){}
-
-/* ════════════════════════════════════════════════════
-   THEME
-   ════════════════════════════════════════════════════ */
-let theme = localStorage.getItem("smkg_theme") || "dark";
-function applyTheme(t) {
-  document.documentElement.setAttribute("data-theme", t);
-  document.getElementById("themeLbl").textContent = t==="light" ? "Light" : "Dark";
-  localStorage.setItem("smkg_theme", t); theme = t;
-}
-document.getElementById("themeBtn").onclick = () => applyTheme(theme==="light" ? "dark" : "light");
-applyTheme(theme);
-
-/* ════════════════════════════════════════════════════
-   GOOGLE OAUTH — GIS (Google Identity Services)
-   ════════════════════════════════════════════════════ */
-let tokenClient;
-
-window.addEventListener("load", () => {
-  if (typeof google === "undefined") return; // GIS not loaded
-  tokenClient = google.accounts.oauth2.initTokenClient({
-    client_id: GOOGLE_CLIENT_ID,
-    scope: DRIVE_SCOPE,
-    callback: (resp) => {
-      if (resp.error) { showToast("Sign-in failed: " + resp.error); return; }
-      accessToken = resp.access_token;
-      fetchUserInfo();
-    }
-  });
-});
-
-document.getElementById("loginBtn").onclick = () => {
-  if (GOOGLE_CLIENT_ID.startsWith("YOUR_CLIENT_ID")) {
-    // Demo mode — simulate login
-    simulateLogin();
-    return;
-  }
-  if (tokenClient) tokenClient.requestAccessToken();
-  else showToast("Google auth not loaded. Check CLIENT_ID.");
-};
-
-function simulateLogin() {
-  accessToken = "DEMO_TOKEN";
-  userInfo = { name: "Demo Teacher", email: "teacher@smkg.edu.my" };
-  onSignedIn();
-}
-
-async function fetchUserInfo() {
-  try {
-    const res = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
-      headers: { Authorization: "Bearer " + accessToken }
+    /* PAGE TRANS */
+    const pageTrans=document.getElementById('pageTrans');
+    document.querySelectorAll('[data-trans="true"]').forEach(a=>{
+      a.onclick=e=>{if(a.getAttribute('href')==='#')return;e.preventDefault();closeDrawer();pageTrans.classList.add('run');setTimeout(()=>{window.location.href=a.href;},520);};
     });
-    userInfo = await res.json();
-    onSignedIn();
-  } catch(e) { showToast("Could not fetch user info"); }
-}
 
-function onSignedIn() {
-  document.getElementById("loginOverlay").classList.add("off");
-  document.getElementById("userBadge").style.display = "flex";
-  document.getElementById("logoutBtn").style.display = "flex";
-  const name = userInfo?.name || userInfo?.email || "Teacher";
-  document.getElementById("userName").textContent = name;
-  document.getElementById("userAv").textContent = name.charAt(0).toUpperCase();
-  document.getElementById("statusDot").className = "s-dot s-green";
-  document.getElementById("statusConn").textContent = "Connected · " + (userInfo?.email || "");
-  document.getElementById("dropHint").textContent = "Upload goes to this folder";
-  showToast("Signed in as " + name);
-  refreshView();
-}
-
-function logout() {
-  accessToken = null; userInfo = null;
-  document.getElementById("loginOverlay").classList.remove("off");
-  document.getElementById("userBadge").style.display = "none";
-  document.getElementById("logoutBtn").style.display = "none";
-  document.getElementById("statusDot").className = "s-dot s-amber";
-  document.getElementById("statusConn").textContent = "Not signed in — browse only";
-  document.getElementById("dropHint").textContent = "Sign in to enable upload";
-  allItems = []; renderCurrentView();
-}
-
-/* ════════════════════════════════════════════════════
-   DRIVE API CALLS
-   ════════════════════════════════════════════════════ */
-async function driveList(parentId, foldersOnly = false) {
-  if (!accessToken || accessToken === "DEMO_TOKEN") {
-    // Demo: return fake subfolders for Pengurusan Am
-    if (foldersOnly) return getDemoFolders();
-    return getDemoFiles();
-  }
-  const mimeFilter = foldersOnly
-    ? "mimeType='application/vnd.google-apps.folder'"
-    : "mimeType!='application/vnd.google-apps.folder'";
-  const q = encodeURIComponent(`'${parentId}' in parents and ${mimeFilter} and trashed=false`);
-  const fields = "files(id,name,mimeType,size,modifiedTime,webViewLink,owners)";
-  const url = `https://www.googleapis.com/drive/v3/files?q=${q}&fields=${fields}&orderBy=name&pageSize=200`;
-  const res = await fetch(url, { headers: { Authorization: "Bearer " + accessToken } });
-  if (!res.ok) {
-    const err = await res.json().catch(()=>({}));
-    if (res.status === 401) { accessToken = null; showToast("Session expired — please sign in again"); return []; }
-    showToast("Drive error: " + (err?.error?.message || res.status));
-    return [];
-  }
-  const data = await res.json();
-  return data.files || [];
-}
-
-async function driveUpload(file, parentFolderId) {
-  if (!accessToken || accessToken === "DEMO_TOKEN") {
-    showToast("Demo mode: file would upload to " + curFolderName);
-    return { id: "demo_" + Date.now(), name: file.name };
-  }
-  // Multipart upload
-  const meta = JSON.stringify({ name: file.name, parents: [parentFolderId] });
-  const boundary = "smkg_boundary_" + Date.now();
-  const body = `--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${meta}\r\n--${boundary}\r\nContent-Type: ${file.type||"application/octet-stream"}\r\n\r\n`;
-  const bodyEnd = `\r\n--${boundary}--`;
-  // Use XMLHttpRequest for progress tracking
-  return new Promise((resolve, reject) => {
-    const xhr = new XMLHttpRequest();
-    xhr.open("POST", "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name,webViewLink");
-    xhr.setRequestHeader("Authorization", "Bearer " + accessToken);
-    xhr.setRequestHeader("Content-Type", `multipart/related; boundary=${boundary}`);
-    xhr.upload.onprogress = (e) => {
-      if (e.lengthComputable) showUploadProgress(file.name, Math.round(e.loaded/e.total*100));
-    };
-    xhr.onload = () => {
-      if (xhr.status >= 200 && xhr.status < 300) resolve(JSON.parse(xhr.responseText));
-      else reject(new Error("Upload failed: " + xhr.status));
-    };
-    xhr.onerror = () => reject(new Error("Network error"));
-    // Combine: meta + file data
-    const blob = new Blob([body, file, bodyEnd]);
-    xhr.send(blob);
-  });
-}
-
-async function driveDelete(fileId) {
-  if (!accessToken || accessToken === "DEMO_TOKEN") {
-    showToast("Demo mode: would delete file from Drive");
-    return true;
-  }
-  const res = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}`, {
-    method: "DELETE",
-    headers: { Authorization: "Bearer " + accessToken }
-  });
-  return res.status === 204;
-}
-
-/* Demo data */
-function getDemoFolders() {
-  return [
-    {id:"demo_f1", name:"1.1_Surat_Menyurat",                     mimeType:"application/vnd.google-apps.folder"},
-    {id:"demo_f2", name:"1.2_Visi_Misi_KPM",                      mimeType:"application/vnd.google-apps.folder"},
-    {id:"demo_f3", name:"1.3_Struktur_Carta_Organisasi_JKKS_Panitia", mimeType:"application/vnd.google-apps.folder"},
-    {id:"demo_f4", name:"1.4_Butiran_Peribadi_Ahli_Panitia",       mimeType:"application/vnd.google-apps.folder"},
-    {id:"demo_f5", name:"1.5_Jadual_Waktu_Persendirian_Ahli_Panitia", mimeType:"application/vnd.google-apps.folder"},
-    {id:"demo_f6", name:"1.6_Dokumen_Standard_Kurikulum_dan_Pentaksiran", mimeType:"application/vnd.google-apps.folder"},
-    {id:"demo_f7", name:"1.7_Rancangan_Pengajaran_Tahunan",        mimeType:"application/vnd.google-apps.folder"},
-    {id:"demo_f8", name:"1.8_Takwim_Panitia",                      mimeType:"application/vnd.google-apps.folder"},
-    {id:"demo_f9", name:"1.9_Jadual_&_Analisis_Pencerapan_Guru",   mimeType:"application/vnd.google-apps.folder"},
-    {id:"demo_f10",name:"1.10_Senarai_Buku_Teks_Buku_Kerja_Rujukan", mimeType:"application/vnd.google-apps.folder"},
-    {id:"demo_f11",name:"1.11_Takwim_Aktiviti_Ko-Akademik",        mimeType:"application/vnd.google-apps.folder"},
-  ];
-}
-function getDemoFiles() {
-  return [
-    {id:"demo_file1", name:"Surat_Menyurat_2025.pdf",  mimeType:"application/pdf",  size:"245000", modifiedTime:"2025-03-01T08:00:00Z", webViewLink:"#"},
-    {id:"demo_file2", name:"Borang_Pemantauan.docx",   mimeType:"application/vnd.openxmlformats-officedocument.wordprocessingml.document", size:"112000", modifiedTime:"2025-02-15T10:30:00Z", webViewLink:"#"},
-  ];
-}
-
-/* ════════════════════════════════════════════════════
-   SIDEBAR
-   ════════════════════════════════════════════════════ */
-function renderSidebar(filter) {
-  const scroll = document.getElementById("sbScroll");
-  const groups = groupOrder.map(id => GROUPS.find(g=>g.id===id)).filter(Boolean);
-  scroll.innerHTML = groups.map(group => {
-    const anyVis = !filter || group.subjects.some(k => SUBJECT_LABEL[k].toLowerCase().includes((filter||"").toLowerCase()));
-    const forceOpen = filter && anyVis;
-    const items = group.subjects.map(key => {
-      const label = SUBJECT_LABEL[key];
-      const hidden = filter && !label.toLowerCase().includes(filter.toLowerCase());
-      return `<div class="sb-item${key===curSubject?" active":""}${hidden?" hidden":""}" onclick="selectSubject('${key}')"><span class="sb-dot"></span>${label}</div>`;
-    }).join("");
-    return `<div class="sb-group${forceOpen?" open":""}" id="${group.id}" draggable="true">`+
-      `<div class="group-head" onclick="toggleGroup(event,'${group.id}')">`+
-        `<div class="drag-handle" title="Drag to reorder"><span></span><span></span><span></span></div>`+
-        `<svg class="group-arrow" width="8" height="8" viewBox="0 0 8 8" fill="none"><path d="M2 2l4 2-4 2" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>`+
-        `<span class="group-label">${group.label}</span>`+
-        `<span class="group-count">${group.subjects.length}</span>`+
-      `</div><div class="group-body"><div class="subject-list">${items}</div></div></div>`;
-  }).join("");
-
-  document.querySelectorAll(".sb-group").forEach(el => {
-    el.addEventListener("dragstart", e => { e.dataTransfer.setData("text/plain",el.id); setTimeout(()=>el.classList.add("dragging"),0); });
-    el.addEventListener("dragend",   () => el.classList.remove("dragging"));
-    el.addEventListener("dragover",  e => { e.preventDefault(); el.classList.add("drag-over"); });
-    el.addEventListener("dragleave", () => el.classList.remove("drag-over"));
-    el.addEventListener("drop", e => {
-      e.preventDefault(); el.classList.remove("drag-over");
-      const from=e.dataTransfer.getData("text/plain"), to=el.id;
-      if (from===to) return;
-      const fi=groupOrder.indexOf(from), ti=groupOrder.indexOf(to);
-      if (fi<0||ti<0) return;
-      groupOrder.splice(fi,1); groupOrder.splice(ti,0,from);
-      localStorage.setItem("smkg_group_order",JSON.stringify(groupOrder));
-      renderSidebar(document.getElementById("sbSearch").value);
-      showToast("Order saved");
+    /* ACCORDION — ALL START CLOSED */
+    function closeAllBidang(){document.querySelectorAll('.bidang').forEach(b=>{b.classList.remove('open');b.querySelector('.bbody').style.maxHeight='0';});}
+    document.querySelectorAll('.bidang').forEach(box=>{
+      const btn=box.querySelector('.bhead'),body=box.querySelector('.bbody');
+      function setOpen(open){box.classList.toggle('open',open);body.style.maxHeight=open?body.scrollHeight+'px':'0';}
+      setOpen(false);
+      btn.addEventListener('click',()=>{const w=!box.classList.contains('open');closeAllBidang();if(w)setOpen(true);});
     });
-  });
-}
 
-function toggleGroup(e, id) {
-  if (e.target.closest(".drag-handle")) return;
-  document.getElementById(id)?.classList.toggle("open");
-}
-function filterSidebar(v) { renderSidebar(v); }
-
-/* ════════════════════════════════════════════════════
-   SUBJECT + MODULE SELECTION
-   ════════════════════════════════════════════════════ */
-function selectSubject(key) {
-  // Hide welcome panel when any subject is picked
-  const wp = document.getElementById("welcomePanel");
-  if (wp) wp.style.display = "none";
-  curSubject = key;
-  document.getElementById("bcSubject").textContent = SUBJECT_LABEL[key] || key;
-  goUpToFolderView(false);
-  renderSidebar(document.getElementById("sbSearch").value);
-  updateStatus();
-  showToast(SUBJECT_LABEL[key] || key);
-  showFolderView();
-}
-
-document.querySelectorAll(".m-tab").forEach(tab => {
-  tab.onclick = () => {
-    document.querySelectorAll(".m-tab").forEach(t=>t.classList.remove("active"));
-    tab.classList.add("active");
-    curModule = tab.dataset.mod;
-    const label = tab.textContent.trim().replace(/^\S+\s/,"");
-    document.getElementById("bcModule").textContent = label;
-    goUpToFolderView(false);
-    updateStatus();
-  };
-});
-
-/* ════════════════════════════════════════════════════
-   VIEW MODES
-   ════════════════════════════════════════════════════ */
-
-// Show folder list (top level of module)
-async function showFolderView() {
-  viewMode = "folders";
-  curFolderId = null;
-  curFolderName = "";
-  selected.clear();
-
-  // UI state
-  document.getElementById("locationBar").classList.remove("visible");
-  document.getElementById("dropBanner").classList.add("hidden");
-  document.getElementById("uploadBtn").style.display = "none";
-  document.getElementById("deleteBtn").style.display = "none";
-  document.getElementById("fileSearchBox").style.display = "none";
-  document.getElementById("fileSearch").value = "";
-
-  // Table header — folder columns
-  document.getElementById("tableHead").innerHTML =
-    `<th style="width:22px"></th>
-     <th>Folder Name</th>
-     <th style="width:100px">Type</th>
-     <th style="width:100px"></th>`;
-
-  // Get parent folder ID for current subject+module
-  const url = LINKS?.[curSubject]?.[curModule];
-  const parentId = folderIdFromUrl(url);
-
-  if (!parentId) {
-    renderEmpty("No Drive folder configured", "This subject/module combination doesn't have a Drive folder URL yet.");
-    return;
-  }
-
-  // Open in Drive button always points to module root
-  document.getElementById("openDriveBtn").onclick = () => window.open(url, "_blank", "noopener");
-
-  renderLoading("Loading subfolders...");
-  updateStatus();
-
-  try {
-    allItems = await driveList(parentId, true); // folders only
-    renderFolderRows(allItems);
-  } catch(e) {
-    renderEmpty("Could not load folders", e.message);
-  }
-}
-
-// Drill into a specific subfolder
-async function enterFolder(folderId, folderName) {
-  viewMode = "files";
-  curFolderId = folderId;
-  curFolderName = folderName;
-  selected.clear();
-
-  // UI state
-  document.getElementById("locationBar").classList.add("visible");
-  document.getElementById("locPath").textContent = `${SUBJECT_LABEL[curSubject]} › ${document.querySelector(".m-tab.active")?.textContent.trim().replace(/^\S+\s/,"")} › ${folderName}`;
-  document.getElementById("dropBanner").classList.remove("hidden");
-  document.getElementById("uploadBtn").style.display = accessToken ? "flex" : "none";
-  document.getElementById("deleteBtn").style.display = "none";
-  document.getElementById("fileSearchBox").style.display = "flex";
-
-  // Open in Drive points to this specific subfolder
-  const folderUrl = `https://drive.google.com/drive/folders/${folderId}`;
-  document.getElementById("openDriveBtn").onclick = () => window.open(folderUrl, "_blank", "noopener");
-
-  // Table header — file columns
-  document.getElementById("tableHead").innerHTML =
-    `<th style="width:28px"><input class="f-check" type="checkbox" id="masterCb" onchange="toggleAll(this)"></th>
-     <th style="width:22px"></th>
-     <th class="sortable sorted" onclick="sortFiles('name')" id="th-name">File Name <span id="sort-name">↕</span></th>
-     <th style="width:56px">Type</th>
-     <th style="width:70px">Size</th>
-     <th style="width:110px" class="sortable" onclick="sortFiles('date')" id="th-date">Modified <span id="sort-date"></span></th>
-     <th style="width:88px"></th>`;
-
-  renderLoading("Loading files...");
-  updateStatus();
-
-  try {
-    allItems = await driveList(folderId, false); // files only
-    renderFileRows(allItems);
-  } catch(e) {
-    renderEmpty("Could not load files", e.message);
-  }
-}
-
-function goUpToFolderView(refresh = true) {
-  viewMode = "folders";
-  curFolderId = null;
-  curFolderName = "";
-  selected.clear();
-  document.getElementById("deleteBtn").style.display = "none";
-  if (refresh) showFolderView();
-  else {
-    // just reset UI without fetching
-    document.getElementById("locationBar").classList.remove("visible");
-    document.getElementById("dropBanner").classList.add("hidden");
-    document.getElementById("uploadBtn").style.display = "none";
-    document.getElementById("fileSearchBox").style.display = "none";
-    document.getElementById("fileBody").innerHTML = "";
-    document.getElementById("tableHead").innerHTML = "";
-    updateStatus();
-  }
-}
-
-function refreshView() {
-  if (viewMode === "files" && curFolderId) enterFolder(curFolderId, curFolderName);
-  else showFolderView();
-}
-
-function renderCurrentView() {
-  if (viewMode === "files" && curFolderId) enterFolder(curFolderId, curFolderName);
-  else showFolderView();
-}
-
-/* ════════════════════════════════════════════════════
-   RENDER ROWS
-   ════════════════════════════════════════════════════ */
-function renderFolderRows(folders) {
-  const tbody = document.getElementById("fileBody");
-  document.getElementById("statusCount").textContent = folders.length + " folder" + (folders.length!==1?"s":"");
-  if (!folders.length) {
-    renderEmpty("No subfolders found", "This module folder appears to be empty. Open it in Drive to check.");
-    return;
-  }
-  tbody.innerHTML = folders.map(f => `
-    <tr class="folder-row" onclick="enterFolder('${f.id}', '${f.name.replace(/'/g,"\\'")}')">
-      <td><span class="folder-ico">📁</span></td>
-      <td><span class="folder-name">${f.name.replace(/_/g," ")}</span></td>
-      <td><span class="f-ext ext-folder">FOLDER</span></td>
-      <td><div style="display:flex;align-items:center;gap:6px">
-        <button class="row-btn" onclick="event.stopPropagation();window.open('https://drive.google.com/drive/folders/${f.id}','_blank','noopener')">Open ↗</button>
-        <span class="folder-arrow">›</span>
-      </div></td>
-    </tr>
-  `).join("");
-}
-
-let sortKey = "name", sortAsc = true;
-
-function renderFileRows(files, searchFilter) {
-  const search = (searchFilter || document.getElementById("fileSearch")?.value || "").toLowerCase();
-  let rows = search ? files.filter(f=>f.name.toLowerCase().includes(search)) : [...files];
-  rows.sort((a,b)=>{
-    const va = sortKey==="date" ? (a.modifiedTime||"") : a.name.toLowerCase();
-    const vb = sortKey==="date" ? (b.modifiedTime||"") : b.name.toLowerCase();
-    return sortAsc ? va.localeCompare(vb) : vb.localeCompare(va);
-  });
-
-  const tbody = document.getElementById("fileBody");
-  const mc = document.getElementById("masterCb");
-  if (mc) mc.checked = rows.length>0 && rows.every(f=>selected.has(f.id));
-  document.getElementById("statusCount").textContent = rows.length + " file" + (rows.length!==1?"s":"");
-  updateStatus();
-
-  if (!rows.length) {
-    tbody.innerHTML = `<tr class="state-row"><td colspan="7"><div class="empty-ico">📭</div><div class="empty-title">No files</div><div class="empty-sub">${search?"No files match your search.":"This folder is empty. Upload files using the button above."}</div></td></tr>`;
-    return;
-  }
-
-  tbody.innerHTML = rows.map(f => {
-    const ext = f.mimeType==="application/vnd.google-apps.folder" ? "FOLDER" : extOf(f.name);
-    const extCls = EXT_CLASS[ext] || "ext-default";
-    const ico = EXT_ICONS[ext] || "📄";
-    const isSel = selected.has(f.id);
-    const sz = f.size ? sizeStr(parseInt(f.size)) : "—";
-    const dt = dateStr(f.modifiedTime);
-    return `<tr class="${isSel?"selected":""}" id="frow${f.id}">
-      <td><input class="f-check" type="checkbox" ${isSel?"checked":""} onchange="toggleRow('${f.id}',this)" onclick="event.stopPropagation()"></td>
-      <td><span class="f-ico">${ico}</span></td>
-      <td><span class="f-name" onclick="openFile('${f.webViewLink||"#"}')">${f.name}</span></td>
-      <td><span class="f-ext ${extCls}">${ext}</span></td>
-      <td style="color:var(--text-2)">${sz}</td>
-      <td style="color:var(--text-3)">${dt}</td>
-      <td><div class="row-actions">
-        <button class="row-btn" onclick="event.stopPropagation();openFile('${f.webViewLink||"#"}')">Open ↗</button>
-        <button class="row-btn" onclick="event.stopPropagation();confirmDeleteOne('${f.id}','${f.name.replace(/'/g,"\\'")}')">Delete</button>
-      </div></td>
-    </tr>`;
-  }).join("");
-}
-
-function renderLoading(msg) {
-  document.getElementById("fileBody").innerHTML =
-    `<tr class="state-row"><td colspan="8"><div class="spinner"></div><div style="font-size:11px;color:var(--text-2)">${msg}</div></td></tr>`;
-}
-function renderEmpty(title, sub) {
-  document.getElementById("fileBody").innerHTML =
-    `<tr class="state-row"><td colspan="8"><div class="empty-ico">📭</div><div class="empty-title">${title}</div><div class="empty-sub">${sub}</div></td></tr>`;
-}
-
-/* ════════════════════════════════════════════════════
-   FILE ACTIONS
-   ════════════════════════════════════════════════════ */
-function filterFiles(v) { renderFileRows(allItems, v); }
-
-function sortFiles(key) {
-  if (sortKey===key) sortAsc=!sortAsc; else { sortKey=key; sortAsc=true; }
-  ["name","date"].forEach(k => {
-    const th = document.getElementById("th-"+k);
-    const sp = document.getElementById("sort-"+k);
-    if (!th||!sp) return;
-    th.classList.toggle("sorted", sortKey===k);
-    sp.textContent = sortKey===k ? (sortAsc?"↑":"↓") : (k==="name"?"↕":"");
-  });
-  renderFileRows(allItems);
-}
-
-function openFile(url) {
-  if (!url || url==="#") { showToast("File link not available"); return; }
-  window.open(url, "_blank", "noopener");
-}
-
-function toggleRow(id, cb) {
-  cb.checked ? selected.add(id) : selected.delete(id);
-  document.getElementById("frow"+id)?.classList.toggle("selected", cb.checked);
-  updateDeleteBtn(); updateStatus();
-}
-function toggleAll(masterCb) {
-  allItems.forEach(f => masterCb.checked ? selected.add(f.id) : selected.delete(f.id));
-  updateDeleteBtn(); renderFileRows(allItems);
-}
-function updateDeleteBtn() {
-  const btn = document.getElementById("deleteBtn");
-  btn.style.display = selected.size ? "flex" : "none";
-  document.getElementById("selCount").textContent = selected.size;
-}
-
-async function handleUpload(input) {
-  if (!input.files.length) return;
-  if (!curFolderId) { showToast("Please open a subfolder first, then upload"); return; }
-  if (!accessToken) { showToast("Sign in first to upload files"); return; }
-
-  const files = Array.from(input.files);
-  input.value = "";
-
-  for (let i=0; i<files.length; i++) {
-    const file = files[i];
-    showUploadProgress(file.name, 0);
-    try {
-      await driveUpload(file, curFolderId);
-      showUploadProgress(file.name, 100);
-      showToast(`"${file.name}" uploaded to ${curFolderName} ✓`);
-    } catch(e) {
-      showToast("Upload failed: " + e.message);
+    /* DRAG TO REORDER */
+    const SORT_KEY='smkg_bidang_order';
+    const bidangList=document.getElementById('bidangList');
+    function saveOrder(){localStorage.setItem(SORT_KEY,JSON.stringify([...bidangList.querySelectorAll('.bidang')].map(b=>b.dataset.bidang)));}
+    (function restoreOrder(){
+      try{const s=JSON.parse(localStorage.getItem(SORT_KEY)||'null');if(!s||!Array.isArray(s))return;s.forEach(id=>{const el=bidangList.querySelector(`.bidang[data-bidang="${id}"]`);if(el)bidangList.appendChild(el);});}catch(e){}
+    })();
+    let dragEl=null;
+    function initDrag(box){
+      const handle=box.querySelector('.drag-handle');
+      handle.addEventListener('mousedown',()=>{box.setAttribute('draggable','true');});
+      handle.addEventListener('touchstart',()=>{box.setAttribute('draggable','true');},{passive:true});
+      document.addEventListener('mouseup',()=>{document.querySelectorAll('.bidang[draggable]').forEach(b=>b.removeAttribute('draggable'));});
+      box.addEventListener('dragstart',e=>{dragEl=box;box.classList.add('dragging');e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain',box.dataset.bidang);});
+      box.addEventListener('dragend',()=>{box.classList.remove('dragging');document.querySelectorAll('.bidang').forEach(b=>b.classList.remove('drag-over-above','drag-over-below'));dragEl=null;saveOrder();});
+      box.addEventListener('dragover',e=>{e.preventDefault();if(!dragEl||dragEl===box)return;const rect=box.getBoundingClientRect(),mid=rect.top+rect.height/2;box.classList.remove('drag-over-above','drag-over-below');box.classList.add(e.clientY<mid?'drag-over-above':'drag-over-below');});
+      box.addEventListener('dragleave',()=>box.classList.remove('drag-over-above','drag-over-below'));
+      box.addEventListener('drop',e=>{e.preventDefault();if(!dragEl||dragEl===box)return;box.classList.remove('drag-over-above','drag-over-below');const rect=box.getBoundingClientRect(),mid=rect.top+rect.height/2;bidangList.insertBefore(dragEl,e.clientY<mid?box:box.nextSibling);});
+      let touchStartY=0,touchClone=null;
+      handle.addEventListener('touchstart',e=>{touchStartY=e.touches[0].clientY;dragEl=box;touchClone=box.cloneNode(true);touchClone.style.cssText=`position:fixed;left:${box.getBoundingClientRect().left}px;top:${box.getBoundingClientRect().top}px;width:${box.offsetWidth}px;opacity:.7;pointer-events:none;z-index:300;border-radius:12px;box-shadow:0 12px 36px rgba(0,0,0,.35);`;document.body.appendChild(touchClone);box.classList.add('dragging');},{passive:true});
+      handle.addEventListener('touchmove',e=>{if(!dragEl||!touchClone)return;e.preventDefault();const touch=e.touches[0],dy=touch.clientY-touchStartY;touchClone.style.top=(box.getBoundingClientRect().top+dy)+'px';document.querySelectorAll('.bidang').forEach(b=>b.classList.remove('drag-over-above','drag-over-below'));const els=document.elementsFromPoint(touch.clientX,touch.clientY);const target=els.find(el=>el.classList.contains('bidang')&&el!==dragEl);if(target){const rect=target.getBoundingClientRect();target.classList.add(touch.clientY<rect.top+rect.height/2?'drag-over-above':'drag-over-below');}},{passive:false});
+      handle.addEventListener('touchend',e=>{if(!dragEl)return;if(touchClone){touchClone.remove();touchClone=null;}dragEl.classList.remove('dragging');document.querySelectorAll('.bidang').forEach(b=>{const above=b.classList.contains('drag-over-above'),below=b.classList.contains('drag-over-below');b.classList.remove('drag-over-above','drag-over-below');if(b===dragEl)return;if(above)bidangList.insertBefore(dragEl,b);else if(below)bidangList.insertBefore(dragEl,b.nextSibling);});dragEl=null;saveOrder();});
     }
-  }
-  hideUploadProgress();
-  // Refresh file list
-  setTimeout(() => enterFolder(curFolderId, curFolderName), 500);
-}
+    document.querySelectorAll('.bidang').forEach(initDrag);
 
-async function handleDelete() {
-  if (!selected.size) return;
-  const count = selected.size;
-  if (!confirm(`Permanently delete ${count} file${count>1?"s":""} from Google Drive?\n\nThis cannot be undone.`)) return;
-
-  const ids = [...selected];
-  selected.clear(); updateDeleteBtn();
-
-  let done = 0;
-  for (const id of ids) {
-    await driveDelete(id);
-    allItems = allItems.filter(f=>f.id!==id);
-    done++;
-  }
-  showToast(`${done} file${done>1?"s":""} deleted`);
-  renderFileRows(allItems);
-}
-
-async function confirmDeleteOne(id, name) {
-  if (!confirm(`Delete "${name}" from Google Drive?\n\nThis cannot be undone.`)) return;
-  const ok = await driveDelete(id);
-  if (ok) {
-    allItems = allItems.filter(f=>f.id!==id);
-    selected.delete(id); updateDeleteBtn();
-    showToast(`"${name}" deleted`);
-    renderFileRows(allItems);
-  } else showToast("Delete failed");
-}
-
-/* ════════════════════════════════════════════════════
-   STATUS + PROGRESS
-   ════════════════════════════════════════════════════ */
-function updateStatus() {
-  const subjLabel = SUBJECT_LABEL[curSubject] || curSubject;
-  const modEl = document.querySelector(".m-tab.active");
-  const modLabel = modEl ? modEl.textContent.trim().replace(/^\S+\s/,"") : curModule;
-  const path = viewMode==="files" && curFolderName
-    ? `${subjLabel} › ${modLabel} › ${curFolderName}`
-    : `${subjLabel} › ${modLabel}`;
-  document.getElementById("statusPath").textContent = path;
-  document.getElementById("statusSel").textContent = selected.size ? selected.size+" selected" : (viewMode==="files"?"In file view":"Select a subfolder");
-}
-
-function showUploadProgress(name, pct) {
-  const el = document.getElementById("uploadProgress");
-  el.classList.add("visible");
-  document.getElementById("upTitle").textContent = `Uploading ${name}`;
-  document.getElementById("upBar").style.width = pct + "%";
-  document.getElementById("upLabel").textContent = pct + "% — uploading to " + curFolderName;
-}
-function hideUploadProgress() {
-  setTimeout(() => document.getElementById("uploadProgress").classList.remove("visible"), 1200);
-}
-
-/* ════════════════════════════════════════════════════
-   TOAST
-   ════════════════════════════════════════════════════ */
-let tt;
-function showToast(msg) {
-  const t=document.getElementById("toast");
-  t.textContent=msg; t.classList.add("show");
-  clearTimeout(tt); tt=setTimeout(()=>t.classList.remove("show"),2600);
-}
-
-/* ════════════════════════════════════════════════════
-   INIT
-   ════════════════════════════════════════════════════ */
-
-// ── Countdown (SPM / STPM) ──
-// Update these dates each year
-const SPM_DATE  = new Date("2025-11-10T08:00:00");
-const STPM_DATE = new Date("2025-10-13T08:00:00");
-
-function runCountdown(targetDate, blocksId, noteId) {
-  function tick() {
-    const diff = targetDate - new Date();
-    const el = document.getElementById(blocksId);
-    const ne = document.getElementById(noteId);
-    if (!el) return;
-    if (diff <= 0) {
-      el.innerHTML = `<div class="wp-cd-block" style="flex:2"><span class="wp-cd-num" style="font-size:13px;color:var(--green)">Sedang Berlangsung</span></div>`;
-      if (ne) ne.textContent = "Peperiksaan sedang berlangsung";
-      return;
+    /* SUBJECT + PANELS */
+    let currentSubject='';
+    const rightTitle=document.getElementById('rightTitle'),badgeText=document.getElementById('badgeText'),activeLabel=document.getElementById('activeLabel');
+    const stdPanel=document.getElementById('stdPanel'),ppPanel=document.getElementById('ppPanel'),homePanel=document.getElementById('homePanel');
+    let toastTimer=null;
+    const SUBJECT_LABEL={bm:"Bahasa Melayu",bi:"Bahasa Inggeris",ba:"Bahasa Arab",km:"Kesusteraan Melayu",bkd:"BKD",mt:"Matematik",sc:"Sains",bio:"Biologi",fiz:"Fizik",kim:"Kimia",mt2:"Matematik Tambahan",sej:"Sejarah",geo:"Geografi",pai:"Pendidikan Agama Islam",pm:"Pendidikan Moral",psv:"Pendidikan Seni Visual",pjpk:"PJPK",ss:"Sains Sukan",prt:"Pertanian",per:"Perniagaan",eko:"Ekonomi",ak:"Asas Kelestarian",kdp:"Katering dan Penyajian",ldn:"Landskap dan Nursery",rbt:"RBT",pp:"Perdana Petang"};
+    function showToast(msg){const t=document.getElementById('toast');document.getElementById('toastMsg').textContent=msg;t.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),1800);}
+    function showStdPanel(){homePanel.style.display='none';stdPanel.classList.remove('hidden');ppPanel.classList.remove('active');}
+    function showPPPanel(){homePanel.style.display='none';stdPanel.classList.add('hidden');ppPanel.classList.add('active');}
+    function setSubject(key){
+      currentSubject=key;const label=SUBJECT_LABEL[key]||key;
+      document.querySelectorAll('.subj').forEach(s=>s.classList.toggle('active',s.dataset.subject===key));
+      showToast('Dipilih: '+label);
+      if(key==='pp'){showPPPanel();}
+      else{showStdPanel();const code=key.toUpperCase();rightTitle.textContent=label;badgeText.textContent=code;activeLabel.textContent=code+' aktif';}
     }
-    const d = Math.floor(diff/86400000);
-    const h = Math.floor((diff%86400000)/3600000);
-    const m = Math.floor((diff%3600000)/60000);
-    const s = Math.floor((diff%60000)/1000);
-    el.innerHTML =
-      `<div class="wp-cd-block"><span class="wp-cd-num">${String(d).padStart(2,"0")}</span><span class="wp-cd-unit">Hari</span></div>`+
-      `<div class="wp-cd-block"><span class="wp-cd-num">${String(h).padStart(2,"0")}</span><span class="wp-cd-unit">Jam</span></div>`+
-      `<div class="wp-cd-block"><span class="wp-cd-num">${String(m).padStart(2,"0")}</span><span class="wp-cd-unit">Min</span></div>`+
-      `<div class="wp-cd-block"><span class="wp-cd-num">${String(s).padStart(2,"0")}</span><span class="wp-cd-unit">Saat</span></div>`;
-    if (ne) ne.textContent = "Bermula " + targetDate.toLocaleDateString("ms-MY",{day:"numeric",month:"long",year:"numeric"});
-  }
-  tick();
-  setInterval(tick, 1000);
-}
+    document.querySelectorAll('.subj[data-subject]').forEach(s=>{
+      s.addEventListener('click',e=>{e.preventDefault();const key=s.dataset.subject;setSubject(key);const box=s.closest('.bidang');if(box&&!box.classList.contains('open'))box.querySelector('.bhead').click();});
+    });
 
-renderSidebar();
-runCountdown(SPM_DATE,  "cdSPM",  "cdSPMnote");
-runCountdown(STPM_DATE, "cdSTPM", "cdSTPMnote");
-// Welcome panel is visible by default — selectSubject() hides it
-</script>
+    /* SEARCH */
+    document.getElementById('searchInput').addEventListener('input',function(){
+      const q=this.value.toLowerCase().trim();
+      document.querySelectorAll('.bidang').forEach(box=>{
+        const subjects=box.querySelectorAll('.subj');let visible=0;
+        subjects.forEach(s=>{const match=!q||s.querySelector('.subj-name').textContent.toLowerCase().includes(q);s.classList.toggle('hidden',!match);if(match)visible++;});
+        if(q&&visible>0){box.classList.add('open');box.querySelector('.bbody').style.maxHeight=box.querySelector('.bbody').scrollHeight+'px';}
+        else if(!q){box.classList.remove('open');box.querySelector('.bbody').style.maxHeight='0';}
+        box.style.display=(!q||visible>0)?'':'none';
+      });
+    });
+
+    /* PP SECTION ACCORDIONS */
+    document.querySelectorAll('.pp-sec').forEach(sec=>{
+      const head=sec.querySelector('.pp-sec-head'),body=sec.querySelector('.pp-sec-body');
+      head.addEventListener('click',()=>{const w=!sec.classList.contains('open');document.querySelectorAll('.pp-sec').forEach(s=>{s.classList.remove('open');s.querySelector('.pp-sec-body').style.maxHeight='0';});if(w){sec.classList.add('open');body.style.maxHeight=body.scrollHeight+'px';}});
+    });
+
+    /* PP DRIVE LINKS */
+    const PP_LINKS={'jadual-pdp':'#','takwim':'#','jadual-bertugas':'#','program-akademik':'#','headcount':'#','disiplin':'#','kehadiran':'#','senarai-kelab':'#','jadual-koku':'#'};
+    document.querySelectorAll('.pp-item[data-pp-url]').forEach(item=>{item.addEventListener('click',e=>{e.preventDefault();const url=PP_LINKS[item.dataset.ppUrl];if(url&&url!=='#')window.open(url,'_blank','noopener');else showToast('Link belum ditetapkan — tambah dalam PP_LINKS');});});
+
+    /* MODAL */
+    const modalOverlay=document.getElementById('modalOverlay'),modalTitle=document.getElementById('modalTitle'),modalIcon=document.getElementById('modalIcon'),modalList=document.getElementById('modalList'),modalClose=document.getElementById('modalClose');
+    const MODAL_DATA={'penolong-ketua':{title:'Penolong Ketua Panitia Mata Pelajaran',icon:'👤',items:['Bahasa Melayu','Bahasa Inggeris','Matematik','Sains','Sejarah','Pendidikan Islam / Moral','PJPK','Perdana Petang']},'senarai-matpel':{title:'Senarai Mata Pelajaran',icon:'📚',items:['Bahasa Melayu','Bahasa Inggeris','Matematik','Sains','Sejarah','Pendidikan Islam','Pendidikan Moral','PJPK','Seni Visual','Geografi','Kemahiran Hidup']}};
+    function openModal(key){const data=MODAL_DATA[key];if(!data)return;modalTitle.textContent=data.title;modalIcon.textContent=data.icon;modalList.innerHTML=data.items.map((item,i)=>`<div class="modal-row"><div class="modal-row-num">${String(i+1).padStart(2,'0')}</div><div class="modal-row-text">${item}</div></div>`).join('');modalOverlay.classList.add('open');}
+    function closeModal(){modalOverlay.classList.remove('open');}
+    modalClose.addEventListener('click',closeModal);
+    modalOverlay.addEventListener('click',e=>{if(e.target===modalOverlay)closeModal();});
+    document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
+    document.querySelectorAll('.pp-item[data-modal]').forEach(item=>{item.addEventListener('click',()=>openModal(item.dataset.modal));});
+
+    /* ENROLMENT (from localStorage, admin-editable) */
+    (function loadEnrolment(){
+      try{const d=JSON.parse(localStorage.getItem('smkg_enrolmen')||'null');if(!d)return;if(d.total!==undefined)document.getElementById('hs-total').textContent=Number(d.total).toLocaleString();if(d.pagi!==undefined)document.getElementById('hs-pagi').textContent=Number(d.pagi).toLocaleString();if(d.petang!==undefined)document.getElementById('hs-petang').textContent=Number(d.petang).toLocaleString();if(d.prau!==undefined)document.getElementById('hs-prau').textContent=Number(d.prau).toLocaleString();}catch(e){}
+    })();
+
+    /* COUNTDOWN ENGINE */
+    const EXAM_DEFAULTS={spm:{date:'2025-11-10',start:'2025-01-01'},stpm:{date:'2025-11-24',start:'2025-01-01'},ppsa:{date:'2025-08-25',start:'2025-01-01'},pasa:{date:'2025-10-06',start:'2025-01-01'}};
+    function loadExamDates(){try{const s=JSON.parse(localStorage.getItem('smkg_exam_dates')||'null');if(!s)return EXAM_DEFAULTS;const m={};Object.keys(EXAM_DEFAULTS).forEach(k=>{m[k]={...EXAM_DEFAULTS[k],...(s[k]||{})};});return m;}catch(e){return EXAM_DEFAULTS;}}
+    function pad(n){return String(Math.floor(n)).padStart(2,'0');}
+    function renderCountdown(key,cfg){
+      const target=new Date(cfg.date+'T08:00:00'),startRef=new Date(cfg.start+'T00:00:00'),now=new Date();
+      const tag=document.getElementById(key+'-date-tag');
+      if(tag)tag.textContent=new Date(cfg.date).toLocaleDateString('ms-MY',{day:'numeric',month:'short',year:'numeric'});
+      const diff=target-now;
+      if(diff<=0){['d','h','m','s'].forEach(u=>{const el=document.getElementById(key+'-'+u);if(el)el.textContent='00';});const bar=document.getElementById(key+'-bar');if(bar)bar.style.width='100%';return;}
+      const days=Math.floor(diff/86400000),hours=Math.floor((diff%86400000)/3600000),mins=Math.floor((diff%3600000)/60000),secs=Math.floor((diff%60000)/1000);
+      const dEl=document.getElementById(key+'-d'),hEl=document.getElementById(key+'-h'),mEl=document.getElementById(key+'-m'),sEl=document.getElementById(key+'-s');
+      if(dEl)dEl.textContent=pad(days);if(hEl)hEl.textContent=pad(hours);if(mEl)mEl.textContent=pad(mins);if(sEl)sEl.textContent=pad(secs);
+      const totalRange=target-startRef,elapsed=now-startRef,pct=Math.min(100,Math.max(0,(elapsed/totalRange)*100));
+      const bar=document.getElementById(key+'-bar');if(bar)bar.style.width=pct.toFixed(1)+'%';
+    }
+    let examDates=loadExamDates();
+    function tickCountdowns(){Object.keys(examDates).forEach(k=>renderCountdown(k,examDates[k]));}
+    tickCountdowns();setInterval(tickCountdowns,1000);
+    window.addEventListener('storage',e=>{if(e.key==='smkg_exam_dates'||e.key==='smkg_enrolmen'){examDates=loadExamDates();(function loadEnrolment(){try{const d=JSON.parse(localStorage.getItem('smkg_enrolmen')||'null');if(!d)return;if(d.total!==undefined)document.getElementById('hs-total').textContent=Number(d.total).toLocaleString();if(d.pagi!==undefined)document.getElementById('hs-pagi').textContent=Number(d.pagi).toLocaleString();if(d.petang!==undefined)document.getElementById('hs-petang').textContent=Number(d.petang).toLocaleString();if(d.prau!==undefined)document.getElementById('hs-prau').textContent=Number(d.prau).toLocaleString();}catch(e){}})();}});
+
+    /* DRIVE LINKS */
+    const LINKS={bm:{pengurusan:"https://drive.google.com/drive/folders/1_mfA8XdLD-jNh9iAY-TQI8cVX4Cb1c2r?usp=sharing",pekeliling:"https://drive.google.com/drive/folders/103iYyYK_NDMH4vlD7EMk9KwhTfLD_Obp?usp=sharing",mesyuarat:"https://drive.google.com/drive/folders/1cu6yTjH0dr2xYDzLe65aGhJxMhHhRtRH?usp=sharing",pentaksiran:"https://drive.google.com/drive/folders/1QUKk5DTCA2ndC-zj1Td9Ez7ssBQffRD0?usp=sharing",perancangan:"https://drive.google.com/drive/folders/19AwsEnKQlmcjwFmolZWPD6BxEiz-s99d?usp=sharing",kewangan:"https://drive.google.com/drive/folders/19AwsEnKQlmcjwFmolZWPD6BxEiz-s99d?usp=sharing"},bi:{pengurusan:"https://drive.google.com/drive/folders/1Jrzf9XJkqUuITL6uqj85z_IjDKV9LHJR?usp=drive_link",pekeliling:"https://drive.google.com/drive/folders/1EBQ6Nv86eNIwu_icHrNo-Yex0RTFVMel?usp=drive_link",mesyuarat:"https://drive.google.com/drive/folders/1XR-HA_oAuI8or8ugF4klvc5ebN2-JJdy?usp=drive_link",pentaksiran:"https://drive.google.com/drive/folders/1MjaF8yTgDCViCoAYDdkA3xV-_ez2HITC?usp=drive_link",perancangan:"https://drive.google.com/drive/folders/1ixR7lbf0Y_5XEFhl4jhy0Eh4ioY5w0AJ?usp=drive_link",kewangan:"https://drive.google.com/drive/folders/1ChosK1WBFnxj7SPL4Gz6_ZDj8Ap6P-Bp?usp=drive_link"},ba:{pengurusan:"https://drive.google.com/drive/folders/1JOgzqG1g0-p2vjfhW5bsej9FWOBnW0h9?usp=drive_link",pekeliling:"https://drive.google.com/drive/folders/1AcYNdagBZ3hcNF86LorS9zFMQrdLJZJD?usp=drive_link",mesyuarat:"https://drive.google.com/drive/folders/1EXBic7wE77d6B39vAV5TCOCc6x0vo2hL?usp=drive_link",pentaksiran:"https://drive.google.com/drive/folders/1Ns8lr2lSoKLsih6ghzvG-PGkm1cwL0gd?usp=drive_link",perancangan:"https://drive.google.com/drive/folders/1BQm8Dp-Z51eeB-KZn1KOlcMXJi1zPV1X?usp=drive_link",kewangan:"https://drive.google.com/drive/folders/1_5USgbdVxFs1kYx3JhXF4isgKMhQz4OC?usp=drive_link"},km:{pengurusan:"https://drive.google.com/drive/folders/1t20DcE4jbZy_pxcCtmD9yL2KVYqFl3tV?usp=drive_link",pekeliling:"https://drive.google.com/drive/folders/1jI3wDyqS6JDzGOZDKSsZdn44n9eyq663?usp=drive_link",mesyuarat:"https://drive.google.com/drive/folders/1ApIJltOXhWFY417iWnR8ZsgIwLpCkhew?usp=drive_link",pentaksiran:"https://drive.google.com/drive/folders/1xBPqe8QbnIpZz0cSVmv2iplHNiSb5WJt?usp=drive_link",perancangan:"https://drive.google.com/drive/folders/1FzcU2SsNaEe-fQ_lmHnTpwfL44cLf4iF?usp=drive_link",kewangan:"https://drive.google.com/drive/folders/1hrHY1dR1es2jYS1JZhfr9PZjZI_NY24t?usp=drive_link"},bkd:{pengurusan:"https://drive.google.com/drive/folders/1kS4aapz5aNwRTghC5NhFsyWMxvfna2Xx?usp=drive_link",pekeliling:"https://drive.google.com/drive/folders/19pWW5GhLez80Lh2Ae6Ov42s8M9kMguRg?usp=drive_link",mesyuarat:"https://drive.google.com/drive/folders/1hUUuUFf6a7fIVL-Xpp4bKi2msIVmia_c?usp=drive_link",pentaksiran:"https://drive.google.com/drive/folders/1KIubcnvTDVMaGCeK8GqhBUUwPfTmnVmc?usp=drive_link",perancangan:"https://drive.google.com/drive/folders/1OxP_448r4ROCwhC5o27ISoaHQ5InQqAf?usp=drive_link",kewangan:"https://drive.google.com/drive/folders/1NGupwPHBMc4HYHIVrGkq-Bfv9Hty2s4w?usp=drive_link"},mt:{pengurusan:"https://drive.google.com/drive/folders/1TnRcgg2BFhUDJc54gVardi1pWRJfhUfQ?usp=drive_link",pekeliling:"https://drive.google.com/drive/folders/1X66O0AUonabuhDDp1yQarw8LBrpMCdtE?usp=drive_link",mesyuarat:"https://drive.google.com/drive/folders/1D7JaE3sIeE6wTYWsz0QLH9BGPo3I2-MX?usp=drive_link",pentaksiran:"https://drive.google.com/drive/folders/1KUa7BwV9NoNuR0BmrguNE4b-aZE3rB1W?usp=drive_link",perancangan:"https://drive.google.com/drive/folders/1qEOq9vH9NgwLqvOFyzTGXn-afph1jMOH?usp=drive_link",kewangan:"https://drive.google.com/drive/folders/1NQHWVW1vgd_wdA06O-n_bWWXqtREe7jo?usp=drive_link"},sc:{pengurusan:"https://drive.google.com/drive/folders/1z8QO3kvXUalvxdaM3TF1t_QGVsiv9Kx3?usp=drive_link",pekeliling:"https://drive.google.com/drive/folders/1zq3ZOMBd2YhMidwehJ6q_8pe2glnTSQT?usp=drive_link",mesyuarat:"https://drive.google.com/drive/folders/1Rr6AT-BUy1jNgjOOuxxIl4T63ZA-8taw?usp=drive_link",pentaksiran:"https://drive.google.com/drive/folders/1mrIJRKPLFZqM5BXJwr-waOWo8TO_Tv1W?usp=drive_link",perancangan:"https://drive.google.com/drive/folders/1RQdUJgHP9PoOHlA052TQphgyzHhi87KM?usp=drive_link",kewangan:"https://drive.google.com/drive/folders/15YQj6-QyGGsuFQ8BFNDCl6pb37Qfh2p3?usp=drive_link"},bio:{pengurusan:"https://drive.google.com/drive/folders/1eNksELZJK-_5wEFr1CLOKW4tBo5iRkUH?usp=drive_link",pekeliling:"https://drive.google.com/drive/folders/1pEBv7ic4XYta4wvrvXpixrjzXjbgjsfa?usp=drive_link",mesyuarat:"https://drive.google.com/drive/folders/1vOhVPkBYGsr_S3bv53iJwcX8NNEbSJ3G?usp=drive_link",pentaksiran:"https://drive.google.com/drive/folders/1U0J0o7yjmmOcvSqMNfoxFza-mPeumHEH?usp=drive_link",perancangan:"https://drive.google.com/drive/folders/1RlB4JqERbNShD5kz9Y0THXnBRehIX0XA?usp=drive_link",kewangan:"https://drive.google.com/drive/folders/1lx1J9c0EGxeMvz8E1q-TISgtkrcg4J2O?usp=drive_link"},fiz:{pengurusan:"https://drive.google.com/drive/folders/18Icqi_gFyJAc7wsLU7KP7IDlYoLt_wb8?usp=drive_link",pekeliling:"https://drive.google.com/drive/folders/1ohYLXQwP5GMic_QaJMHn1WZnYu2oPBCO?usp=drive_link",mesyuarat:"https://drive.google.com/drive/folders/1XJClmeOARQzo9WL_L99Eg6N-drV6vrP5?usp=drive_link",pentaksiran:"https://drive.google.com/drive/folders/1ilX-Webh6UHqRDTM-2BhKreg2ghHrk-m?usp=drive_link",perancangan:"https://drive.google.com/drive/folders/1zBvw2he5LjLZZT_eGVxPh0tT5wPKaCG0?usp=drive_link",kewangan:"https://drive.google.com/drive/folders/15ITYRv0AmbnnuVg7t9bEaBcBe4hFKrrK?usp=drive_link"},kim:{pengurusan:"https://drive.google.com/drive/folders/1pvmBEmbnQpYgzVgfFEGPmF2uOHDtOjbS?usp=drive_link",pekeliling:"https://drive.google.com/drive/folders/1YKc73pL3n_OWET4SJ5VqzBAqwjVOuPbZ?usp=drive_link",mesyuarat:"https://drive.google.com/drive/folders/1PvR6ZO1Ri76uC5otosHCvt7jZ4vKo7yt?usp=drive_link",pentaksiran:"https://drive.google.com/drive/folders/10Pmrh5iAWuQV7mwAnnYojZihpZvxqNQA?usp=drive_link",perancangan:"https://drive.google.com/drive/folders/1XdMEjZsBfNr9fGwHYjs-m5EoRm4OSBz-?usp=drive_link",kewangan:"https://drive.google.com/drive/folders/14k34mwkrXiIBh8uix6cRmP7uIAT-V4R-?usp=drive_link"},mt2:{pengurusan:"https://drive.google.com/drive/folders/1Ny7tO0fhq78T8SaFo7vx13xEVrx05aBF?usp=drive_link",pekeliling:"https://drive.google.com/drive/folders/1RtS0I1q4llwF-QR51ZZV8pRvgjQNxIAy?usp=drive_link",mesyuarat:"https://drive.google.com/drive/folders/1f1i3Z0PGJEHdRbcoSXOjlWtDLpqfsjwB?usp=drive_link",pentaksiran:"https://drive.google.com/drive/folders/1FaZfiFNcRiZb8ikVgMdyll_RDslMD3HZ?usp=drive_link",perancangan:"https://drive.google.com/drive/folders/19zsEm-5DrCPzIOyx_z5yVSy0eQiIsyNG?usp=drive_link",kewangan:"https://drive.google.com/drive/folders/1xyFJEP7fAectz62pPdXemyx6I0tZZen7?usp=drive_link"},sej:{pengurusan:"https://drive.google.com/drive/folders/1KTel9kiZDhe0ouCdivVazxoHt7MC9poW?usp=drive_link",pekeliling:"https://drive.google.com/drive/folders/1pVURiDmgkBJau5DK0vm9EPkYXJP5x8ji?usp=drive_link",mesyuarat:"https://drive.google.com/drive/folders/1EBEpOm0Ob-QteA0OwOig_FJMP4Jk8dfK?usp=drive_link",pentaksiran:"https://drive.google.com/drive/folders/1Y-W7MmpU3cZnwuY1razNwYDb1_MSDcPb?usp=drive_link",perancangan:"https://drive.google.com/drive/folders/1_HE6H7NcxP5LmTyzUcX_j6sRnZbTCR70?usp=drive_link",kewangan:"https://drive.google.com/drive/folders/1hBSMFD6TH5mqxwdjWjKIgRHSry7QQ2Wl?usp=drive_link"},geo:{pengurusan:"https://drive.google.com/drive/folders/17f0dewjc-0eqg0VxyjdYz9GI0_uE0lk-?usp=drive_link",pekeliling:"https://drive.google.com/drive/folders/1u_lTAWcBaaaFYtpddOLu4bFlROlp2ari?usp=drive_link",mesyuarat:"https://drive.google.com/drive/folders/1BXXHZNU4DOLg2Tf-qSh8zT1UlQRKIVqj?usp=drive_link",pentaksiran:"https://drive.google.com/drive/folders/1UbiWlTd9FkaCgD8X2pL8Ist6_p_kDnY3?usp=drive_link",perancangan:"https://drive.google.com/drive/folders/162UVv1rfHfd794jT_aiJXTMmbwR4raLq?usp=drive_link",kewangan:"https://drive.google.com/drive/folders/1gH5FokfV1BzNmX0q0Lrn2mjlLtwldwPE?usp=drive_link"},pai:{pengurusan:"https://drive.google.com/drive/folders/12LMEF7c4YCDYhdGR4ehrO50BzfoQPiKc?usp=drive_link",pekeliling:"https://drive.google.com/drive/folders/1t4HB22JzxXvIgvbGGdNJJsd6wsOLmXAj?usp=drive_link",mesyuarat:"https://drive.google.com/drive/folders/1MdQSyZomeDOjskYepTeb_hiJQpmZIWbH?usp=drive_link",pentaksiran:"https://drive.google.com/drive/folders/1vPOCsrnziJH_IoV3XlC7xY4Er4d7JY5L?usp=drive_link",perancangan:"https://drive.google.com/drive/folders/1lG_eF6yGQ-oOdg964XnLTBWw49Gw_fNO?usp=drive_link",kewangan:"https://drive.google.com/drive/folders/1N-jq63AukTbwwyo3rfc3Cy97EunR1aiG?usp=drive_link"},pm:{pengurusan:"https://drive.google.com/drive/folders/15QI9KmpF4GcATxmZ9l-K7oObMOV39Ce2?usp=drive_link",pekeliling:"https://drive.google.com/drive/folders/1APwoDhf5k3bkS-DJJyuZwaaGOYjavmTI?usp=drive_link",mesyuarat:"https://drive.google.com/drive/folders/1V1lVscIZcoDD5iBlGyRiYmSaWTdpYaZ5?usp=drive_link",pentaksiran:"https://drive.google.com/drive/folders/108Bsqo4U25cjXkRgM_N9wpwlQ2KkxbaB?usp=drive_link",perancangan:"https://drive.google.com/drive/folders/1VpcTDnQ-W16D6sy1Q1W_22j2JYT5vjuW?usp=drive_link",kewangan:"https://drive.google.com/drive/folders/1h8Nnm6xRI9w0pXp1yAbCU-uWEcDb4vcN?usp=drive_link"},psv:{pengurusan:"https://drive.google.com/drive/folders/1FzhRwZlg6W_oSkzp5gkHPfehZ8mKR-2-?usp=drive_link",pekeliling:"https://drive.google.com/drive/folders/1galR46m5FPfB9N4fU2jTFsA51Old-xLa?usp=drive_link",mesyuarat:"https://drive.google.com/drive/folders/1C5ME9dujyawSo3Y-iPNAfi4rk8mm9_Wf?usp=drive_link",pentaksiran:"https://drive.google.com/drive/folders/1KVTBQVcnVtSgLlrBFSekvo_49XGjJ6Q_?usp=drive_link",perancangan:"https://drive.google.com/drive/folders/1HU4x52CiLPMDT6bkWdlRcfPEG0Q1QNcY?usp=drive_link",kewangan:"https://drive.google.com/drive/folders/1Czq2w2491N7jpAlkhDXsacKZqaOnOwqa?usp=drive_link"},pjpk:{pengurusan:"https://drive.google.com/drive/folders/13npKMymjni_PdXKcea0vPdCqrpr441Ww?usp=drive_link",pekeliling:"https://drive.google.com/drive/folders/1Dt-Tz1MK-DntW67sazPdvmREJZwwWBYW?usp=drive_link",mesyuarat:"https://drive.google.com/drive/folders/1EN3Ua0TH4DSBhKpjqb3TE5sIKjcD67Ns?usp=drive_link",pentaksiran:"https://drive.google.com/drive/folders/12RhN87702DFqBwEnOJV_RRMzccuq5syS?usp=drive_link",perancangan:"https://drive.google.com/drive/folders/13KZmpFYYHNXqOHmxrfK-pepkqMDPaOSJ?usp=drive_link",kewangan:"https://drive.google.com/drive/folders/15IzUjI88DXRaThDRiX--zdkjjB0DDF0-?usp=drive_link"},ss:{pengurusan:"https://drive.google.com/drive/folders/1jdj_uZ83RGZiKTwm-FCOc9MPDsI206qc?usp=drive_link",pekeliling:"https://drive.google.com/drive/folders/1Q7Vj5q0unWY9EljkRFw5ukgVbURPkA_8?usp=drive_link",mesyuarat:"https://drive.google.com/drive/folders/1ICuqkMkdh5gtAgWHZUesRSqVxlAWIVky?usp=drive_link",pentaksiran:"https://drive.google.com/drive/folders/1G8LC1nKOOc7mZwcdRmEBe7Epzr32nMTa?usp=drive_link",perancangan:"https://drive.google.com/drive/folders/10aLrVw5Xrpi4WoB3sJxBlsYq4lGqkesW?usp=drive_link",kewangan:"https://drive.google.com/drive/folders/16pNyRBWCbggWbSGolFMyESxvVi3UnUmr?usp=drive_link"},prt:{pengurusan:"https://drive.google.com/drive/folders/1oMNIBSvSA4G_9aVRffcaNPbq0wN-9Skd?usp=drive_link",pekeliling:"https://drive.google.com/drive/folders/17pArf7jJ6BxYyJ97NvjghdGvIMKE1TH7?usp=drive_link",mesyuarat:"https://drive.google.com/drive/folders/1RV129OOnUsf78HfOeDVvoF3B9ZfB_SBj?usp=drive_link",pentaksiran:"https://drive.google.com/drive/folders/1sGPfZOh5lwYP4Nmh6PVOuv0f2g8KntbB?usp=drive_link",perancangan:"https://drive.google.com/drive/folders/1iPRoPJthj7stdKPOaWpS_SW6PNR1K94X?usp=drive_link",kewangan:"https://drive.google.com/drive/folders/1H-ka9gQdyRWjq0D3_WawHsxhDjvd3Ede?usp=drive_link"},per:{pengurusan:"https://drive.google.com/drive/folders/1nrJaevWG1vQwrj9O0-2Lod2POwDp9MG2?usp=drive_link",pekeliling:"https://drive.google.com/drive/folders/1o0sjwn_JWz2vjiQO1jy7CDSHZURQhcvg?usp=drive_link",mesyuarat:"https://drive.google.com/drive/folders/1D0fAozAO1y5AViyskuSj_drGFjUpQAaf?usp=drive_link",pentaksiran:"https://drive.google.com/drive/folders/1mIavIjJHfWH4sBohUcfBJ41LBJV3qviz?usp=drive_link",perancangan:"https://drive.google.com/drive/folders/1cL1KTh4v6lt1KCeR3RLdeBInB61rBD3E?usp=drive_link",kewangan:"https://drive.google.com/drive/folders/1pQKxckJ0EF5BU338mbNzeBfDXnkzyIKk?usp=drive_link"},eko:{pengurusan:"https://drive.google.com/drive/folders/15a4j0XLrNB7jKQEjEPoZ-aBIrRpPMW8v?usp=drive_link",pekeliling:"https://drive.google.com/drive/folders/1Xr7XP0FFg6ofmt-6whLZ__Yhj7WqD8pr?usp=drive_link",mesyuarat:"https://drive.google.com/drive/folders/1TdQ8pM43ZvAAKvEMcRD-jqxsZr4jKRqI?usp=drive_link",pentaksiran:"https://drive.google.com/drive/folders/1rHBdMODnpqIdnA6Au2XDC2RNDp45Q30b?usp=drive_link",perancangan:"https://drive.google.com/drive/folders/1hhlUK1T0yxwSa-o44Yf1kx_LrnKJrVe9?usp=drive_link",kewangan:"https://drive.google.com/drive/folders/1FZLV9t4trHAW7d9UlSG7aK0DNxY-rAFd?usp=drive_link"},ak:{pengurusan:"https://drive.google.com/drive/folders/1Qgb9chYHZsHS4DLQJq6iycF1xRaNG93m?usp=drive_link",pekeliling:"https://drive.google.com/drive/folders/1671Y09-A6SBSeChkGT6Egq1srVvrtHHe?usp=drive_link",mesyuarat:"https://drive.google.com/drive/folders/17iKpnjhhhpXLy9hgWLVonVnIzti-MzXX?usp=drive_link",pentaksiran:"https://drive.google.com/drive/folders/15c-wySf5MjmP70PndJjJjnzZ9QpsU6eH?usp=drive_link",perancangan:"https://drive.google.com/drive/folders/1V3ZGoPitTFJrx_NydqkD1eAaz7N2SHJ4?usp=drive_link",kewangan:"https://drive.google.com/drive/folders/1VLIuebq2RRxmsbPSG0avRZKloBh-6e8Q?usp=drive_link"},kdp:{pengurusan:"https://drive.google.com/drive/folders/1lC38AB3IPs7q62g5kubqLDe_qqsFIAWs?usp=drive_link",pekeliling:"https://drive.google.com/drive/folders/1M5QqjexIOOTBdenkwUqaBJretaGYJHed?usp=drive_link",mesyuarat:"https://drive.google.com/drive/folders/1WW1xhJ6ieXempqFPCA1wvvjASFg4ni9V?usp=drive_link",pentaksiran:"https://drive.google.com/drive/folders/1tP6cLsktVenCuz-W3JhdFOZ7abdomjHT?usp=drive_link",perancangan:"https://drive.google.com/drive/folders/1s--f45yr4qwVIQ2Mqo9YvmLNs1iD8DgZ?usp=drive_link",kewangan:"https://drive.google.com/drive/folders/1he5kMSEk0WXs4wUXjAzB0iKfGSacNbrh?usp=drive_link"},ldn:{pengurusan:"https://drive.google.com/drive/folders/1hgegolySyLJLf1fpVIA4PRgjaT4KcVY4?usp=drive_link",pekeliling:"https://drive.google.com/drive/folders/1HdTE7kDGkaxnEkq-A274YJIMZ66Wpy3Y?usp=drive_link",mesyuarat:"https://drive.google.com/drive/folders/17VXQGhLokFqp5eRmJLCQmsgZtZLjLIrT?usp=drive_link",pentaksiran:"https://drive.google.com/drive/folders/15WOVVRA_zUiXtSMqvw252ocxpLe5l4I3?usp=drive_link",perancangan:"https://drive.google.com/drive/folders/1gJaRQF_g4ua-Hpm-w2cAGvqPDs6xhD4n?usp=drive_link",kewangan:"https://drive.google.com/drive/folders/14-v_YHvcPhafXS71rWHxv0a9LUvmKo8F?usp=drive_link"},rbt:{pengurusan:"https://drive.google.com/drive/folders/11TZNYnBXLa192tT3lcpoosVggZ3qOMyL?usp=drive_link",pekeliling:"https://drive.google.com/drive/folders/1XWPsFmg5iNTW18mDgll-nIIUoA_47MK_?usp=drive_link",mesyuarat:"https://drive.google.com/drive/folders/1ahR7br4b3ttcvuTCJkwAeiQFOJggvmGZ?usp=drive_link",pentaksiran:"https://drive.google.com/drive/folders/14tlHFpWc_cYCvHCq8mTtTF54nOEYsC4P?usp=drive_link",perancangan:"https://drive.google.com/drive/folders/171pm2x3EYAyixXr3g2HTuenl8cz4k0Yr?usp=drive_link",kewangan:"https://drive.google.com/drive/folders/1rOWshS-ZmWmbSZElL7t5bZ3ZtQsnC9q2?usp=drive_link"}};
+    document.querySelectorAll('.mcard[data-module]').forEach(card=>{card.addEventListener('click',()=>{const mod=card.dataset.module,url=LINKS?.[currentSubject]?.[mod];if(!url){showToast('Tiada link untuk: '+(SUBJECT_LABEL[currentSubject]||currentSubject));return;}window.open(url,'_blank','noopener');});});
+  </script>
 </body>
 </html>
