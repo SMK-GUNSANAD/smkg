@@ -248,7 +248,28 @@
     @media(max-width:640px){.home-cd-grid{grid-template-columns:1fr;}}
     @media(max-width:860px){:root{--leftW:240px;}.module-grid{grid-template-columns:repeat(2,minmax(0,1fr));}}
     @media(max-width:640px){:root{--leftW:100%;}.shell{grid-template-columns:1fr;}html,body{overflow:auto;}.left{height:auto;border-right:0;border-bottom:1px solid var(--border);}.bidang-list{max-height:280px;}.right{height:auto;}.module-grid{grid-template-columns:repeat(2,minmax(0,1fr));}}
-  </style>
+    /* AUTH */
+    .nav-user-chip{display:flex;align-items:center;gap:7px;padding:5px 10px 5px 6px;border-radius:100px;border:1px solid var(--border);background:var(--surface);cursor:pointer;transition:all var(--dur) var(--ease);text-decoration:none;color:var(--text);}
+    .nav-user-chip:hover{background:var(--surface-hover);border-color:var(--border-strong);}
+    .nav-user-avatar{width:22px;height:22px;border-radius:50%;overflow:hidden;flex-shrink:0;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;}
+    .nav-user-avatar img{width:100%;height:100%;object-fit:cover;}
+    .nav-user-name{font-size:11px;font-weight:600;max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+    .nav-role-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+    .auth-gate{position:fixed;inset:0;z-index:800;background:rgba(0,0,0,.60);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .35s var(--ease);padding:20px;}
+    .auth-gate.open{opacity:1;pointer-events:auto;}
+    .auth-box{background:var(--bg1);border:1px solid var(--border-strong);border-radius:24px;width:min(400px,100%);padding:36px 32px;box-shadow:0 32px 80px rgba(0,0,0,.55);transform:translateY(20px) scale(.97);transition:transform .35s var(--ease2);text-align:center;}
+    .auth-gate.open .auth-box{transform:translateY(0) scale(1);}
+    .auth-box-mark{width:44px;height:44px;border-radius:12px;margin:0 auto 16px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:20px;color:#fff;font-weight:700;box-shadow:0 0 28px var(--accent-glow);}
+    .auth-box-title{font-size:18px;font-weight:800;letter-spacing:-.03em;margin-bottom:6px;}
+    .auth-box-sub{font-size:12.5px;color:var(--muted);line-height:1.55;margin-bottom:20px;}
+    .auth-google-btn{width:100%;display:flex;align-items:center;justify-content:center;gap:10px;padding:13px;border-radius:12px;background:var(--surface);border:1px solid var(--border-strong);color:var(--text);font-family:'Geist',sans-serif;font-size:13.5px;font-weight:600;cursor:pointer;transition:all .2s var(--ease);margin-bottom:10px;}
+    .auth-google-btn:hover{background:var(--surface-hover);border-color:var(--accent-border);transform:translateY(-1px);}
+    .auth-google-btn:disabled{opacity:.5;cursor:not-allowed;transform:none;}
+    .auth-cancel{font-size:12px;color:var(--muted2);cursor:pointer;background:none;border:none;font-family:'Geist',sans-serif;padding:6px;transition:color .2s;}
+    .auth-cancel:hover{color:var(--muted);}
+    .auth-status{font-size:11.5px;color:var(--muted2);margin-top:10px;font-family:'Geist Mono',monospace;min-height:18px;}
+    .auth-spinner{display:inline-block;width:14px;height:14px;border:2px solid var(--border-strong);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:6px;}
+    @keyframes spin{to{transform:rotate(360deg);}}
 </head>
 <body>
   <div class="bg"></div>
@@ -269,9 +290,29 @@
     <div class="nav-right">
       <button class="nav-btn" id="themeToggle"><span id="themeIcon">☾</span><span id="themeLabel">Dark</span></button>
       <a class="nav-btn" href="index.html" data-trans="true">← Kembali</a>
+      <div id="navUserChip" class="nav-user-chip" style="display:none;" title="Profil & Log Keluar">
+        <div class="nav-user-avatar" id="navAvatar">?</div>
+        <span class="nav-user-name" id="navUserName">—</span>
+        <div class="nav-role-dot" id="navRoleDot"></div>
+      </div>
       <div class="hamburger" id="hamburger"><span></span><span></span><span></span></div>
     </div>
   </header>
+
+  <!-- AUTH GATE MODAL -->
+  <div class="auth-gate" id="authGate">
+    <div class="auth-box">
+      <div class="auth-box-mark">◆</div>
+      <div class="auth-box-title">Log Masuk Diperlukan</div>
+      <div class="auth-box-sub">Portal Kurikulum memerlukan pengesahan identiti.<br>Gunakan akaun Google sekolah anda untuk teruskan.</div>
+      <button class="auth-google-btn" id="authGoogleBtn">
+        <svg width="18" height="18" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+        Log masuk dengan Google
+      </button>
+      <button class="auth-cancel" id="authCancel">Batal — lihat halaman utama</button>
+      <div class="auth-status" id="authStatus"></div>
+    </div>
+  </div>
 
   <div class="drawer-overlay" id="drawerOverlay"></div>
   <aside class="drawer" id="drawer">
@@ -614,6 +655,7 @@
       if(key==='pp'){showPPPanel();}
       else{showStdPanel();const code=key.toUpperCase();rightTitle.textContent=label;badgeText.textContent=code;activeLabel.textContent=code+' aktif';}
     }
+    window.setSubjectGlobal=setSubject;
     document.querySelectorAll('.subj[data-subject]').forEach(s=>{
       s.addEventListener('click',e=>{e.preventDefault();const key=s.dataset.subject;setSubject(key);const box=s.closest('.bidang');if(box&&!box.classList.contains('open'))box.querySelector('.bhead').click();});
     });
@@ -679,6 +721,123 @@
     /* DRIVE LINKS */
     const LINKS={bm:{pengurusan:"https://drive.google.com/drive/folders/1_mfA8XdLD-jNh9iAY-TQI8cVX4Cb1c2r?usp=sharing",pekeliling:"https://drive.google.com/drive/folders/103iYyYK_NDMH4vlD7EMk9KwhTfLD_Obp?usp=sharing",mesyuarat:"https://drive.google.com/drive/folders/1cu6yTjH0dr2xYDzLe65aGhJxMhHhRtRH?usp=sharing",pentaksiran:"https://drive.google.com/drive/folders/1QUKk5DTCA2ndC-zj1Td9Ez7ssBQffRD0?usp=sharing",perancangan:"https://drive.google.com/drive/folders/19AwsEnKQlmcjwFmolZWPD6BxEiz-s99d?usp=sharing",kewangan:"https://drive.google.com/drive/folders/19AwsEnKQlmcjwFmolZWPD6BxEiz-s99d?usp=sharing"},bi:{pengurusan:"https://drive.google.com/drive/folders/1Jrzf9XJkqUuITL6uqj85z_IjDKV9LHJR?usp=drive_link",pekeliling:"https://drive.google.com/drive/folders/1EBQ6Nv86eNIwu_icHrNo-Yex0RTFVMel?usp=drive_link",mesyuarat:"https://drive.google.com/drive/folders/1XR-HA_oAuI8or8ugF4klvc5ebN2-JJdy?usp=drive_link",pentaksiran:"https://drive.google.com/drive/folders/1MjaF8yTgDCViCoAYDdkA3xV-_ez2HITC?usp=drive_link",perancangan:"https://drive.google.com/drive/folders/1ixR7lbf0Y_5XEFhl4jhy0Eh4ioY5w0AJ?usp=drive_link",kewangan:"https://drive.google.com/drive/folders/1ChosK1WBFnxj7SPL4Gz6_ZDj8Ap6P-Bp?usp=drive_link"},ba:{pengurusan:"https://drive.google.com/drive/folders/1JOgzqG1g0-p2vjfhW5bsej9FWOBnW0h9?usp=drive_link",pekeliling:"https://drive.google.com/drive/folders/1AcYNdagBZ3hcNF86LorS9zFMQrdLJZJD?usp=drive_link",mesyuarat:"https://drive.google.com/drive/folders/1EXBic7wE77d6B39vAV5TCOCc6x0vo2hL?usp=drive_link",pentaksiran:"https://drive.google.com/drive/folders/1Ns8lr2lSoKLsih6ghzvG-PGkm1cwL0gd?usp=drive_link",perancangan:"https://drive.google.com/drive/folders/1BQm8Dp-Z51eeB-KZn1KOlcMXJi1zPV1X?usp=drive_link",kewangan:"https://drive.google.com/drive/folders/1_5USgbdVxFs1kYx3JhXF4isgKMhQz4OC?usp=drive_link"},km:{pengurusan:"https://drive.google.com/drive/folders/1t20DcE4jbZy_pxcCtmD9yL2KVYqFl3tV?usp=drive_link",pekeliling:"https://drive.google.com/drive/folders/1jI3wDyqS6JDzGOZDKSsZdn44n9eyq663?usp=drive_link",mesyuarat:"https://drive.google.com/drive/folders/1ApIJltOXhWFY417iWnR8ZsgIwLpCkhew?usp=drive_link",pentaksiran:"https://drive.google.com/drive/folders/1xBPqe8QbnIpZz0cSVmv2iplHNiSb5WJt?usp=drive_link",perancangan:"https://drive.google.com/drive/folders/1FzcU2SsNaEe-fQ_lmHnTpwfL44cLf4iF?usp=drive_link",kewangan:"https://drive.google.com/drive/folders/1hrHY1dR1es2jYS1JZhfr9PZjZI_NY24t?usp=drive_link"},bkd:{pengurusan:"https://drive.google.com/drive/folders/1kS4aapz5aNwRTghC5NhFsyWMxvfna2Xx?usp=drive_link",pekeliling:"https://drive.google.com/drive/folders/19pWW5GhLez80Lh2Ae6Ov42s8M9kMguRg?usp=drive_link",mesyuarat:"https://drive.google.com/drive/folders/1hUUuUFf6a7fIVL-Xpp4bKi2msIVmia_c?usp=drive_link",pentaksiran:"https://drive.google.com/drive/folders/1KIubcnvTDVMaGCeK8GqhBUUwPfTmnVmc?usp=drive_link",perancangan:"https://drive.google.com/drive/folders/1OxP_448r4ROCwhC5o27ISoaHQ5InQqAf?usp=drive_link",kewangan:"https://drive.google.com/drive/folders/1NGupwPHBMc4HYHIVrGkq-Bfv9Hty2s4w?usp=drive_link"},mt:{pengurusan:"https://drive.google.com/drive/folders/1TnRcgg2BFhUDJc54gVardi1pWRJfhUfQ?usp=drive_link",pekeliling:"https://drive.google.com/drive/folders/1X66O0AUonabuhDDp1yQarw8LBrpMCdtE?usp=drive_link",mesyuarat:"https://drive.google.com/drive/folders/1D7JaE3sIeE6wTYWsz0QLH9BGPo3I2-MX?usp=drive_link",pentaksiran:"https://drive.google.com/drive/folders/1KUa7BwV9NoNuR0BmrguNE4b-aZE3rB1W?usp=drive_link",perancangan:"https://drive.google.com/drive/folders/1qEOq9vH9NgwLqvOFyzTGXn-afph1jMOH?usp=drive_link",kewangan:"https://drive.google.com/drive/folders/1NQHWVW1vgd_wdA06O-n_bWWXqtREe7jo?usp=drive_link"},sc:{pengurusan:"https://drive.google.com/drive/folders/1z8QO3kvXUalvxdaM3TF1t_QGVsiv9Kx3?usp=drive_link",pekeliling:"https://drive.google.com/drive/folders/1zq3ZOMBd2YhMidwehJ6q_8pe2glnTSQT?usp=drive_link",mesyuarat:"https://drive.google.com/drive/folders/1Rr6AT-BUy1jNgjOOuxxIl4T63ZA-8taw?usp=drive_link",pentaksiran:"https://drive.google.com/drive/folders/1mrIJRKPLFZqM5BXJwr-waOWo8TO_Tv1W?usp=drive_link",perancangan:"https://drive.google.com/drive/folders/1RQdUJgHP9PoOHlA052TQphgyzHhi87KM?usp=drive_link",kewangan:"https://drive.google.com/drive/folders/15YQj6-QyGGsuFQ8BFNDCl6pb37Qfh2p3?usp=drive_link"},bio:{pengurusan:"https://drive.google.com/drive/folders/1eNksELZJK-_5wEFr1CLOKW4tBo5iRkUH?usp=drive_link",pekeliling:"https://drive.google.com/drive/folders/1pEBv7ic4XYta4wvrvXpixrjzXjbgjsfa?usp=drive_link",mesyuarat:"https://drive.google.com/drive/folders/1vOhVPkBYGsr_S3bv53iJwcX8NNEbSJ3G?usp=drive_link",pentaksiran:"https://drive.google.com/drive/folders/1U0J0o7yjmmOcvSqMNfoxFza-mPeumHEH?usp=drive_link",perancangan:"https://drive.google.com/drive/folders/1RlB4JqERbNShD5kz9Y0THXnBRehIX0XA?usp=drive_link",kewangan:"https://drive.google.com/drive/folders/1lx1J9c0EGxeMvz8E1q-TISgtkrcg4J2O?usp=drive_link"},fiz:{pengurusan:"https://drive.google.com/drive/folders/18Icqi_gFyJAc7wsLU7KP7IDlYoLt_wb8?usp=drive_link",pekeliling:"https://drive.google.com/drive/folders/1ohYLXQwP5GMic_QaJMHn1WZnYu2oPBCO?usp=drive_link",mesyuarat:"https://drive.google.com/drive/folders/1XJClmeOARQzo9WL_L99Eg6N-drV6vrP5?usp=drive_link",pentaksiran:"https://drive.google.com/drive/folders/1ilX-Webh6UHqRDTM-2BhKreg2ghHrk-m?usp=drive_link",perancangan:"https://drive.google.com/drive/folders/1zBvw2he5LjLZZT_eGVxPh0tT5wPKaCG0?usp=drive_link",kewangan:"https://drive.google.com/drive/folders/15ITYRv0AmbnnuVg7t9bEaBcBe4hFKrrK?usp=drive_link"},kim:{pengurusan:"https://drive.google.com/drive/folders/1pvmBEmbnQpYgzVgfFEGPmF2uOHDtOjbS?usp=drive_link",pekeliling:"https://drive.google.com/drive/folders/1YKc73pL3n_OWET4SJ5VqzBAqwjVOuPbZ?usp=drive_link",mesyuarat:"https://drive.google.com/drive/folders/1PvR6ZO1Ri76uC5otosHCvt7jZ4vKo7yt?usp=drive_link",pentaksiran:"https://drive.google.com/drive/folders/10Pmrh5iAWuQV7mwAnnYojZihpZvxqNQA?usp=drive_link",perancangan:"https://drive.google.com/drive/folders/1XdMEjZsBfNr9fGwHYjs-m5EoRm4OSBz-?usp=drive_link",kewangan:"https://drive.google.com/drive/folders/14k34mwkrXiIBh8uix6cRmP7uIAT-V4R-?usp=drive_link"},mt2:{pengurusan:"https://drive.google.com/drive/folders/1Ny7tO0fhq78T8SaFo7vx13xEVrx05aBF?usp=drive_link",pekeliling:"https://drive.google.com/drive/folders/1RtS0I1q4llwF-QR51ZZV8pRvgjQNxIAy?usp=drive_link",mesyuarat:"https://drive.google.com/drive/folders/1f1i3Z0PGJEHdRbcoSXOjlWtDLpqfsjwB?usp=drive_link",pentaksiran:"https://drive.google.com/drive/folders/1FaZfiFNcRiZb8ikVgMdyll_RDslMD3HZ?usp=drive_link",perancangan:"https://drive.google.com/drive/folders/19zsEm-5DrCPzIOyx_z5yVSy0eQiIsyNG?usp=drive_link",kewangan:"https://drive.google.com/drive/folders/1xyFJEP7fAectz62pPdXemyx6I0tZZen7?usp=drive_link"},sej:{pengurusan:"https://drive.google.com/drive/folders/1KTel9kiZDhe0ouCdivVazxoHt7MC9poW?usp=drive_link",pekeliling:"https://drive.google.com/drive/folders/1pVURiDmgkBJau5DK0vm9EPkYXJP5x8ji?usp=drive_link",mesyuarat:"https://drive.google.com/drive/folders/1EBEpOm0Ob-QteA0OwOig_FJMP4Jk8dfK?usp=drive_link",pentaksiran:"https://drive.google.com/drive/folders/1Y-W7MmpU3cZnwuY1razNwYDb1_MSDcPb?usp=drive_link",perancangan:"https://drive.google.com/drive/folders/1_HE6H7NcxP5LmTyzUcX_j6sRnZbTCR70?usp=drive_link",kewangan:"https://drive.google.com/drive/folders/1hBSMFD6TH5mqxwdjWjKIgRHSry7QQ2Wl?usp=drive_link"},geo:{pengurusan:"https://drive.google.com/drive/folders/17f0dewjc-0eqg0VxyjdYz9GI0_uE0lk-?usp=drive_link",pekeliling:"https://drive.google.com/drive/folders/1u_lTAWcBaaaFYtpddOLu4bFlROlp2ari?usp=drive_link",mesyuarat:"https://drive.google.com/drive/folders/1BXXHZNU4DOLg2Tf-qSh8zT1UlQRKIVqj?usp=drive_link",pentaksiran:"https://drive.google.com/drive/folders/1UbiWlTd9FkaCgD8X2pL8Ist6_p_kDnY3?usp=drive_link",perancangan:"https://drive.google.com/drive/folders/162UVv1rfHfd794jT_aiJXTMmbwR4raLq?usp=drive_link",kewangan:"https://drive.google.com/drive/folders/1gH5FokfV1BzNmX0q0Lrn2mjlLtwldwPE?usp=drive_link"},pai:{pengurusan:"https://drive.google.com/drive/folders/12LMEF7c4YCDYhdGR4ehrO50BzfoQPiKc?usp=drive_link",pekeliling:"https://drive.google.com/drive/folders/1t4HB22JzxXvIgvbGGdNJJsd6wsOLmXAj?usp=drive_link",mesyuarat:"https://drive.google.com/drive/folders/1MdQSyZomeDOjskYepTeb_hiJQpmZIWbH?usp=drive_link",pentaksiran:"https://drive.google.com/drive/folders/1vPOCsrnziJH_IoV3XlC7xY4Er4d7JY5L?usp=drive_link",perancangan:"https://drive.google.com/drive/folders/1lG_eF6yGQ-oOdg964XnLTBWw49Gw_fNO?usp=drive_link",kewangan:"https://drive.google.com/drive/folders/1N-jq63AukTbwwyo3rfc3Cy97EunR1aiG?usp=drive_link"},pm:{pengurusan:"https://drive.google.com/drive/folders/15QI9KmpF4GcATxmZ9l-K7oObMOV39Ce2?usp=drive_link",pekeliling:"https://drive.google.com/drive/folders/1APwoDhf5k3bkS-DJJyuZwaaGOYjavmTI?usp=drive_link",mesyuarat:"https://drive.google.com/drive/folders/1V1lVscIZcoDD5iBlGyRiYmSaWTdpYaZ5?usp=drive_link",pentaksiran:"https://drive.google.com/drive/folders/108Bsqo4U25cjXkRgM_N9wpwlQ2KkxbaB?usp=drive_link",perancangan:"https://drive.google.com/drive/folders/1VpcTDnQ-W16D6sy1Q1W_22j2JYT5vjuW?usp=drive_link",kewangan:"https://drive.google.com/drive/folders/1h8Nnm6xRI9w0pXp1yAbCU-uWEcDb4vcN?usp=drive_link"},psv:{pengurusan:"https://drive.google.com/drive/folders/1FzhRwZlg6W_oSkzp5gkHPfehZ8mKR-2-?usp=drive_link",pekeliling:"https://drive.google.com/drive/folders/1galR46m5FPfB9N4fU2jTFsA51Old-xLa?usp=drive_link",mesyuarat:"https://drive.google.com/drive/folders/1C5ME9dujyawSo3Y-iPNAfi4rk8mm9_Wf?usp=drive_link",pentaksiran:"https://drive.google.com/drive/folders/1KVTBQVcnVtSgLlrBFSekvo_49XGjJ6Q_?usp=drive_link",perancangan:"https://drive.google.com/drive/folders/1HU4x52CiLPMDT6bkWdlRcfPEG0Q1QNcY?usp=drive_link",kewangan:"https://drive.google.com/drive/folders/1Czq2w2491N7jpAlkhDXsacKZqaOnOwqa?usp=drive_link"},pjpk:{pengurusan:"https://drive.google.com/drive/folders/13npKMymjni_PdXKcea0vPdCqrpr441Ww?usp=drive_link",pekeliling:"https://drive.google.com/drive/folders/1Dt-Tz1MK-DntW67sazPdvmREJZwwWBYW?usp=drive_link",mesyuarat:"https://drive.google.com/drive/folders/1EN3Ua0TH4DSBhKpjqb3TE5sIKjcD67Ns?usp=drive_link",pentaksiran:"https://drive.google.com/drive/folders/12RhN87702DFqBwEnOJV_RRMzccuq5syS?usp=drive_link",perancangan:"https://drive.google.com/drive/folders/13KZmpFYYHNXqOHmxrfK-pepkqMDPaOSJ?usp=drive_link",kewangan:"https://drive.google.com/drive/folders/15IzUjI88DXRaThDRiX--zdkjjB0DDF0-?usp=drive_link"},ss:{pengurusan:"https://drive.google.com/drive/folders/1jdj_uZ83RGZiKTwm-FCOc9MPDsI206qc?usp=drive_link",pekeliling:"https://drive.google.com/drive/folders/1Q7Vj5q0unWY9EljkRFw5ukgVbURPkA_8?usp=drive_link",mesyuarat:"https://drive.google.com/drive/folders/1ICuqkMkdh5gtAgWHZUesRSqVxlAWIVky?usp=drive_link",pentaksiran:"https://drive.google.com/drive/folders/1G8LC1nKOOc7mZwcdRmEBe7Epzr32nMTa?usp=drive_link",perancangan:"https://drive.google.com/drive/folders/10aLrVw5Xrpi4WoB3sJxBlsYq4lGqkesW?usp=drive_link",kewangan:"https://drive.google.com/drive/folders/16pNyRBWCbggWbSGolFMyESxvVi3UnUmr?usp=drive_link"},prt:{pengurusan:"https://drive.google.com/drive/folders/1oMNIBSvSA4G_9aVRffcaNPbq0wN-9Skd?usp=drive_link",pekeliling:"https://drive.google.com/drive/folders/17pArf7jJ6BxYyJ97NvjghdGvIMKE1TH7?usp=drive_link",mesyuarat:"https://drive.google.com/drive/folders/1RV129OOnUsf78HfOeDVvoF3B9ZfB_SBj?usp=drive_link",pentaksiran:"https://drive.google.com/drive/folders/1sGPfZOh5lwYP4Nmh6PVOuv0f2g8KntbB?usp=drive_link",perancangan:"https://drive.google.com/drive/folders/1iPRoPJthj7stdKPOaWpS_SW6PNR1K94X?usp=drive_link",kewangan:"https://drive.google.com/drive/folders/1H-ka9gQdyRWjq0D3_WawHsxhDjvd3Ede?usp=drive_link"},per:{pengurusan:"https://drive.google.com/drive/folders/1nrJaevWG1vQwrj9O0-2Lod2POwDp9MG2?usp=drive_link",pekeliling:"https://drive.google.com/drive/folders/1o0sjwn_JWz2vjiQO1jy7CDSHZURQhcvg?usp=drive_link",mesyuarat:"https://drive.google.com/drive/folders/1D0fAozAO1y5AViyskuSj_drGFjUpQAaf?usp=drive_link",pentaksiran:"https://drive.google.com/drive/folders/1mIavIjJHfWH4sBohUcfBJ41LBJV3qviz?usp=drive_link",perancangan:"https://drive.google.com/drive/folders/1cL1KTh4v6lt1KCeR3RLdeBInB61rBD3E?usp=drive_link",kewangan:"https://drive.google.com/drive/folders/1pQKxckJ0EF5BU338mbNzeBfDXnkzyIKk?usp=drive_link"},eko:{pengurusan:"https://drive.google.com/drive/folders/15a4j0XLrNB7jKQEjEPoZ-aBIrRpPMW8v?usp=drive_link",pekeliling:"https://drive.google.com/drive/folders/1Xr7XP0FFg6ofmt-6whLZ__Yhj7WqD8pr?usp=drive_link",mesyuarat:"https://drive.google.com/drive/folders/1TdQ8pM43ZvAAKvEMcRD-jqxsZr4jKRqI?usp=drive_link",pentaksiran:"https://drive.google.com/drive/folders/1rHBdMODnpqIdnA6Au2XDC2RNDp45Q30b?usp=drive_link",perancangan:"https://drive.google.com/drive/folders/1hhlUK1T0yxwSa-o44Yf1kx_LrnKJrVe9?usp=drive_link",kewangan:"https://drive.google.com/drive/folders/1FZLV9t4trHAW7d9UlSG7aK0DNxY-rAFd?usp=drive_link"},ak:{pengurusan:"https://drive.google.com/drive/folders/1Qgb9chYHZsHS4DLQJq6iycF1xRaNG93m?usp=drive_link",pekeliling:"https://drive.google.com/drive/folders/1671Y09-A6SBSeChkGT6Egq1srVvrtHHe?usp=drive_link",mesyuarat:"https://drive.google.com/drive/folders/17iKpnjhhhpXLy9hgWLVonVnIzti-MzXX?usp=drive_link",pentaksiran:"https://drive.google.com/drive/folders/15c-wySf5MjmP70PndJjJjnzZ9QpsU6eH?usp=drive_link",perancangan:"https://drive.google.com/drive/folders/1V3ZGoPitTFJrx_NydqkD1eAaz7N2SHJ4?usp=drive_link",kewangan:"https://drive.google.com/drive/folders/1VLIuebq2RRxmsbPSG0avRZKloBh-6e8Q?usp=drive_link"},kdp:{pengurusan:"https://drive.google.com/drive/folders/1lC38AB3IPs7q62g5kubqLDe_qqsFIAWs?usp=drive_link",pekeliling:"https://drive.google.com/drive/folders/1M5QqjexIOOTBdenkwUqaBJretaGYJHed?usp=drive_link",mesyuarat:"https://drive.google.com/drive/folders/1WW1xhJ6ieXempqFPCA1wvvjASFg4ni9V?usp=drive_link",pentaksiran:"https://drive.google.com/drive/folders/1tP6cLsktVenCuz-W3JhdFOZ7abdomjHT?usp=drive_link",perancangan:"https://drive.google.com/drive/folders/1s--f45yr4qwVIQ2Mqo9YvmLNs1iD8DgZ?usp=drive_link",kewangan:"https://drive.google.com/drive/folders/1he5kMSEk0WXs4wUXjAzB0iKfGSacNbrh?usp=drive_link"},ldn:{pengurusan:"https://drive.google.com/drive/folders/1hgegolySyLJLf1fpVIA4PRgjaT4KcVY4?usp=drive_link",pekeliling:"https://drive.google.com/drive/folders/1HdTE7kDGkaxnEkq-A274YJIMZ66Wpy3Y?usp=drive_link",mesyuarat:"https://drive.google.com/drive/folders/17VXQGhLokFqp5eRmJLCQmsgZtZLjLIrT?usp=drive_link",pentaksiran:"https://drive.google.com/drive/folders/15WOVVRA_zUiXtSMqvw252ocxpLe5l4I3?usp=drive_link",perancangan:"https://drive.google.com/drive/folders/1gJaRQF_g4ua-Hpm-w2cAGvqPDs6xhD4n?usp=drive_link",kewangan:"https://drive.google.com/drive/folders/14-v_YHvcPhafXS71rWHxv0a9LUvmKo8F?usp=drive_link"},rbt:{pengurusan:"https://drive.google.com/drive/folders/11TZNYnBXLa192tT3lcpoosVggZ3qOMyL?usp=drive_link",pekeliling:"https://drive.google.com/drive/folders/1XWPsFmg5iNTW18mDgll-nIIUoA_47MK_?usp=drive_link",mesyuarat:"https://drive.google.com/drive/folders/1ahR7br4b3ttcvuTCJkwAeiQFOJggvmGZ?usp=drive_link",pentaksiran:"https://drive.google.com/drive/folders/14tlHFpWc_cYCvHCq8mTtTF54nOEYsC4P?usp=drive_link",perancangan:"https://drive.google.com/drive/folders/171pm2x3EYAyixXr3g2HTuenl8cz4k0Yr?usp=drive_link",kewangan:"https://drive.google.com/drive/folders/1rOWshS-ZmWmbSZElL7t5bZ3ZtQsnC9q2?usp=drive_link"}};
     document.querySelectorAll('.mcard[data-module]').forEach(card=>{card.addEventListener('click',()=>{const mod=card.dataset.module,url=LINKS?.[currentSubject]?.[mod];if(!url){showToast('Tiada link untuk: '+(SUBJECT_LABEL[currentSubject]||currentSubject));return;}window.open(url,'_blank','noopener');});});
+  </script>
+
+  <script type="module">
+    import { supabase, getUserRole, ensureUserRole, signInWithGoogle, ROLE_LABELS, ROLE_COLORS } from './supabase-config.js';
+
+    const ROLE_DOT_COLORS = {
+      super_admin:'#818cf8', admin:'#a78bfa',
+      PK:'#4ade80', KB:'#fbbf24', KP:'#60a5fa', GA:'#94a3b8'
+    };
+
+    /* ── Render nav user chip ── */
+    function renderUserChip(user, role){
+      const chip=document.getElementById('navUserChip');
+      const avatar=document.getElementById('navAvatar');
+      const nameEl=document.getElementById('navUserName');
+      const dot=document.getElementById('navRoleDot');
+      const name=user.user_metadata?.full_name||user.email||'';
+      const pic=user.user_metadata?.avatar_url;
+      if(pic){avatar.innerHTML=`<img src="${pic}" alt=""/>`;}
+      else{avatar.textContent=name[0]?.toUpperCase()||'?';}
+      nameEl.textContent=(name.split(' ')[0]||name).slice(0,12);
+      dot.style.background=ROLE_DOT_COLORS[role]||'#94a3b8';
+      dot.title=ROLE_LABELS[role]||role;
+      chip.style.display='flex';
+      chip.onclick=()=>{if(confirm('Log keluar dari SMKG?')){supabase.auth.signOut().then(()=>{chip.style.display='none';sessionStorage.removeItem('smkg_user_role');});}};
+    }
+
+    /* ── Auth gate ── */
+    const gate=document.getElementById('authGate');
+    const gBtn=document.getElementById('authGoogleBtn');
+    const gCancel=document.getElementById('authCancel');
+    const gStatus=document.getElementById('authStatus');
+
+    function openGate(){gate.classList.add('open');}
+    function closeGate(){gate.classList.remove('open');}
+
+    gCancel.onclick=()=>{closeGate();window.location.href='index.html';};
+    gate.addEventListener('click',e=>{if(e.target===gate)closeGate();});
+
+    gBtn.onclick=async()=>{
+      gBtn.disabled=true;
+      gBtn.innerHTML=`<span class="auth-spinner"></span> Mengalihkan ke Google…`;
+      gStatus.textContent='Membuka Google Sign-In…';
+      // Redirect back here after OAuth
+      const returnUrl=window.location.href;
+      localStorage.setItem('smkg_auth_return', returnUrl);
+      await signInWithGoogle(returnUrl);
+    };
+
+    /* ── Auth gate intercept: fires when user clicks any bidang subject ── */
+    let authed=false;
+    let pendingSubjectKey=null;
+
+    async function checkAuthAndProceed(key, callback){
+      if(authed){ callback(key); return; }
+      // Quick check cached session
+      const role=sessionStorage.getItem('smkg_user_role');
+      if(role){ authed=true; callback(key); return; }
+      // Check Supabase
+      const { data:{ session } }=await supabase.auth.getSession();
+      if(session?.user){
+        await ensureUserRole(session.user);
+        const r=await getUserRole(session.user.id);
+        sessionStorage.setItem('smkg_user_role', r);
+        sessionStorage.setItem('smkg_user_name', session.user.user_metadata?.full_name||session.user.email);
+        renderUserChip(session.user, r);
+        authed=true;
+        callback(key);
+      } else {
+        pendingSubjectKey=key;
+        openGate();
+      }
+    }
+
+    /* Intercept subject clicks — gate them through auth */
+    document.querySelectorAll('.subj[data-subject]').forEach(s=>{
+      const original=s.cloneNode(true);
+      s.addEventListener('click',e=>{
+        e.stopImmediatePropagation(); // prevent the plain JS handler
+      },{capture:true});
+      s.addEventListener('click',async e=>{
+        e.preventDefault();
+        const key=s.dataset.subject;
+        checkAuthAndProceed(key,(k)=>{
+          // Fire the global setSubject defined in the plain script
+          if(typeof window.setSubjectGlobal==='function') window.setSubjectGlobal(k);
+          const box=s.closest('.bidang');
+          if(box&&!box.classList.contains('open'))box.querySelector('.bhead').click();
+        });
+      });
+    });
+
+    /* ── On load: restore session silently ── */
+    const { data:{ session:initSession } }=await supabase.auth.getSession();
+    if(initSession?.user){
+      await ensureUserRole(initSession.user);
+      const r=await getUserRole(initSession.user.id);
+      sessionStorage.setItem('smkg_user_role', r);
+      renderUserChip(initSession.user, r);
+      authed=true;
+    }
+
+    /* ── Listen for auth state change (e.g. returned from OAuth popup) ── */
+    supabase.auth.onAuthStateChange(async(event, session)=>{
+      if(event==='SIGNED_IN'&&session?.user){
+        await ensureUserRole(session.user);
+        const r=await getUserRole(session.user.id);
+        sessionStorage.setItem('smkg_user_role', r);
+        renderUserChip(session.user, r);
+        authed=true;
+        closeGate();
+        if(pendingSubjectKey){
+          if(typeof window.setSubjectGlobal==='function') window.setSubjectGlobal(pendingSubjectKey);
+          pendingSubjectKey=null;
+        }
+      }
+    });
   </script>
 </body>
 </html>
