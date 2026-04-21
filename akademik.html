@@ -340,7 +340,7 @@
         <span class="dl-arrow">›</span>
       </a>
 
-      <a class="drawer-link" href="akademik.html" id="drawerKurikulum">
+      <a class="drawer-link" href="akademik.html" id="drawerKurikulum" style="display:none;">
         <div class="dl-icon">📚</div>
         <div class="dl-meta"><div class="dl-title">Kurikulum</div><div class="dl-sub">Akademik & pencapaian pelajar</div></div>
         <span class="dl-arrow">›</span>
@@ -790,9 +790,6 @@
   <script type="module">
     import { supabase, getUserRole, ensureUserRole, signInWithGoogle, ROLE_LABELS, ROLE_COLORS } from './supabase-config.js';
 
-    // Hide current page link in drawer
-    document.getElementById('drawerKurikulum').style.display = 'none';
-
     const ROLE_DOT_COLORS = {
       super_admin:'#818cf8', admin:'#a78bfa',
       PK:'#4ade80', KB:'#fbbf24', KP:'#60a5fa', GA:'#94a3b8'
@@ -812,7 +809,7 @@
       dot.style.background=ROLE_DOT_COLORS[role]||'#94a3b8';
       dot.title=ROLE_LABELS[role]||role;
       chip.style.display='flex';
-      chip.onclick=()=>{if(confirm('Log keluar dari SMKG?')){supabase.auth.signOut().then(()=>{chip.style.display='none';sessionStorage.removeItem('smkg_user_role');});}};
+      chip.onclick=()=>{if(confirm('Log keluar dari SMKG?')){supabase.auth.signOut().then(()=>{sessionStorage.removeItem('smkg_user_role');sessionStorage.removeItem('smkg_user_name');window.location.href='index.html';});}};
     }
 
     /* ── Auth gate ── */
