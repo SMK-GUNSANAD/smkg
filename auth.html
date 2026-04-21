@@ -291,15 +291,18 @@
     }
 
     /* ON LOAD — check existing session */
-const { data:{ session } } = await supabase.auth.getSession();
-if(session?.user){
-  location.href = 'index.html'; // auto redirect
-}
+    const { data:{ session } } = await supabase.auth.getSession();
+    if(session?.user){
+      location.href = 'index.html';
+    }
 
     /* LISTEN for auth state changes (OAuth callback returns here) */
     supabase.auth.onAuthStateChange(async (event, session)=>{
       if(event==='SIGNED_IN' && session?.user){
-            location.href = 'index.html';
+        // Only redirect on a real new login (token in URL = fresh OAuth callback)
+        if(location.hash.includes('access_token') || location.search.includes('code=')){
+          location.href = 'index.html';
+        }
       } else if(event==='SIGNED_OUT'){
         sessionStorage.removeItem('smkg_user_role');
         sessionStorage.removeItem('smkg_user_name');
