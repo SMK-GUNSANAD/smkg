@@ -879,5 +879,11 @@
 
     renderSlider();
   </script>
+<script type="module">
+  import { supabase } from './supabase-config.js';
+  const { data: { session } } = await supabase.auth.getSession();
+  console.log('index session:', session);
+  if (!session) window.location.href = 'auth.html';
+</script>
 </body>
 </html>
