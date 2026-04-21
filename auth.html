@@ -291,15 +291,15 @@
     }
 
     /* ON LOAD — check existing session */
-    const { data:{ session } } = await supabase.auth.getSession();
-    if(session?.user){
-      await showLoggedIn(session.user);
-    }
+const { data:{ session } } = await supabase.auth.getSession();
+if(session?.user){
+  location.href = 'index.html'; // auto redirect
+}
 
     /* LISTEN for auth state changes (OAuth callback returns here) */
     supabase.auth.onAuthStateChange(async (event, session)=>{
       if(event==='SIGNED_IN' && session?.user){
-        await showLoggedIn(session.user);
+            location.href = 'index.html';
       } else if(event==='SIGNED_OUT'){
         sessionStorage.removeItem('smkg_user_role');
         sessionStorage.removeItem('smkg_user_name');
