@@ -2,9 +2,14 @@
 <html lang="ms">
 <head>
 <script type="module">
-  import { supabase } from './supabase-config.js';
+  import { supabase, isEmailAllowed } from './supabase-config.js';
   const { data: { session } } = await supabase.auth.getSession();
-  if (!session) window.location.href = 'auth.html';
+  if (!session) {
+    window.location.href = 'auth.html';
+  } else if (!isEmailAllowed(session.user.email)) {
+    await supabase.auth.signOut();
+    window.location.href = 'auth.html?error=unauthorized';
+  }
 </script>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
@@ -290,7 +295,7 @@
         <div class="brand-sub">Kurikulum · Akademik</div>
       </div>
     </a>
-    <nav class="nav-breadcrumb">
+    <nav class="nav-breadcrumb" style="display:none;">
       <span>SMKG</span><span class="bc-sep">›</span><span class="bc-current">Kurikulum</span>
     </nav>
     <div class="nav-right">
@@ -753,7 +758,7 @@
       dot.style.background=ROLE_DOT_COLORS[role]||'#94a3b8';
       dot.title=ROLE_LABELS[role]||role;
       chip.style.display='flex';
-      chip.onclick=()=>{if(confirm('Log keluar dari SMKG?')){supabase.auth.signOut().then(()=>{sessionStorage.removeItem('smkg_user_role');sessionStorage.removeItem('smkg_user_name');window.location.href='auth.html';});}};
+      chip.onclick=()=>{if(confirm('Log keluar dari SMKG?')){supabase.auth.signOut().then(()=>{chip.style.display='none';sessionStorage.removeItem('smkg_user_role');});}};
     }
 
     /* ── Auth gate ── */
@@ -829,10 +834,9 @@
       sessionStorage.setItem('smkg_user_role', r);
       renderUserChip(initSession.user, r);
       authed=true;
-      showAdminLink(r);
     }
 
-    /* ── Listen for auth state change ── */
+    /* ── Listen for auth state change (e.g. returned from OAuth popup) ── */
     supabase.auth.onAuthStateChange(async(event, session)=>{
       if(event==='SIGNED_IN'&&session?.user){
         await ensureUserRole(session.user);
@@ -841,36 +845,12 @@
         renderUserChip(session.user, r);
         authed=true;
         closeGate();
-        showAdminLink(r);
         if(pendingSubjectKey){
           if(typeof window.setSubjectGlobal==='function') window.setSubjectGlobal(pendingSubjectKey);
           pendingSubjectKey=null;
         }
-      } else if(event==='SIGNED_OUT'){
-        sessionStorage.removeItem('smkg_user_role');
-        sessionStorage.removeItem('smkg_user_name');
-        window.location.href='auth.html';
       }
     });
-
-    /* ── Show Admin link in drawer for super_admin or admin ── */
-    function showAdminLink(role){
-      if(role==='super_admin'||role==='admin'){
-        const existing=document.getElementById('drawerAdminLink');
-        if(existing) return;
-        const drawer=document.querySelector('.drawer-body');
-        if(!drawer) return;
-        const sep=document.createElement('div');
-        sep.className='drawer-sep';
-        const link=document.createElement('a');
-        link.id='drawerAdminLink';
-        link.href='admin.html';
-        link.className='drawer-link';
-        link.innerHTML='<div class="dl-icon">⚙️</div><div class="dl-meta"><div class="dl-title">Admin Panel</div><div class="dl-sub">Urus pengguna &amp; tetapan</div></div>';
-        drawer.appendChild(sep);
-        drawer.appendChild(link);
-      }
-    }
   </script>
 </body>
 </html>

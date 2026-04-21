@@ -218,6 +218,12 @@
   <script type="module">
     import { supabase, getUserRole, ensureUserRole, signInWithGoogle, signOut, ROLE_LABELS, ROLE_COLORS } from './supabase-config.js';
 
+    /* Unauthorized message */
+    if(location.search.includes('unauthorized')){
+      const sb=document.getElementById('statusBox');
+      if(sb){ sb.textContent='Akaun anda tidak dibenarkan akses. Hubungi admin sekolah.'; sb.className='status-box show error'; }
+    }
+
     /* THEME */
     const root=document.documentElement;
     const tBtn=document.getElementById('themeToggle'),tIco=document.getElementById('themeIcon'),tLbl=document.getElementById('themeLabel');
@@ -291,24 +297,16 @@
     }
 
     /* ON LOAD — check existing session */
-    const { data:{ session } } = await supabase.auth.getSession();
-    if(session?.user){
-      location.href = 'index.html';
-    }
+const { data:{ session } } = await supabase.auth.getSession();
+if(session?.user){
+  location.href = 'index.html'; // auto redirect
+}
 
-    /* LISTEN — only redirect on fresh OAuth callback */
-    const isOAuthCallback = location.search.includes('code=') || location.hash.includes('access_token');
-    if(isOAuthCallback){
-      supabase.auth.onAuthStateChange((event, session)=>{
-        if(event==='SIGNED_IN' && session?.user){
-          location.href = 'index.html';
-        }
-      });
-    }
-
-    /* Always handle sign out cleanup */
-    supabase.auth.onAuthStateChange((event)=>{
-      if(event==='SIGNED_OUT'){
+    /* LISTEN for auth state changes (OAuth callback returns here) */
+    supabase.auth.onAuthStateChange(async (event, session)=>{
+      if(event==='SIGNED_IN' && session?.user){
+            location.href = 'index.html';
+      } else if(event==='SIGNED_OUT'){
         sessionStorage.removeItem('smkg_user_role');
         sessionStorage.removeItem('smkg_user_name');
       }

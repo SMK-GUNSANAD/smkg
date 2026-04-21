@@ -34,6 +34,19 @@ export const ROLE_COLORS = {
   GA:          { bg:'rgba(148,163,184,.12)',border:'rgba(148,163,184,.25)',text:'#94a3b8' },
 };
 
+
+// Allowed email addresses — only these can access protected pages
+export const ALLOWED_EMAILS = [
+  // Add school staff emails here, e.g:
+  // 'guru1@gmail.com',
+  // 'guru2@smkgunsanad.edu.my',
+];
+
+export function isEmailAllowed(email) {
+  if (!email) return false;
+  return ALLOWED_EMAILS.includes(email.toLowerCase());
+}
+
 /**
  * Get current session. Returns { session, user } or { session:null, user:null }
  */
