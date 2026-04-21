@@ -296,14 +296,19 @@
       location.href = 'index.html';
     }
 
-    /* LISTEN for auth state changes (OAuth callback returns here) */
-    supabase.auth.onAuthStateChange(async (event, session)=>{
-      if(event==='SIGNED_IN' && session?.user){
-        // Only redirect on a real new login (token in URL = fresh OAuth callback)
-        if(location.hash.includes('access_token') || location.search.includes('code=')){
+    /* LISTEN — only redirect on fresh OAuth callback */
+    const isOAuthCallback = location.search.includes('code=') || location.hash.includes('access_token');
+    if(isOAuthCallback){
+      supabase.auth.onAuthStateChange((event, session)=>{
+        if(event==='SIGNED_IN' && session?.user){
           location.href = 'index.html';
         }
-      } else if(event==='SIGNED_OUT'){
+      });
+    }
+
+    /* Always handle sign out cleanup */
+    supabase.auth.onAuthStateChange((event)=>{
+      if(event==='SIGNED_OUT'){
         sessionStorage.removeItem('smkg_user_role');
         sessionStorage.removeItem('smkg_user_name');
       }
