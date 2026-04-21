@@ -1,11 +1,10 @@
 <!doctype html>
 <html lang="ms">
 <head>
-    <script src="supabase-config.js"></script>
-  <script>
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session) window.location.href = 'auth.html';
-    });
+  <script type="module">
+    import { supabase } from './supabase-config.js';
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) window.location.href = 'auth.html';
   </script>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
