@@ -76,7 +76,7 @@ export async function signInWithGoogle(redirectTo) {
   const { error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: {
-      redirectTo: redirectTo || window.location.origin + '/smkg/auth.html',
+      redirectTo: 'https://smk-gunsanad.github.io/smkg/auth.html'
     }
   });
   if (error) console.error('OAuth error:', error);

@@ -245,7 +245,7 @@
       setStatus('Membuka Google Sign-In…');
       // Store redirect target so we can use it after OAuth callback
       localStorage.setItem('smkg_auth_redirect', redirectTo);
-      await signInWithGoogle(location.origin+location.pathname);
+      await signInWithGoogle('https://smk-gunsanad.github.io/smkg/auth.html');
       // Page will redirect — code below won't run
     };
 
