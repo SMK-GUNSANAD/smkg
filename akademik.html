@@ -340,7 +340,7 @@
         <span class="dl-arrow">›</span>
       </a>
 
-      <a class="drawer-link" href="akademik.html">
+      <a class="drawer-link" href="akademik.html" id="drawerKurikulum">
         <div class="dl-icon">📚</div>
         <div class="dl-meta"><div class="dl-title">Kurikulum</div><div class="dl-sub">Akademik & pencapaian pelajar</div></div>
         <span class="dl-arrow">›</span>
@@ -789,6 +789,11 @@
 
   <script type="module">
     import { supabase, getUserRole, ensureUserRole, signInWithGoogle, ROLE_LABELS, ROLE_COLORS } from './supabase-config.js';
+
+    // Hide current page link in drawer
+    document.getElementById('drawerKurikulum').style.display = 'none';
+
+    const ROLE_DOT_COLORS = {
 
     const ROLE_DOT_COLORS = {
       super_admin:'#818cf8', admin:'#a78bfa',
