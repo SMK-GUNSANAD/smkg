@@ -1,16 +1,7 @@
 <!doctype html>
 <html lang="ms">
 <head>
-<script type="module">
-  import { supabase, isEmailAllowed } from './supabase-config.js';
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session) {
-    window.location.href = 'auth.html';
-  } else if (!isEmailAllowed(session.user.email)) {
-    await supabase.auth.signOut();
-    window.location.href = 'auth.html?error=unauthorized';
-  }
-</script>
+
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Kurikulum · Dashboard SMKG</title>
@@ -796,7 +787,7 @@
   </script>
 
   <script type="module">
-    import { supabase, getUserRole, ensureUserRole, signInWithGoogle, ROLE_LABELS, ROLE_COLORS } from './supabase-config.js';
+    import { supabase, getUserRole, ensureUserRole, signInWithGoogle, isEmailAllowed, ROLE_LABELS, ROLE_COLORS } from './supabase-config.js';
 
     const ROLE_DOT_COLORS = {
       super_admin:'#818cf8', admin:'#a78bfa',
@@ -934,12 +925,18 @@
       }
     }
 
-    /* ── On load: restore session silently ── */
+    /* ── On load: auth check + session restore ── */
     const { data:{ session:initSession } }=await supabase.auth.getSession();
-    if(initSession?.user){
+    if(!initSession?.user){
+      window.location.href='auth.html';
+    } else if(!isEmailAllowed(initSession.user.email)){
+      await supabase.auth.signOut();
+      window.location.href='auth.html?error=unauthorized';
+    } else {
       await ensureUserRole(initSession.user);
       const r=await getUserRole(initSession.user.id);
       sessionStorage.setItem('smkg_user_role', r);
+      sessionStorage.setItem('smkg_user_name', initSession.user.user_metadata?.full_name||initSession.user.email);
       renderUserChip(initSession.user, r);
       authed=true;
       filterByRole(r);
