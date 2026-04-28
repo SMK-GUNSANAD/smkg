@@ -38,6 +38,7 @@ export const ROLE_COLORS = {
 // Allowed email addresses — only these can access protected pages
 export const ALLOWED_EMAILS = [
   'sekolah-9345@moe-dl.edu.my',
+  'kencdah@gmail.com',
 ];
 
 export function isEmailAllowed(email) {
