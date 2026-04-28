@@ -858,23 +858,7 @@
       }
     }
 
-    /* Intercept subject clicks — gate them through auth */
-    document.querySelectorAll('.subj[data-subject]').forEach(s=>{
-      const original=s.cloneNode(true);
-      s.addEventListener('click',e=>{
-        e.stopImmediatePropagation(); // prevent the plain JS handler
-      },{capture:true});
-      s.addEventListener('click',async e=>{
-        e.preventDefault();
-        const key=s.dataset.subject;
-        checkAuthAndProceed(key,(k)=>{
-          // Fire the global setSubject defined in the plain script
-          if(typeof window.setSubjectGlobal==='function') window.setSubjectGlobal(k);
-          const box=s.closest('.bidang');
-          if(box&&!box.classList.contains('open'))box.querySelector('.bhead').click();
-        });
-      });
-    });
+    /* Auth handled at page load — subject clicks work directly */
 
     const KB_BIDANG={'KBB':'bahasa','KBSM':'sains','KBSS':'sosial','KBT':'tvet'};
     const KP_MAP={
