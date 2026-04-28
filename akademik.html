@@ -877,85 +877,6 @@
       });
     });
 
-
-    /* ── Role-based bidang/subject filter ── */
-    function filterByRole(role, userData) {
-      const allBidang = document.querySelectorAll('.bidang');
-      const allSubj   = document.querySelectorAll('.subj[data-subject]');
-
-      // Full access roles
-      if (['super_admin', 'admin', 'PK'].includes(role)) return;
-
-      // KB — show only their bidang, hide others
-      const KB_BIDANG = {
-        'KBB':  'bahasa',
-        'KBSM': 'sains',
-        'KBSS': 'sosial',
-        'KBT':  'tvet',
-      };
-
-      // KP — show only their bidang + highlight their subject
-      const KP_MAP = {
-        'KPBM':  { bidang: 'bahasa', subject: 'bm'  },
-        'KPBI':  { bidang: 'bahasa', subject: 'bi'  },
-        'KPBA':  { bidang: 'bahasa', subject: 'ba'  },
-        'KPKM':  { bidang: 'bahasa', subject: 'km'  },
-        'KPBKD': { bidang: 'bahasa', subject: 'bkd' },
-        'KPM3':  { bidang: 'sains',  subject: 'mt'  },
-        'KPS':   { bidang: 'sains',  subject: 'sc'  },
-        'KPBio': { bidang: 'sains',  subject: 'bio' },
-        'KPFiz': { bidang: 'sains',  subject: 'fiz' },
-        'KPKim': { bidang: 'sains',  subject: 'kim' },
-        'KPAM':  { bidang: 'sains',  subject: 'mt2' },
-        'KPsej': { bidang: 'sosial', subject: 'sej' },
-        'KPgeo': { bidang: 'sosial', subject: 'geo' },
-        'KPPI':  { bidang: 'sosial', subject: 'pai' },
-        'KPPSV': { bidang: 'sosial', subject: 'psv' },
-        'KPPJPK':{ bidang: 'sosial', subject: 'pjpk'},
-        'KPSS':  { bidang: 'sosial', subject: 'ss'  },
-        'KPptn': { bidang: 'tvet',   subject: 'prt' },
-        'KPpnn': { bidang: 'tvet',   subject: 'per' },
-        'KPeko': { bidang: 'tvet',   subject: 'eko' },
-        'KPak':  { bidang: 'tvet',   subject: 'ak'  },
-        'KPKP':  { bidang: 'tvet',   subject: 'kdp' },
-        'KPLN':  { bidang: 'tvet',   subject: 'ldn' },
-        'KPRBT': { bidang: 'tvet',   subject: 'rbt' },
-      };
-
-      if (KB_BIDANG[role]) {
-        const allowedBidang = KB_BIDANG[role];
-        allBidang.forEach(b => {
-          if (b.dataset.bidang !== allowedBidang && b.dataset.bidang !== 'pp') {
-            b.style.display = 'none';
-          }
-        });
-        return;
-      }
-
-      if (KP_MAP[role]) {
-        const { bidang: allowedBidang, subject: allowedSubject } = KP_MAP[role];
-        // Hide other bidang
-        allBidang.forEach(b => {
-          if (b.dataset.bidang !== allowedBidang && b.dataset.bidang !== 'pp') {
-            b.style.display = 'none';
-          }
-        });
-        // Hide other subjects within the bidang
-        allSubj.forEach(s => {
-          if (s.dataset.subject !== allowedSubject && s.dataset.subject !== 'pp') {
-            s.style.display = 'none';
-          }
-        });
-        // Auto-open and auto-select their subject
-        const targetSubj = document.querySelector(`.subj[data-subject="${allowedSubject}"]`);
-        if (targetSubj) setTimeout(() => targetSubj.click(), 300);
-        return;
-      }
-
-      // GA — hide everything (no access to any bidang)
-      allBidang.forEach(b => { b.style.display = 'none'; });
-    }
-
     /* ── On load: restore session silently ── */
     const { data:{ session:initSession } }=await supabase.auth.getSession();
     if(initSession?.user){
@@ -964,7 +885,6 @@
       sessionStorage.setItem('smkg_user_role', r);
       renderUserChip(initSession.user, r);
       authed=true;
-      filterByRole(r, initSession.user);
     }
 
     /* ── Listen for auth state change (e.g. returned from OAuth popup) ── */
@@ -976,7 +896,6 @@
         renderUserChip(session.user, r);
         authed=true;
         closeGate();
-        filterByRole(r, session.user);
         if(pendingSubjectKey){
           if(typeof window.setSubjectGlobal==='function') window.setSubjectGlobal(pendingSubjectKey);
           pendingSubjectKey=null;
