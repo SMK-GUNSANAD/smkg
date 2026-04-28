@@ -136,6 +136,8 @@
     .subj.active .subj-dot{background:var(--accent);}
     .subj-name{font-size:12px;font-weight:500;}
     .subj.hidden{display:none;}
+    [data-role-hidden="1"]{display:none !important;}
+    [data-role-hidden]{display:none !important;}
     /* DRAG */
     .drag-handle{width:20px;height:20px;flex-shrink:0;display:flex;align-items:center;justify-content:center;cursor:grab;border-radius:4px;color:var(--muted2);font-size:12px;transition:color .15s,background .15s;margin-right:2px;}
     .drag-handle:hover{color:var(--muted);background:var(--surface-hover);}
@@ -728,8 +730,14 @@
     document.getElementById('searchInput').addEventListener('input',function(){
       const q=this.value.toLowerCase().trim();
       document.querySelectorAll('.bidang').forEach(box=>{
+        if(box.hasAttribute('data-role-hidden')) return; // respect role filter
         const subjects=box.querySelectorAll('.subj');let visible=0;
-        subjects.forEach(s=>{const match=!q||s.querySelector('.subj-name').textContent.toLowerCase().includes(q);s.classList.toggle('hidden',!match);if(match)visible++;});
+        subjects.forEach(s=>{
+          if(s.hasAttribute('data-role-hidden')) return; // respect role filter
+          const match=!q||s.querySelector('.subj-name').textContent.toLowerCase().includes(q);
+          s.classList.toggle('hidden',!match);
+          if(match)visible++;
+        });
         if(q&&visible>0){box.classList.add('open');box.querySelector('.bbody').style.maxHeight='600px';}
         else if(!q){box.classList.remove('open');box.querySelector('.bbody').style.maxHeight='0';}
         box.style.display=(!q||visible>0)?'':'none';
@@ -743,37 +751,8 @@
     });
 
     /* PP DRIVE LINKS */
-    // ═══════════════════════════════════════════════════
-    // PERDANA PETANG — FOLDER LINKS
-    // Replace each '' with your Google Drive folder URL
-    // Example: 'https://drive.google.com/drive/folders/xxx'
-    // ═══════════════════════════════════════════════════
-    const PP_LINKS = {
-      // 1. Maklumat Pentadbiran
-      'jadual-pdp':       '',   // Jadual PdP (Guru dan Kelas)
-      'takwim':           '',   // Takwim Pengurusan Perdana Petang
-      'jadual-bertugas':  '',   // Jadual Agihan Bertugas Mingguan
-
-      // 2. Pengurusan Kurikulum
-      'program-akademik': '',   // Program Akademik
-      'headcount':        '',   // Headcount
-
-      // 3. Pengurusan HEM
-      'disiplin':         '',   // Disiplin Pelajar
-      'kehadiran':        '',   // Kehadiran & Rekod Pelajar
-
-      // 4. Ko-Kurikulum
-      'senarai-kelab':    '',   // Senarai Kelab & Persatuan
-      'jadual-koku':      '',   // Jadual Ko-Kurikulum
-
-      // 6. Data Driven
-      'data-gpmp':        '',   // Analisis GPMP Perdana Petang
-      'data-kehadiran':   '',   // Trend Kehadiran Pelajar
-      'data-intervensi':  '',   // Rekod Intervensi & Pemantauan
-      'data-headcount':   '',   // Headcount & Enrolmen
-    };
-    // ═══════════════════════════════════════════════════
-    document.querySelectorAll('.pp-item[data-pp-url]').forEach(item=>{item.addEventListener('click',e=>{e.preventDefault();const url=PP_LINKS[item.dataset.ppUrl];if(url&&url.trim()!=='')window.open(url,'_blank','noopener');else showToast('Folder belum ditetapkan — hubungi admin.');});});
+    const PP_LINKS={'jadual-pdp':'#','takwim':'#','jadual-bertugas':'#','program-akademik':'#','headcount':'#','disiplin':'#','kehadiran':'#','senarai-kelab':'#','jadual-koku':'#','data-gpmp':'#','data-kehadiran':'#','data-intervensi':'#','data-headcount':'#'};
+    document.querySelectorAll('.pp-item[data-pp-url]').forEach(item=>{item.addEventListener('click',e=>{e.preventDefault();const url=PP_LINKS[item.dataset.ppUrl];if(url&&url!=='#')window.open(url,'_blank','noopener');else showToast('Link belum ditetapkan — tambah dalam PP_LINKS');});});
 
     /* MODAL */
     const modalOverlay=document.getElementById('modalOverlay'),modalTitle=document.getElementById('modalTitle'),modalIcon=document.getElementById('modalIcon'),modalList=document.getElementById('modalList'),modalClose=document.getElementById('modalClose');
@@ -906,83 +885,53 @@
       });
     });
 
-
-    /* ── Role-based bidang/subject filter ── */
-    function filterByRole(role, userData) {
-      const allBidang = document.querySelectorAll('.bidang');
-      const allSubj   = document.querySelectorAll('.subj[data-subject]');
-
-      // Full access roles
-      if (['super_admin', 'admin', 'PK'].includes(role)) return;
-
-      // KB — show only their bidang, hide others
-      const KB_BIDANG = {
-        'KBB':  'bahasa',
-        'KBSM': 'sains',
-        'KBSS': 'sosial',
-        'KBT':  'tvet',
-      };
-
-      // KP — show only their bidang + highlight their subject
-      const KP_MAP = {
-        'KPBM':  { bidang: 'bahasa', subject: 'bm'  },
-        'KPBI':  { bidang: 'bahasa', subject: 'bi'  },
-        'KPBA':  { bidang: 'bahasa', subject: 'ba'  },
-        'KPKM':  { bidang: 'bahasa', subject: 'km'  },
-        'KPBKD': { bidang: 'bahasa', subject: 'bkd' },
-        'KPM3':  { bidang: 'sains',  subject: 'mt'  },
-        'KPS':   { bidang: 'sains',  subject: 'sc'  },
-        'KPBio': { bidang: 'sains',  subject: 'bio' },
-        'KPFiz': { bidang: 'sains',  subject: 'fiz' },
-        'KPKim': { bidang: 'sains',  subject: 'kim' },
-        'KPAM':  { bidang: 'sains',  subject: 'mt2' },
-        'KPsej': { bidang: 'sosial', subject: 'sej' },
-        'KPgeo': { bidang: 'sosial', subject: 'geo' },
-        'KPPI':  { bidang: 'sosial', subject: 'pai' },
-        'KPPSV': { bidang: 'sosial', subject: 'psv' },
-        'KPPJPK':{ bidang: 'sosial', subject: 'pjpk'},
-        'KPSS':  { bidang: 'sosial', subject: 'ss'  },
-        'KPptn': { bidang: 'tvet',   subject: 'prt' },
-        'KPpnn': { bidang: 'tvet',   subject: 'per' },
-        'KPeko': { bidang: 'tvet',   subject: 'eko' },
-        'KPak':  { bidang: 'tvet',   subject: 'ak'  },
-        'KPKP':  { bidang: 'tvet',   subject: 'kdp' },
-        'KPLN':  { bidang: 'tvet',   subject: 'ldn' },
-        'KPRBT': { bidang: 'tvet',   subject: 'rbt' },
-      };
-
-      if (KB_BIDANG[role]) {
-        const allowedBidang = KB_BIDANG[role];
-        allBidang.forEach(b => {
-          if (b.dataset.bidang !== allowedBidang && b.dataset.bidang !== 'pp') {
-            b.style.display = 'none';
-          }
-        });
+    const KB_BIDANG={'KBB':'bahasa','KBSM':'sains','KBSS':'sosial','KBT':'tvet'};
+    const KP_MAP={
+      'KPBM':{bidang:'bahasa',subject:'bm'},'KPBI':{bidang:'bahasa',subject:'bi'},
+      'KPBA':{bidang:'bahasa',subject:'ba'},'KPKM':{bidang:'bahasa',subject:'km'},
+      'KPBKD':{bidang:'bahasa',subject:'bkd'},'KPM3':{bidang:'sains',subject:'mt'},
+      'KPS':{bidang:'sains',subject:'sc'},'KPBio':{bidang:'sains',subject:'bio'},
+      'KPFiz':{bidang:'sains',subject:'fiz'},'KPKim':{bidang:'sains',subject:'kim'},
+      'KPAM':{bidang:'sains',subject:'mt2'},'KPsej':{bidang:'sosial',subject:'sej'},
+      'KPgeo':{bidang:'sosial',subject:'geo'},'KPPI':{bidang:'sosial',subject:'pai'},
+      'KPPSV':{bidang:'sosial',subject:'psv'},'KPPJPK':{bidang:'sosial',subject:'pjpk'},
+      'KPSS':{bidang:'sosial',subject:'ss'},'KPptn':{bidang:'tvet',subject:'prt'},
+      'KPpnn':{bidang:'tvet',subject:'per'},'KPeko':{bidang:'tvet',subject:'eko'},
+      'KPak':{bidang:'tvet',subject:'ak'},'KPKP':{bidang:'tvet',subject:'kdp'},
+      'KPLN':{bidang:'tvet',subject:'ldn'},'KPRBT':{bidang:'tvet',subject:'rbt'},
+    };
+    function filterByRole(role){
+      const allBidang=document.querySelectorAll('.bidang');
+      const allSubj=document.querySelectorAll('.subj[data-subject]');
+      allBidang.forEach(b=>b.removeAttribute('data-role-hidden'));
+      allSubj.forEach(s=>s.removeAttribute('data-role-hidden'));
+      if(['super_admin','admin','PK'].includes(role)) return;
+      if(KB_BIDANG[role]){
+        const allowed=KB_BIDANG[role];
+        allBidang.forEach(b=>{if(b.dataset.bidang!==allowed&&b.dataset.bidang!=='pp')b.setAttribute('data-role-hidden','1');});
         return;
       }
-
-      if (KP_MAP[role]) {
-        const { bidang: allowedBidang, subject: allowedSubject } = KP_MAP[role];
-        // Hide other bidang
-        allBidang.forEach(b => {
-          if (b.dataset.bidang !== allowedBidang && b.dataset.bidang !== 'pp') {
-            b.style.display = 'none';
-          }
-        });
-        // Hide other subjects within the bidang
-        allSubj.forEach(s => {
-          if (s.dataset.subject !== allowedSubject && s.dataset.subject !== 'pp') {
-            s.style.display = 'none';
-          }
-        });
-        // Auto-open and auto-select their subject
-        const targetSubj = document.querySelector(`.subj[data-subject="${allowedSubject}"]`);
-        if (targetSubj) setTimeout(() => targetSubj.click(), 300);
+      if(KP_MAP[role]){
+        const {bidang:allowed,subject:allowedSubj}=KP_MAP[role];
+        allBidang.forEach(b=>{if(b.dataset.bidang!==allowed&&b.dataset.bidang!=='pp')b.setAttribute('data-role-hidden','1');});
+        allSubj.forEach(s=>{if(s.dataset.subject!==allowedSubj)s.setAttribute('data-role-hidden','1');});
+        const target=document.querySelector('.subj[data-subject="'+allowedSubj+'"]');
+        if(target) setTimeout(()=>target.click(),300);
         return;
       }
-
-      // GA — hide everything (no access to any bidang)
-      allBidang.forEach(b => { b.style.display = 'none'; });
+      allBidang.forEach(b=>b.setAttribute('data-role-hidden','1'));
+    }
+    function showAdminLink(role){
+      if(role==='super_admin'||role==='admin'){
+        if(document.getElementById('drawerAdminLink')) return;
+        const body=document.querySelector('.drawer-body');
+        if(!body) return;
+        const sep=document.createElement('div');sep.className='drawer-sep';
+        const link=document.createElement('a');
+        link.id='drawerAdminLink';link.href='admin.html';link.className='drawer-link';
+        link.innerHTML='<div class="dl-icon">⚙️</div><div class="dl-meta"><div class="dl-title">Admin Panel</div><div class="dl-sub">Urus pengguna &amp; tetapan</div></div><span class="dl-arrow">›</span>';
+        body.appendChild(sep);body.appendChild(link);
+      }
     }
 
     /* ── On load: restore session silently ── */
@@ -993,7 +942,8 @@
       sessionStorage.setItem('smkg_user_role', r);
       renderUserChip(initSession.user, r);
       authed=true;
-      filterByRole(r, initSession.user);
+      filterByRole(r);
+      showAdminLink(r);
     }
 
     /* ── Listen for auth state change (e.g. returned from OAuth popup) ── */
@@ -1005,11 +955,16 @@
         renderUserChip(session.user, r);
         authed=true;
         closeGate();
-        filterByRole(r, session.user);
+        filterByRole(r);
+        showAdminLink(r);
         if(pendingSubjectKey){
           if(typeof window.setSubjectGlobal==='function') window.setSubjectGlobal(pendingSubjectKey);
           pendingSubjectKey=null;
         }
+      } else if(event==='SIGNED_OUT'){
+        sessionStorage.removeItem('smkg_user_role');
+        sessionStorage.removeItem('smkg_user_name');
+        window.location.href='index.html';
       }
     });
   </script>
