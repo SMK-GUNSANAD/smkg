@@ -909,23 +909,10 @@
       }
     }
 
-    /* ── On load: auth check + session restore ── */
-    const { data:{ session:initSession } }=await supabase.auth.getSession();
-    if(!initSession?.user){
-      window.location.href='auth.html';
-    } else if(!isEmailAllowed(initSession.user.email)){
-      await supabase.auth.signOut();
-      window.location.href='auth.html?error=unauthorized';
-    } else {
-      await ensureUserRole(initSession.user);
-      const r=await getUserRole(initSession.user.id);
-      sessionStorage.setItem('smkg_user_role', r);
-      sessionStorage.setItem('smkg_user_name', initSession.user.user_metadata?.full_name||initSession.user.email);
-      renderUserChip(initSession.user, r);
-      authed=true;
-      filterByRole(r);
-      showAdminLink(r);
-    }
+    /* ── AUTH TEMPORARILY DISABLED ── */
+    // To re-enable: restore the session check block and remove these lines
+    authed=true;
+    filterByRole('super_admin'); // full access while auth is disabled
 
     /* ── Listen for auth state change (e.g. returned from OAuth popup) ── */
     supabase.auth.onAuthStateChange(async(event, session)=>{
