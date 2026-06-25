@@ -299,13 +299,15 @@
     /* ON LOAD — check existing session */
 const { data:{ session } } = await supabase.auth.getSession();
 if(session?.user){
-  location.href = 'index.html'; // auto redirect
+  const p2=new URLSearchParams(location.search);
+  location.href = p2.get('redirect') || 'akademik.html';
 }
 
     /* LISTEN for auth state changes (OAuth callback returns here) */
     supabase.auth.onAuthStateChange(async (event, session)=>{
       if(event==='SIGNED_IN' && session?.user){
-            location.href = 'index.html';
+        const p=new URLSearchParams(location.search);
+        location.href = p.get('redirect') || 'akademik.html';
       } else if(event==='SIGNED_OUT'){
         sessionStorage.removeItem('smkg_user_role');
         sessionStorage.removeItem('smkg_user_name');
