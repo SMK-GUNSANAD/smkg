@@ -1,6 +1,6 @@
 // supabase-config.js
-const SUPABASE_URL  = 'https://wreqrvskgwrcykbkusdn.supabase.co';
-const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndyZXFydnNrZ3dyY3lrYmt1c2RuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY1OTYwMzIsImV4cCI6MjA5MjE3MjAzMn0.1ABTx4vGJ7hze5xI967F5Kvv31qiKYvK6gjHQZHyeg0';
+const SUPABASE_URL  = 'https://ypdsntpgkildxbxxtptv.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlwZHNudHBna2lsZHhieHh0cHR2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzODgyNjcsImV4cCI6MjA5Nzk2NDI2N30.SMcPR3ZjNipqwEVp-iPq3AvnfPnKSpSsvergFEdC3D8';
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
