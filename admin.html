@@ -1,12 +1,22 @@
 <!doctype html>
 <html lang="en">
 <head>
-    <script src="supabase-config.js"></script>
-  <script>
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session) window.location.href = 'auth.html';
-    });
-  </script>
+<script type="module">
+  import { supabase, isEmailAllowed, getUserRole } from './supabase-config.js';
+  const { data:{ session } } = await supabase.auth.getSession();
+  if (!session?.user) {
+    window.location.href = 'auth.html?redirect=admin.html';
+  } else if (!isEmailAllowed(session.user.email)) {
+    await supabase.auth.signOut();
+    window.location.href = 'auth.html?error=unauthorized';
+  } else {
+    const role = await getUserRole(session.user.id);
+    if (role !== 'super_admin' && role !== 'admin') {
+      window.location.href = 'index.html'; // not admin — send back
+    }
+  }
+</script>
+
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Admin · Dashboard SMKG</title>
