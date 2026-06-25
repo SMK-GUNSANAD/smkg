@@ -3,16 +3,26 @@
 <head>
 <script type="module">
   import { supabase, isEmailAllowed, getUserRole } from './supabase-config.js';
+
+  // Wait for session to be fully ready
   const { data:{ session } } = await supabase.auth.getSession();
+
   if (!session?.user) {
     window.location.href = 'auth.html?redirect=admin.html';
   } else if (!isEmailAllowed(session.user.email)) {
     await supabase.auth.signOut();
     window.location.href = 'auth.html?error=unauthorized';
   } else {
-    const role = await getUserRole(session.user.id);
+    // Retry getUserRole up to 3 times with delay
+    let role = null;
+    for (let i = 0; i < 3; i++) {
+      role = await getUserRole(session.user.id);
+      if (role && role !== 'GA') break;
+      await new Promise(r => setTimeout(r, 800));
+    }
+    console.log('Admin check — user:', session.user.email, 'role:', role);
     if (role !== 'super_admin' && role !== 'admin') {
-      window.location.href = 'index.html'; // not admin — send back
+      window.location.href = 'index.html';
     }
   }
 </script>
