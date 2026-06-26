@@ -68,15 +68,32 @@ export const ROLE_COLORS = {
   GA:         { bg:'rgba(148,163,184,.12)', border:'rgba(148,163,184,.25)',text:'#94a3b8' },
 };
 
-// Allowed emails — add every staff email here
-export const ALLOWED_EMAILS = [
-  'sekolah-9345@moe-dl.edu.my',
-  'kencdah@gmail.com',
-];
+/**
+ * Check if user exists in user_roles table (i.e. has been approved).
+ * Any user in the table = allowed. Admin adds them via Admin Panel.
+ */
+export async function isUserAllowed(userId) {
+  if (!userId) return false;
+  const { data, error } = await supabase
+    .from('user_roles')
+    .select('user_id')
+    .eq('user_id', userId)
+    .single();
+  return !error && !!data;
+}
 
-export function isEmailAllowed(email) {
-  if (!email) return false;
-  return ALLOWED_EMAILS.includes(email.toLowerCase());
+/**
+ * Check if user is admin/super_admin by role.
+ */
+export async function isAdmin(userId) {
+  if (!userId) return false;
+  const { data, error } = await supabase
+    .from('user_roles')
+    .select('role')
+    .eq('user_id', userId)
+    .single();
+  if (error || !data) return false;
+  return ['super_admin', 'admin'].includes(data.role);
 }
 
 /**
@@ -116,15 +133,24 @@ export function getRoleLevel(roleCode) {
 }
 
 /**
- * Upsert user on first login (role defaults to GA).
+ * Store pending user for admin approval (separate table).
+ * Only inserts if not already in user_roles.
  */
 export async function ensureUserRole(user) {
   if (!user) return;
-  await supabase.from('user_roles').upsert({
+  // Check if already approved
+  const { data } = await supabase
+    .from('user_roles')
+    .select('user_id')
+    .eq('user_id', user.id)
+    .single();
+  if (data) return; // already exists, skip
+  // Store in pending_users for admin to approve
+  await supabase.from('pending_users').upsert({
     user_id:   user.id,
     full_name: user.user_metadata?.full_name || user.email,
     email:     user.email,
-    role:      'GA',
+    requested_at: new Date().toISOString(),
   }, { onConflict: 'user_id', ignoreDuplicates: true });
 }
 

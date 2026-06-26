@@ -1,24 +1,26 @@
 <!doctype html>
 <html lang="en">
 <head>
+<script>
+  // Apply theme before render — prevents flicker
+  (function(){
+    const t = localStorage.getItem('smkg_theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+</script>
 <script type="module">
-  import { supabase } from './supabase-config.js';
-
-  // Admin emails — add any admin/super_admin emails here
-  const ADMIN_EMAILS = [
-    'sekolah-9345@moe-dl.edu.my',
-    // add more admin emails here if needed
-  ];
+  import { supabase, isAdmin } from './supabase-config.js';
 
   const { data:{ session } } = await supabase.auth.getSession();
 
   if (!session?.user) {
     window.location.href = 'auth.html?redirect=admin.html';
-  } else if (!ADMIN_EMAILS.includes(session.user.email?.toLowerCase())) {
-    // Not an admin email — redirect away
-    window.location.href = 'index.html';
+  } else {
+    const admin = await isAdmin(session.user.id);
+    if (!admin) {
+      window.location.href = 'index.html';
+    }
   }
-  // If we reach here, user is authenticated and is an admin — allow access
 </script>
 
   <meta charset="utf-8" />

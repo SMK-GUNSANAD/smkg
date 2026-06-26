@@ -1,5 +1,12 @@
 <!doctype html>
-<html lang="ms">
+<html lang="ms" data-theme="dark">
+<script>
+  // Apply theme immediately before render to prevent flicker
+  (function(){
+    const t = localStorage.getItem('smkg_theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+</script>
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
@@ -297,9 +304,9 @@
     }
 
     /* ON LOAD — check existing session */
+    /* ON LOAD */
     const { data:{ session } } = await supabase.auth.getSession();
     if (session?.user) {
-      // Already logged in — go to destination
       const dest = new URLSearchParams(location.search).get('redirect')
                 || localStorage.getItem('smkg_auth_redirect')
                 || 'akademik.html';
@@ -307,16 +314,24 @@
       location.href = dest;
     }
 
-    /* LISTEN — only redirect on fresh OAuth callback (has code/token in URL) */
+    /* LISTEN — only on fresh OAuth callback */
     supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_IN' && session?.user) {
         const isCallback = location.hash.includes('access_token')
                         || location.search.includes('code=');
-        if (isCallback) {
-          const dest = localStorage.getItem('smkg_auth_redirect') || 'akademik.html';
-          localStorage.removeItem('smkg_auth_redirect');
-          location.href = dest;
+        if (!isCallback) return;
+        await ensureUserRole(session.user); // store in pending if new
+        const allowed = await isUserAllowed(session.user.id);
+        if (!allowed) {
+          // New user — show pending approval message
+          await supabase.auth.signOut();
+          const sb = document.getElementById('statusBox');
+          if (sb) { sb.textContent = 'Akaun anda menunggu kelulusan admin. Sila hubungi pentadbir sekolah.'; sb.className = 'status-box show error'; }
+          return;
         }
+        const dest = localStorage.getItem('smkg_auth_redirect') || 'akademik.html';
+        localStorage.removeItem('smkg_auth_redirect');
+        location.href = dest;
       } else if (event === 'SIGNED_OUT') {
         sessionStorage.removeItem('smkg_user_role');
         sessionStorage.removeItem('smkg_user_name');
