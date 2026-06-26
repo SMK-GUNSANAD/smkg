@@ -2,10 +2,11 @@
 <html lang="en">
 <head>
 <script>
-  // Apply theme before render — prevents flicker
+  // Apply theme + hide body until auth check completes
   (function(){
     const t = localStorage.getItem('smkg_theme') || 'dark';
     document.documentElement.setAttribute('data-theme', t);
+    document.documentElement.style.visibility = 'hidden';
   })();
 </script>
 <script type="module">
@@ -19,6 +20,9 @@
     const admin = await isAdmin(session.user.id);
     if (!admin) {
       window.location.href = 'index.html';
+    } else {
+      // Auth passed — show page
+      document.documentElement.style.visibility = 'visible';
     }
   }
 </script>
