@@ -2,29 +2,23 @@
 <html lang="en">
 <head>
 <script type="module">
-  import { supabase, isEmailAllowed, getUserRole } from './supabase-config.js';
+  import { supabase } from './supabase-config.js';
 
-  // Wait for session to be fully ready
+  // Admin emails — add any admin/super_admin emails here
+  const ADMIN_EMAILS = [
+    'sekolah-9345@moe-dl.edu.my',
+    // add more admin emails here if needed
+  ];
+
   const { data:{ session } } = await supabase.auth.getSession();
 
   if (!session?.user) {
     window.location.href = 'auth.html?redirect=admin.html';
-  } else if (!isEmailAllowed(session.user.email)) {
-    await supabase.auth.signOut();
-    window.location.href = 'auth.html?error=unauthorized';
-  } else {
-    // Retry getUserRole up to 3 times with delay
-    let role = null;
-    for (let i = 0; i < 3; i++) {
-      role = await getUserRole(session.user.id);
-      if (role && role !== 'GA') break;
-      await new Promise(r => setTimeout(r, 800));
-    }
-    console.log('Admin check — user:', session.user.email, 'role:', role);
-    if (role !== 'super_admin' && role !== 'admin') {
-      window.location.href = 'index.html';
-    }
+  } else if (!ADMIN_EMAILS.includes(session.user.email?.toLowerCase())) {
+    // Not an admin email — redirect away
+    window.location.href = 'index.html';
   }
+  // If we reach here, user is authenticated and is an admin — allow access
 </script>
 
   <meta charset="utf-8" />
