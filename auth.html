@@ -297,20 +297,30 @@
     }
 
     /* ON LOAD — check existing session */
-const { data:{ session } } = await supabase.auth.getSession();
-if(session?.user){
-  const p2=new URLSearchParams(location.search);
-  location.href = p2.get('redirect') || 'akademik.html';
-}
+    const { data:{ session } } = await supabase.auth.getSession();
+    if (session?.user) {
+      // Already logged in — go to destination
+      const dest = new URLSearchParams(location.search).get('redirect')
+                || localStorage.getItem('smkg_auth_redirect')
+                || 'akademik.html';
+      localStorage.removeItem('smkg_auth_redirect');
+      location.href = dest;
+    }
 
-    /* LISTEN for auth state changes (OAuth callback returns here) */
-    supabase.auth.onAuthStateChange(async (event, session)=>{
-      if(event==='SIGNED_IN' && session?.user){
-        const p=new URLSearchParams(location.search);
-        location.href = p.get('redirect') || 'akademik.html';
-      } else if(event==='SIGNED_OUT'){
+    /* LISTEN — only redirect on fresh OAuth callback (has code/token in URL) */
+    supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_IN' && session?.user) {
+        const isCallback = location.hash.includes('access_token')
+                        || location.search.includes('code=');
+        if (isCallback) {
+          const dest = localStorage.getItem('smkg_auth_redirect') || 'akademik.html';
+          localStorage.removeItem('smkg_auth_redirect');
+          location.href = dest;
+        }
+      } else if (event === 'SIGNED_OUT') {
         sessionStorage.removeItem('smkg_user_role');
         sessionStorage.removeItem('smkg_user_name');
+        localStorage.removeItem('smkg_auth_redirect');
       }
     });
   </script>
