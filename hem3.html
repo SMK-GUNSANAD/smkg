@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="ms" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard SMKG — HEM</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&family=Geist+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --navH:58px;--leftW:270px;--radius:12px;--radius-sm:8px;
+      --dur:.2s;--ease:cubic-bezier(.2,.8,.2,1);--ease2:cubic-bezier(.16,1,.3,1);
+      --bg0:#08090d;--bg1:#0d0f14;--bg2:#11141b;
+      --surface:rgba(255,255,255,.045);--surface-hover:rgba(255,255,255,.075);
+      --border:rgba(255,255,255,.08);--border-strong:rgba(255,255,255,.14);
+      --text:rgba(255,255,255,.94);--muted:rgba(255,255,255,.55);--muted2:rgba(255,255,255,.32);
+      --navBg:rgba(8,9,13,.88);--navBorder:rgba(255,255,255,.08);
+      --accent:#6366f1;--accent2:#8b5cf6;--accent-text:#a5b4fc;
+      --accent-glow:rgba(99,102,241,.13);--accent-border:rgba(99,102,241,.25);
+      --input-bg:rgba(255,255,255,.035);--input-border:rgba(255,255,255,.09);--input-focus:rgba(99,102,241,.25);
+      --gridLine:rgba(255,255,255,.025);--bg-r1:rgba(99,102,241,.09);--bg-r2:rgba(139,92,246,.06);
+      --c-lang-bg:rgba(99,102,241,.09);--c-lang-border:rgba(99,102,241,.20);
+      --c-sains-bg:rgba(34,197,94,.08);--c-sains-border:rgba(34,197,94,.20);
+      --c-sosial-bg:rgba(245,158,11,.08);--c-sosial-border:rgba(245,158,11,.20);
+      --c-tvet-bg:rgba(239,68,68,.08);--c-tvet-border:rgba(239,68,68,.20);
+      --c-pp-bg:rgba(20,184,166,.08);--c-pp-border:rgba(20,184,166,.20);--c-pp-text:#5eead4;
+    }
+    html[data-theme="light"]{
+      --bg0:#f6f7fb;--bg1:#fff;--bg2:#f2f3f7;
+      --surface:rgba(0,0,0,.035);--surface-hover:rgba(0,0,0,.06);
+      --border:rgba(0,0,0,.07);--border-strong:rgba(0,0,0,.12);
+      --text:rgba(10,10,15,.95);--muted:rgba(10,10,15,.50);--muted2:rgba(10,10,15,.28);
+      --navBg:rgba(255,255,255,.92);--navBorder:rgba(0,0,0,.07);
+      --accent-text:#4f46e5;--accent-glow:rgba(99,102,241,.10);--accent-border:rgba(99,102,241,.18);
+      --input-bg:rgba(0,0,0,.03);--input-border:rgba(0,0,0,.10);--input-focus:rgba(99,102,241,.25);
+      --gridLine:rgba(0,0,0,.04);--bg-r1:rgba(99,102,241,.06);--bg-r2:rgba(139,92,246,.04);
+      --c-lang-bg:rgba(99,102,241,.08);--c-lang-border:rgba(99,102,241,.18);
+      --c-sains-bg:rgba(34,197,94,.07);--c-sains-border:rgba(34,197,94,.18);
+      --c-sosial-bg:rgba(245,158,11,.07);--c-sosial-border:rgba(245,158,11,.18);
+      --c-tvet-bg:rgba(239,68,68,.06);--c-tvet-border:rgba(239,68,68,.16);
+      --c-pp-bg:rgba(20,184,166,.07);--c-pp-border:rgba(20,184,166,.18);--c-pp-text:#0f766e;
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    html,body{height:100%;font-family:'Geist',system-ui,sans-serif;background:var(--bg0);color:var(--text);-webkit-font-smoothing:antialiased;overflow:hidden}
+    .bg{position:fixed;inset:0;z-index:0;pointer-events:none;background:radial-gradient(ellipse 800px 600px at 10% 15%,var(--bg-r1),transparent 60%),radial-gradient(ellipse 600px 500px at 90% 25%,var(--bg-r2),transparent 55%),var(--bg0)}
+    .grid{position:fixed;inset:0;z-index:0;pointer-events:none;background-image:linear-gradient(to right,var(--gridLine) 1px,transparent 1px),linear-gradient(to bottom,var(--gridLine) 1px,transparent 1px);background-size:60px 60px}
+    .topbar{position:fixed;top:0;left:0;right:0;height:var(--navH);z-index:100;display:flex;align-items:center;justify-content:space-between;padding:0 20px;background:var(--navBg);border-bottom:1px solid var(--navBorder);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
+    .brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--text)}
+    .mark{width:30px;height:30px;border-radius:9px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:13px;color:#fff;font-weight:700;box-shadow:0 0 16px var(--accent-glow)}
+    .brand-text{display:flex;flex-direction:column;gap:1px}.brand-name{font-size:13px;font-weight:700;line-height:1}.brand-sub{font-size:10px;color:var(--muted);font-family:'Geist Mono',monospace;letter-spacing:.06em;text-transform:uppercase}
+    .nav-right{display:flex;align-items:center;gap:8px}.nav-btn{display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--surface);color:var(--muted);font-size:12px;cursor:pointer;text-decoration:none}.nav-btn:hover{background:var(--surface-hover);color:var(--text);border-color:var(--border-strong)}
+    .hamburger{width:36px;height:36px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--surface);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;position:relative;z-index:200}.hamburger span{display:block;width:14px;height:1.5px;background:var(--text);border-radius:2px;transition:all .35s var(--ease2)}
+    .hamburger.open span:nth-child(1){transform:translateY(5.5px) rotate(45deg)}.hamburger.open span:nth-child(2){opacity:0}.hamburger.open span:nth-child(3){transform:translateY(-5.5px) rotate(-45deg)}
+    .drawer-overlay{position:fixed;inset:0;z-index:150;background:rgba(0,0,0,.38);backdrop-filter:blur(4px);opacity:0;pointer-events:none;transition:opacity .35s}.drawer-overlay.open{opacity:1;pointer-events:auto}
+    .drawer{position:fixed;top:0;right:0;bottom:0;width:290px;z-index:160;background:var(--navBg);backdrop-filter:blur(32px);border-left:1px solid var(--navBorder);transform:translateX(100%);transition:transform .45s var(--ease2);display:flex;flex-direction:column}.drawer.open{transform:translateX(0)}
+    .drawer-head{height:var(--navH);display:flex;align-items:center;padding:0 18px;border-bottom:1px solid var(--navBorder);font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase}.drawer-body{flex:1;padding:12px;overflow-y:auto;display:flex;flex-direction:column;gap:3px}
+    .drawer-link{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:var(--radius-sm);color:var(--text);text-decoration:none;font-size:13px;font-weight:500;border:1px solid transparent}.drawer-link:hover{background:var(--surface-hover);border-color:var(--border)}
+    .dl-icon{width:28px;height:28px;border-radius:7px;border:1px solid var(--border);background:var(--surface);display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0}.dl-meta .dl-title{font-size:13px}.dl-meta .dl-sub{font-size:10.5px;color:var(--muted);margin-top:1px}.dl-arrow{color:var(--muted2);font-size:13px;margin-left:auto}.drawer-sep{height:1px;background:var(--border);margin:6px 0}.drawer-section-label{font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted2);font-family:'Geist Mono',monospace;padding:8px 10px 4px}
+    .shell{position:relative;z-index:1;display:grid;grid-template-columns:var(--leftW) 1fr;height:100vh;padding-top:var(--navH)}
+    .left{background:var(--bg1);border-right:1px solid var(--border);display:flex;flex-direction:column;height:100%;overflow:hidden}.left-top{padding:20px 16px 14px;flex-shrink:0;border-bottom:1px solid var(--border)}
+    .left-tag{display:inline-flex;align-items:center;gap:5px;background:var(--accent-glow);border:1px solid var(--accent-border);border-radius:100px;padding:3px 9px;font-size:9.5px;font-weight:600;letter-spacing:.1em;color:var(--accent-text);text-transform:uppercase;font-family:'Geist Mono',monospace;margin-bottom:10px}.left-tag-dot{width:4px;height:4px;border-radius:50%;background:var(--accent)}
+    .left-title{font-size:21px;font-weight:800;letter-spacing:-.04em;line-height:1.1;margin-bottom:5px}.left-desc{font-size:11.5px;color:var(--muted);line-height:1.5;margin-bottom:12px}.search-wrap{position:relative}.search-ico{position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:12px;color:var(--muted2);pointer-events:none}.search-input{width:100%;padding:8px 10px 8px 30px;background:var(--input-bg);border:1px solid var(--input-border);border-radius:var(--radius-sm);color:var(--text);font-size:12px;outline:none}.search-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--input-focus)}.sort-hint{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--muted2);font-family:'Geist Mono',monospace;margin-top:8px}
+    .bidang-list{flex:1;overflow-y:auto;padding:10px;display:flex;flex-direction:column;gap:4px;user-select:none}.bidang{border:1px solid var(--border);border-radius:var(--radius);transition:border-color var(--dur)}.bidang.open{border-color:var(--border-strong)}.bhead{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 12px;cursor:pointer;border:0;background:transparent;color:var(--text);width:100%;text-align:left}.bhead:hover{background:var(--surface)}.bhead-left{display:flex;align-items:center;gap:9px}.bicon{width:24px;height:24px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px;border:1px solid}.bicon.lang{background:var(--c-lang-bg);border-color:var(--c-lang-border)}.bicon.sains{background:var(--c-sains-bg);border-color:var(--c-sains-border)}.bicon.sosial{background:var(--c-sosial-bg);border-color:var(--c-sosial-border)}.bicon.tvet{background:var(--c-tvet-bg);border-color:var(--c-tvet-border)}.bicon.pp{background:var(--c-pp-bg);border-color:var(--c-pp-border)}.bhead-label{font-size:12.5px;font-weight:600}.bhead-right{display:flex;align-items:center;gap:6px}.bcount{font-size:10px;font-family:'Geist Mono',monospace;background:var(--surface);border:1px solid var(--border);border-radius:100px;padding:1px 7px;color:var(--muted)}.barrow{width:20px;height:20px;display:flex;align-items:center;justify-content:center;color:var(--muted2);font-size:10px;transition:transform .28s}.bidang.open .barrow{transform:rotate(180deg)}.bbody{max-height:0;overflow:hidden;transition:max-height .35s}.binner{padding:4px 10px 10px;display:flex;flex-direction:column;gap:3px}.subj{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:var(--radius-sm);border:1px solid transparent;cursor:pointer;background:transparent;text-decoration:none;color:var(--text)}.subj:hover{background:var(--surface-hover);border-color:var(--border)}.subj.active{background:var(--accent-glow);border-color:var(--accent-border);color:var(--accent-text)}.subj-dot{width:5px;height:5px;border-radius:50%;background:var(--muted2)}.subj.active .subj-dot{background:var(--accent)}.subj-name{font-size:12px;font-weight:500}.subj.hidden{display:none}[data-role-hidden]{display:none!important}
+    .right{height:100%;min-width:0;background:transparent}.std-panel,.pp-panel,.hem-panel{display:none;flex-direction:column;height:100%}.std-panel.active,.pp-panel.active,.hem-panel.active{display:flex}.std-panel.hidden{display:none}
+    #homePanel{display:flex;flex-direction:column;height:100%}.right-head{flex-shrink:0;padding:22px 24px 16px;display:flex;align-items:flex-start;justify-content:space-between;gap:16px;border-bottom:1px solid var(--border)}.rh-kicker{display:inline-flex;align-items:center;gap:6px;font-size:9.5px;font-family:'Geist Mono',monospace;text-transform:uppercase;letter-spacing:.09em;color:var(--accent-text);background:var(--accent-glow);border:1px solid var(--accent-border);border-radius:100px;padding:3px 8px;margin-bottom:9px}.right-title{font-size:22px;font-weight:800;letter-spacing:-.04em}.right-sub{font-size:11.5px;color:var(--muted);margin-top:4px}.active-badge{display:flex;align-items:center;gap:7px;padding:5px 9px;border-radius:100px;border:1px solid var(--border);font-family:'Geist Mono',monospace;font-size:10px;white-space:nowrap}.badge-dot{width:6px;height:6px;border-radius:50%;background:var(--accent)}
+    .home-panel{flex:1;overflow:auto;padding:20px 24px}.home-stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}.hstat{background:var(--bg1);border:1px solid var(--border);border-radius:var(--radius);padding:15px;position:relative;overflow:hidden}.hstat:before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px}.hstat.blue:before{background:#3b82f6}.hstat.green:before{background:#22c55e}.hstat.amber:before{background:#f59e0b}.hstat.purple:before{background:var(--accent)}.hstat-label{font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-family:'Geist Mono',monospace}.hstat-val{font-size:26px;font-weight:800;letter-spacing:-.04em}.hstat.blue .hstat-val{color:#3b82f6}.hstat.green .hstat-val{color:#22c55e}.hstat.amber .hstat-val{color:#f59e0b}.hstat.purple .hstat-val{color:var(--accent-text)}.hstat-sub{font-size:11px;color:var(--muted)}
+    .home-cd-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.cd-card{background:var(--bg1);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;display:flex;flex-direction:column;gap:10px}.cd-top{display:flex;align-items:center;justify-content:space-between}.cd-name-row{display:flex;align-items:center;gap:8px}.cd-icon{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;border:1px solid var(--border);background:var(--surface)}.cd-name{font-size:13px;font-weight:700}.cd-date-tag{font-size:10px;font-family:'Geist Mono',monospace;padding:2px 8px;border-radius:100px;border:1px solid var(--border);background:var(--surface);color:var(--muted)}.cd-digits{display:flex;gap:6px}.cd-unit{display:flex;flex-direction:column;align-items:center;gap:2px;flex:1}.cd-num{font-size:24px;font-weight:800;line-height:1;background:var(--surface);border:1px solid var(--border);border-radius:6px;width:100%;text-align:center;padding:8px 4px}.cd-unit-label{font-size:9px;font-family:'Geist Mono',monospace;color:var(--muted2);text-transform:uppercase}.cd-progress{height:3px;background:var(--border);border-radius:2px;overflow:hidden}.cd-bar{height:100%;background:var(--accent);border-radius:2px}
+    .module-area{flex:1;overflow-y:auto;padding:20px 24px}.module-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.mcard{background:var(--bg1);border:1px solid var(--border);border-radius:var(--radius);padding:16px;cursor:pointer;display:flex;flex-direction:column;gap:10px}.mcard:hover{border-color:var(--border-strong);background:var(--bg2);transform:translateY(-2px)}.mcard-top{display:flex;justify-content:space-between}.mcard-icon{width:32px;height:32px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--surface);display:flex;align-items:center;justify-content:center}.mcard-arrow{color:var(--muted2)}.mcard-title{font-size:13px;font-weight:700}.mcard-sub{font-size:11px;color:var(--muted);line-height:1.5}.mcard-tag{font-size:9.5px;font-family:'Geist Mono',monospace;color:var(--muted2);background:var(--surface);border:1px solid var(--border);padding:2px 7px;border-radius:4px;display:inline-block}
+    .pp-section-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;padding:20px 24px;overflow-y:auto;flex:1}.pp-sec{background:var(--bg1);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;transition:border-color var(--dur)}.pp-sec.open{border-color:var(--border-strong)}.pp-sec-head{display:flex;align-items:center;gap:10px;padding:14px 16px;cursor:pointer}.pp-sec-head:hover{background:var(--surface)}.pp-sec-num{width:26px;height:26px;border-radius:7px;background:var(--c-pp-bg);border:1px solid var(--c-pp-border);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--c-pp-text);font-family:'Geist Mono',monospace}.pp-sec-title{font-size:12.5px;font-weight:700;flex:1;line-height:1.3}.pp-sec-arrow{font-size:10px;color:var(--muted2);transition:transform .28s}.pp-sec.open .pp-sec-arrow{transform:rotate(180deg)}.pp-sec-body{max-height:0;overflow:hidden;transition:max-height .32s}.pp-sec-inner{padding:4px 12px 12px;display:flex;flex-direction:column;gap:6px;border-top:1px solid var(--border)}.pp-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--surface);cursor:pointer;text-decoration:none;color:var(--text)}.pp-item:hover{background:var(--surface-hover);border-color:var(--border-strong)}.pi-ico{font-size:13px}.pi-label{flex:1;font-size:12px}.pi-tag{font-size:9px;font-family:'Geist Mono',monospace;padding:2px 6px;border-radius:4px;background:var(--c-pp-bg);color:var(--c-pp-text);border:1px solid var(--c-pp-border)}
+    /* HEM: EXACT PP COMPONENT STYLE, 4 X 2 */
+    #hemPanel .pp-section-grid{grid-template-columns:repeat(4,minmax(0,1fr));grid-auto-rows:min-content;align-content:start}
+    #hemPanel .pp-sec-title{font-size:12.5px}
+    #hemPanel .pp-sec-head{min-height:66px}
+    .hem-number{background:var(--accent-glow)!important;border-color:var(--accent-border)!important;color:var(--accent-text)!important}
+    .hem-item .pi-tag{background:var(--accent-glow);color:var(--accent-text);border-color:var(--accent-border)}
+    .status-strip{flex-shrink:0;padding:10px 24px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--bg1)}.status-hint{font-size:11px;color:var(--muted2);font-family:'Geist Mono',monospace}.status-pills{display:flex;gap:6px}.s-pill{font-size:10px;font-family:'Geist Mono',monospace;font-weight:600;padding:3px 9px;border-radius:100px;border:1px solid var(--border);background:var(--surface);color:var(--muted)}.s-pill.green{color:#4ade80}
+    .modal-overlay{position:fixed;inset:0;z-index:700;background:rgba(0,0,0,.55);backdrop-filter:blur(7px);display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity .25s}.modal-overlay.open{opacity:1;pointer-events:auto}.modal-box{width:min(520px,100%);max-height:75vh;background:var(--bg1);border:1px solid var(--border-strong);border-radius:18px;box-shadow:0 30px 80px rgba(0,0,0,.45);overflow:hidden}.modal-head{display:flex;align-items:center;justify-content:space-between;padding:16px 18px;border-bottom:1px solid var(--border)}.modal-title-row{display:flex;align-items:center;gap:10px}.modal-icon{width:32px;height:32px;border-radius:8px;background:var(--accent-glow);border:1px solid var(--accent-border);display:flex;align-items:center;justify-content:center}.modal-title{font-weight:700}.modal-close{border:1px solid var(--border);background:var(--surface);color:var(--text);width:30px;height:30px;border-radius:8px;cursor:pointer}.modal-body{padding:14px;overflow:auto}.modal-row{display:flex;align-items:center;gap:10px;padding:9px;border:1px solid var(--border);border-radius:8px;background:var(--surface);margin-bottom:6px}.modal-row-num{width:22px;height:22px;border-radius:5px;background:var(--accent-glow);border:1px solid var(--accent-border);display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--accent-text);font-family:'Geist Mono',monospace}.modal-row-text{font-size:13px}
+    .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(60px);z-index:900;display:flex;align-items:center;gap:8px;padding:10px 16px;border-radius:var(--radius);background:var(--bg1);border:1px solid var(--border-strong);box-shadow:0 16px 48px rgba(0,0,0,.35);font-size:12.5px;color:var(--text);opacity:0;pointer-events:none;transition:all .4s var(--ease2)}.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}.toast-dot{width:7px;height:7px;border-radius:50%;background:var(--accent)}
+    .nav-user-chip{display:flex;align-items:center;gap:7px;padding:5px 10px 5px 6px;border-radius:100px;border:1px solid var(--border);background:var(--surface);cursor:pointer;color:var(--text)}.nav-user-avatar{width:22px;height:22px;border-radius:50%;overflow:hidden;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:10px;color:#fff}.nav-user-avatar img{width:100%;height:100%;object-fit:cover}.nav-user-name{font-size:11px;font-weight:600;max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.nav-role-dot{width:7px;height:7px;border-radius:50%}
+    .auth-gate{position:fixed;inset:0;z-index:800;background:rgba(0,0,0,.60);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .35s;padding:20px}.auth-gate.open{opacity:1;pointer-events:auto}.auth-box{background:var(--bg1);border:1px solid var(--border-strong);border-radius:24px;width:min(400px,100%);padding:36px 32px;box-shadow:0 32px 80px rgba(0,0,0,.55);text-align:center}.auth-box-mark{width:44px;height:44px;border-radius:12px;margin:0 auto 16px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;color:#fff}.auth-box-title{font-size:18px;font-weight:800;margin-bottom:6px}.auth-box-sub{font-size:12.5px;color:var(--muted);line-height:1.55;margin-bottom:20px}.auth-google-btn{width:100%;display:flex;align-items:center;justify-content:center;gap:10px;padding:13px;border-radius:12px;background:var(--surface);border:1px solid var(--border-strong);color:var(--text);font-size:13.5px;font-weight:600;cursor:pointer;margin-bottom:10px}.auth-cancel{font-size:12px;color:var(--muted2);cursor:pointer;background:none;border:none;padding:6px}.auth-status{font-size:11.5px;color:var(--muted2);margin-top:10px;min-height:18px}
+    @media(max-width:1100px){#hemPanel .pp-section-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.home-stat-grid{grid-template-columns:repeat(2,1fr)}}
+    @media(max-width:860px){:root{--leftW:240px}.module-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+    @media(max-width:640px){:root{--leftW:100%}html,body{overflow:auto}.shell{grid-template-columns:1fr;height:auto;min-height:100vh}.left{height:auto;border-right:0;border-bottom:1px solid var(--border)}.bidang-list{max-height:280px}.right{height:auto;min-height:600px}.home-cd-grid{grid-template-columns:1fr}.module-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.pp-section-grid,#hemPanel .pp-section-grid{grid-template-columns:1fr;padding:12px}.right-head{padding:16px}.home-panel,.module-area{padding:12px}}
+  </style>
+</head>
+
+<body>
+  <div class="bg"></div><div class="grid"></div>
+
+  <header class="topbar">
+    <a class="brand" href="index.html">
+      <div class="mark">◆</div>
+      <div class="brand-text">
+        <div class="brand-name">Dashboard SMKG</div>
+        <div class="brand-sub">Hal Ehwal Murid · HEM</div>
+      </div>
+    </a>
+    <div class="nav-right">
+      <button class="nav-btn" id="themeToggle"><span id="themeIcon">☾</span><span id="themeLabel">Dark</span></button>
+      <a class="nav-btn" href="index.html">← Kembali</a>
+      <div id="navUserChip" class="nav-user-chip" style="display:none" title="Profil & Log Keluar">
+        <div class="nav-user-avatar" id="navAvatar">?</div><span class="nav-user-name" id="navUserName">—</span><div class="nav-role-dot" id="navRoleDot"></div>
+      </div>
+      <div class="hamburger" id="hamburger"><span></span><span></span><span></span></div>
+    </div>
+  </header>
+
+  <div class="drawer-overlay" id="drawerOverlay"></div>
+  <aside class="drawer" id="drawer">
+    <div class="drawer-head">Navigation</div>
+    <div class="drawer-body">
+      <div class="drawer-section-label">Panels</div>
+      <a class="drawer-link" href="index.html"><div class="dl-icon">🏠</div><div class="dl-meta"><div class="dl-title">Dashboard</div><div class="dl-sub">Halaman utama</div></div><span class="dl-arrow">›</span></a>
+      <a class="drawer-link" href="akademik.html" id="drawerKurikulum" style="display:none"><div class="dl-icon">📚</div><div class="dl-meta"><div class="dl-title">Kurikulum</div><div class="dl-sub">Akademik & pencapaian pelajar</div></div><span class="dl-arrow">›</span></a>
+      <a class="drawer-link" href="hem.html"><div class="dl-icon">🏫</div><div class="dl-meta"><div class="dl-title">HEM</div><div class="dl-sub">Hal Ehwal Murid</div></div><span class="dl-arrow">›</span></a>
+      <a class="drawer-link" href="https://sites.google.com/view/unitkokumsmkg?usp=sharing" target="_blank" rel="noopener noreferrer"><div class="dl-icon">🏆</div><div class="dl-meta"><div class="dl-title">Ko-Kurikulum</div><div class="dl-sub">Aktiviti & persatuan</div></div><span class="dl-arrow">›</span></a>
+      <div class="drawer-sep"></div><div class="drawer-section-label">Unit Khas</div>
+      <a class="drawer-link" href="#"><div class="dl-icon">🎓</div><div class="dl-meta"><div class="dl-title">Tingkatan 6</div><div class="dl-sub">Program pra-universiti</div></div><span class="dl-arrow">›</span></a>
+      <a class="drawer-link" href="#"><div class="dl-icon">📊</div><div class="dl-meta"><div class="dl-title">Data Sekolah</div><div class="dl-sub">Dashboard & analisis</div></div><span class="dl-arrow">›</span></a>
+    </div>
+  </aside>
+
+  <main class="shell">
+    <aside class="left">
+      <div class="left-top">
+        <div class="left-tag"><span class="left-tag-dot"></span> HEM 2026</div>
+        <div class="left-title">Hal Ehwal Murid</div>
+        <div class="left-desc">Pilih unit di bawah untuk akses modul HEM.</div>
+        <div class="search-wrap"><span class="search-ico">⌕</span><input class="search-input" id="searchInput" placeholder="Cari unit / modul..."></div>
+        <div class="sort-hint"><span>↕</span> Unit HEM</div>
+      </div>
+
+      <div class="bidang-list" id="bidangList">
+        <div class="bidang" data-bidang="asrama">
+          <button class="bhead"><div class="bhead-left"><div class="bicon pp">🏠</div><span class="bhead-label">ASRAMA</span></div><div class="bhead-right"><span class="bcount">3</span><span class="barrow">▾</span></div></button>
+          <div class="bbody"><div class="binner">
+            <a class="subj" href="#" data-hem="asrama-akademik"><span class="subj-dot"></span><span class="subj-name">Akademik</span></a>
+            <a class="subj" href="#" data-hem="asrama-koku"><span class="subj-dot"></span><span class="subj-name">Kokurikulum</span></a>
+            <a class="subj" href="#" data-hem="asrama-sahsiah"><span class="subj-dot"></span><span class="subj-name">Sahsiah</span></a>
+          </div></div>
+        </div>
+
+        <div class="bidang" data-bidang="disiplin">
+          <button class="bhead"><div class="bhead-left"><div class="bicon sains">🛡️</div><span class="bhead-label">DISIPLIN</span></div><div class="bhead-right"><span class="bcount">1</span><span class="barrow">▾</span></div></button>
+          <div class="bbody"><div class="binner"><a class="subj" href="#" data-hem="disiplin"><span class="subj-dot"></span><span class="subj-name">Pengurusan Disiplin</span></a></div></div>
+        </div>
+
+        <div class="bidang" data-bidang="3k">
+          <button class="bhead"><div class="bhead-left"><div class="bicon sosial">🧹</div><span class="bhead-label">3K</span></div><div class="bhead-right"><span class="bcount">3</span><span class="barrow">▾</span></div></button>
+          <div class="bbody"><div class="binner">
+            <a class="subj" href="#" data-hem="3k-kesihatan"><span class="subj-dot"></span><span class="subj-name">Kesihatan</span></a>
+            <a class="subj" href="#" data-hem="3k-keselamatan"><span class="subj-dot"></span><span class="subj-name">Keselamatan</span></a>
+            <a class="subj" href="#" data-hem="3k-keceriaan"><span class="subj-dot"></span><span class="subj-name">Keceriaan</span></a>
+          </div></div>
+        </div>
+
+        <div class="bidang" data-bidang="bantuan">
+          <button class="bhead"><div class="bhead-left"><div class="bicon tvet">🤝</div><span class="bhead-label">BANTUAN</span></div><div class="bhead-right"><span class="bcount">1</span><span class="barrow">▾</span></div></button>
+          <div class="bbody"><div class="binner"><a class="subj" href="#" data-hem="bantuan"><span class="subj-dot"></span><span class="subj-name">Pengurusan Bantuan</span></a></div></div>
+        </div>
+
+        <div class="bidang" data-bidang="kantin">
+          <button class="bhead"><div class="bhead-left"><div class="bicon pp">🍽️</div><span class="bhead-label">KANTIN</span></div><div class="bhead-right"><span class="bcount">1</span><span class="barrow">▾</span></div></button>
+          <div class="bbody"><div class="binner"><a class="subj" href="#" data-hem="kantin"><span class="subj-dot"></span><span class="subj-name">Pengurusan Kantin</span></a></div></div>
+        </div>
+
+        <div class="bidang" data-bidang="spbt">
+          <button class="bhead"><div class="bhead-left"><div class="bicon pp">📚</div><span class="bhead-label">SPBT</span></div><div class="bhead-right"><span class="bcount">1</span><span class="barrow">▾</span></div></button>
+          <div class="bbody"><div class="binner"><a class="subj" href="#" data-hem="spbt"><span class="subj-dot"></span><span class="subj-name">Pengurusan SPBT</span></a></div></div>
+        </div>
+
+        <div class="bidang" data-bidang="ppda">
+          <button class="bhead"><div class="bhead-left"><div class="bicon pp">🚫</div><span class="bhead-label">PPDA</span></div><div class="bhead-right"><span class="bcount">1</span><span class="barrow">▾</span></div></button>
+          <div class="bbody"><div class="binner"><a class="subj" href="#" data-hem="ppda"><span class="subj-dot"></span><span class="subj-name">Pendidikan Pencegahan Dadah</span></a></div></div>
+        </div>
+
+        <div class="bidang" data-bidang="kelas">
+          <button class="bhead"><div class="bhead-left"><div class="bicon pp">📝</div><span class="bhead-label">PENGURUSAN KELAS</span></div><div class="bhead-right"><span class="bcount">1</span><span class="barrow">▾</span></div></button>
+          <div class="bbody"><div class="binner"><a class="subj" href="#" data-hem="kelas"><span class="subj-dot"></span><span class="subj-name">Pengurusan Kelas</span></a></div></div>
+        </div>
+      </div>
+    </aside>
+
+    <section class="right">
+      <div id="homePanel">
+        <div class="right-head">
+          <div><div class="rh-kicker">Gambaran Keseluruhan</div><div class="right-title">Selamat Datang</div><div class="right-sub">Portal Hal Ehwal Murid SMK Gunsanad</div></div>
+          <div class="active-badge"><div class="badge-dot"></div><span>SMKG 2026</span></div>
+        </div>
+        <div class="home-panel">
+          <div class="home-stat-grid">
+            <div class="hstat blue"><div class="hstat-label">Jumlah Pelajar</div><div class="hstat-val" id="hs-total">1,204</div><div class="hstat-sub">Enrolmen 2026</div></div>
+            <div class="hstat green"><div class="hstat-label">Sesi Pagi</div><div class="hstat-val" id="hs-pagi">786</div><div class="hstat-sub">Tingkatan 1 – 5</div></div>
+            <div class="hstat amber"><div class="hstat-label">Sesi Petang</div><div class="hstat-val" id="hs-petang">324</div><div class="hstat-sub">Perdana Petang</div></div>
+            <div class="hstat purple"><div class="hstat-label">Pra-U / T6</div><div class="hstat-val" id="hs-prau">94</div><div class="hstat-sub">Tingkatan 6</div></div>
+          </div>
+          <div class="home-cd-grid">
+            <div class="cd-card"><div class="cd-top"><div class="cd-name-row"><div class="cd-icon">🎓</div><div class="cd-name">SPM</div></div><div class="cd-date-tag">2025</div></div><div class="cd-digits"><div class="cd-unit"><div class="cd-num" id="spm-d">—</div><div class="cd-unit-label">Hari</div></div><div class="cd-unit"><div class="cd-num" id="spm-h">—</div><div class="cd-unit-label">Jam</div></div><div class="cd-unit"><div class="cd-num" id="spm-m">—</div><div class="cd-unit-label">Min</div></div><div class="cd-unit"><div class="cd-num" id="spm-s">—</div><div class="cd-unit-label">Saat</div></div></div><div class="cd-progress"><div class="cd-bar" id="spm-bar"></div></div></div>
+            <div class="cd-card"><div class="cd-top"><div class="cd-name-row"><div class="cd-icon">📘</div><div class="cd-name">STPM</div></div><div class="cd-date-tag">2025</div></div><div class="cd-digits"><div class="cd-unit"><div class="cd-num" id="stpm-d">—</div><div class="cd-unit-label">Hari</div></div><div class="cd-unit"><div class="cd-num" id="stpm-h">—</div><div class="cd-unit-label">Jam</div></div><div class="cd-unit"><div class="cd-num" id="stpm-m">—</div><div class="cd-unit-label">Min</div></div><div class="cd-unit"><div class="cd-num" id="stpm-s">—</div><div class="cd-unit-label">Saat</div></div></div><div class="cd-progress"><div class="cd-bar" id="stpm-bar"></div></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- HEM 4 X 2 — GAYA PORTAL PERDANA PETANG -->
+      <div class="hem-panel" id="hemPanel">
+        <div class="right-head">
+          <div><div class="rh-kicker" style="background:var(--c-pp-bg);border-color:var(--c-pp-border);color:var(--c-pp-text)">Hal Ehwal Murid</div><div class="right-title">Hal Ehwal Murid</div><div class="right-sub">Pilih unit di bawah untuk lihat bahagian dan dokumen</div></div>
+          <div class="active-badge" style="background:var(--c-pp-bg);border-color:var(--c-pp-border);color:var(--c-pp-text)"><div class="badge-dot" style="background:var(--c-pp-text)"></div><span>HEM</span></div>
+        </div>
+        <div class="pp-section-grid">
+
+          <div class="pp-sec"><div class="pp-sec-head"><div class="pp-sec-num hem-number">1</div><div class="pp-sec-title">🏠 ASRAMA</div><span class="pp-sec-arrow">▾</span></div><div class="pp-sec-body"><div class="pp-sec-inner">
+            <a class="pp-item hem-item" href="#"><span class="pi-ico">📘</span><span class="pi-label">Akademik</span><span class="pi-tag">Drive →</span></a>
+            <a class="pp-item hem-item" href="#"><span class="pi-ico">🏆</span><span class="pi-label">Kokurikulum</span><span class="pi-tag">Drive →</span></a>
+            <a class="pp-item hem-item" href="#"><span class="pi-ico">⭐</span><span class="pi-label">Sahsiah</span><span class="pi-tag">Drive →</span></a>
+          </div></div></div>
+
+          <div class="pp-sec"><div class="pp-sec-head"><div class="pp-sec-num hem-number">2</div><div class="pp-sec-title">🛡️ DISIPLIN</div><span class="pp-sec-arrow">▾</span></div><div class="pp-sec-body"><div class="pp-sec-inner">
+            <a class="pp-item hem-item" href="#"><span class="pi-ico">⚖️</span><span class="pi-label">Pengurusan Disiplin</span><span class="pi-tag">Drive →</span></a>
+          </div></div></div>
+
+          <div class="pp-sec"><div class="pp-sec-head"><div class="pp-sec-num hem-number">3</div><div class="pp-sec-title">🧹 3K</div><span class="pp-sec-arrow">▾</span></div><div class="pp-sec-body"><div class="pp-sec-inner">
+            <a class="pp-item hem-item" href="#"><span class="pi-ico">❤️</span><span class="pi-label">Kesihatan</span><span class="pi-tag">Drive →</span></a>
+            <a class="pp-item hem-item" href="#"><span class="pi-ico">🛡️</span><span class="pi-label">Keselamatan</span><span class="pi-tag">Drive →</span></a>
+            <a class="pp-item hem-item" href="#"><span class="pi-ico">✨</span><span class="pi-label">Keceriaan</span><span class="pi-tag">Drive →</span></a>
+          </div></div></div>
+
+          <div class="pp-sec"><div class="pp-sec-head"><div class="pp-sec-num hem-number">4</div><div class="pp-sec-title">🤝 BANTUAN</div><span class="pp-sec-arrow">▾</span></div><div class="pp-sec-body"><div class="pp-sec-inner">
+            <a class="pp-item hem-item" href="#"><span class="pi-ico">🤝</span><span class="pi-label">Pengurusan Bantuan</span><span class="pi-tag">Drive →</span></a>
+          </div></div></div>
+
+          <div class="pp-sec"><div class="pp-sec-head"><div class="pp-sec-num hem-number">5</div><div class="pp-sec-title">🍽️ KANTIN</div><span class="pp-sec-arrow">▾</span></div><div class="pp-sec-body"><div class="pp-sec-inner">
+            <a class="pp-item hem-item" href="#"><span class="pi-ico">🍽️</span><span class="pi-label">Pengurusan Kantin</span><span class="pi-tag">Drive →</span></a>
+          </div></div></div>
+
+          <div class="pp-sec"><div class="pp-sec-head"><div class="pp-sec-num hem-number">6</div><div class="pp-sec-title">📚 SPBT</div><span class="pp-sec-arrow">▾</span></div><div class="pp-sec-body"><div class="pp-sec-inner">
+            <a class="pp-item hem-item" href="#"><span class="pi-ico">📚</span><span class="pi-label">Pengurusan SPBT</span><span class="pi-tag">Drive →</span></a>
+          </div></div></div>
+
+          <div class="pp-sec"><div class="pp-sec-head"><div class="pp-sec-num hem-number">7</div><div class="pp-sec-title">🚫 PPDA</div><span class="pp-sec-arrow">▾</span></div><div class="pp-sec-body"><div class="pp-sec-inner">
+            <a class="pp-item hem-item" href="#"><span class="pi-ico">🚫</span><span class="pi-label">Pendidikan Pencegahan Dadah</span><span class="pi-tag">Drive →</span></a>
+          </div></div></div>
+
+          <div class="pp-sec"><div class="pp-sec-head"><div class="pp-sec-num hem-number">8</div><div class="pp-sec-title">📝 PENGURUSAN KELAS</div><span class="pp-sec-arrow">▾</span></div><div class="pp-sec-body"><div class="pp-sec-inner">
+            <a class="pp-item hem-item" href="#"><span class="pi-ico">📝</span><span class="pi-label">Pengurusan Kelas</span><span class="pi-tag">Drive →</span></a>
+          </div></div></div>
+
+        </div>
+      </div>
+
+      <!-- PERDANA PETANG -->
+      <div class="pp-panel" id="ppPanel">
+        <div class="right-head">
+          <div><div class="rh-kicker" style="background:var(--c-pp-bg);border-color:var(--c-pp-border);color:var(--c-pp-text)">Perdana Petang</div><div class="right-title">Perdana Petang</div><div class="right-sub">Pilih bahagian di bawah untuk lihat senarai dan dokumen</div></div>
+          <div class="active-badge" style="background:var(--c-pp-bg);border-color:var(--c-pp-border);color:var(--c-pp-text)"><div class="badge-dot" style="background:var(--c-pp-text)"></div><span>PP</span></div>
+        </div>
+        <div class="pp-section-grid">
+          <div class="pp-sec"><div class="pp-sec-head"><div class="pp-sec-num">1</div><div class="pp-sec-title">Maklumat Pentadbiran</div><span class="pp-sec-arrow">▾</span></div><div class="pp-sec-body"><div class="pp-sec-inner">
+            <a class="pp-item" href="#" data-pp-url="jadual-pdp"><span class="pi-ico">🗓️</span><span class="pi-label">Jadual PdP (Guru dan Kelas)</span><span class="pi-tag">Drive →</span></a>
+            <a class="pp-item" href="#" data-pp-url="takwim"><span class="pi-ico">📅</span><span class="pi-label">Takwim Pengurusan Perdana Petang</span><span class="pi-tag">Drive →</span></a>
+            <a class="pp-item" href="#" data-pp-url="jadual-bertugas"><span class="pi-ico">👥</span><span class="pi-label">Jadual Guru Bertugas</span><span class="pi-tag">Drive →</span></a>
+          </div></div></div>
+          <div class="pp-sec"><div class="pp-sec-head"><div class="pp-sec-num">2</div><div class="pp-sec-title">Akademik</div><span class="pp-sec-arrow">▾</span></div><div class="pp-sec-body"><div class="pp-sec-inner">
+            <a class="pp-item" href="#" data-pp-url="program-akademik"><span class="pi-ico">📚</span><span class="pi-label">Program Akademik</span><span class="pi-tag">Drive →</span></a>
+            <a class="pp-item" href="#" data-pp-url="headcount"><span class="pi-ico">📊</span><span class="pi-label">Headcount</span><span class="pi-tag">Drive →</span></a>
+          </div></div></div>
+          <div class="pp-sec"><div class="pp-sec-head"><div class="pp-sec-num">3</div><div class="pp-sec-title">Sahsiah & Disiplin</div><span class="pp-sec-arrow">▾</span></div><div class="pp-sec-body"><div class="pp-sec-inner">
+            <a class="pp-item" href="#" data-pp-url="disiplin"><span class="pi-ico">🛡️</span><span class="pi-label">Disiplin</span><span class="pi-tag">Drive →</span></a>
+            <a class="pp-item" href="#" data-pp-url="kehadiran"><span class="pi-ico">✓</span><span class="pi-label">Kehadiran</span><span class="pi-tag">Drive →</span></a>
+          </div></div></div>
+        </div>
+      </div>
+
+      <!-- STANDARD PANEL -->
+      <div class="std-panel hidden" id="stdPanel">
+        <div class="right-head"><div><div class="rh-kicker">Modul</div><div class="right-title" id="rightTitle">—</div><div class="right-sub">Pilih modul di bawah</div></div><div class="active-badge"><div class="badge-dot"></div><span id="badgeText">—</span></div></div>
+        <div class="module-area"><div class="module-grid">
+          <div class="mcard" data-module="pengurusan"><div class="mcard-top"><div class="mcard-icon">🏛️</div><span class="mcard-arrow">↗</span></div><div class="mcard-title">Pengurusan Am</div><div class="mcard-sub">Dokumen asas, borang, SOP dan rujukan harian.</div><div class="mcard-tag">Drive →</div></div>
+          <div class="mcard" data-module="pekeliling"><div class="mcard-top"><div class="mcard-icon">📌</div><span class="mcard-arrow">↗</span></div><div class="mcard-title">Pekeliling</div><div class="mcard-sub">Surat pekeliling, arahan rasmi & garis panduan.</div><div class="mcard-tag">Drive →</div></div>
+          <div class="mcard" data-module="mesyuarat"><div class="mcard-top"><div class="mcard-icon">👥</div><span class="mcard-arrow">↗</span></div><div class="mcard-title">Mesyuarat</div><div class="mcard-sub">Minit, agenda dan dokumen mesyuarat.</div><div class="mcard-tag">Drive →</div></div>
+          <div class="mcard" data-module="pentaksiran"><div class="mcard-top"><div class="mcard-icon">📝</div><span class="mcard-arrow">↗</span></div><div class="mcard-title">Pentaksiran</div><div class="mcard-sub">Instrumen, analisis dan rekod pentaksiran.</div><div class="mcard-tag">Drive →</div></div>
+          <div class="mcard" data-module="perancangan"><div class="mcard-top"><div class="mcard-icon">🗂️</div><span class="mcard-arrow">↗</span></div><div class="mcard-title">Perancangan</div><div class="mcard-sub">Perancangan tahunan dan program panitia.</div><div class="mcard-tag">Drive →</div></div>
+          <div class="mcard" data-module="kewangan"><div class="mcard-top"><div class="mcard-icon">💰</div><span class="mcard-arrow">↗</span></div><div class="mcard-title">Kewangan</div><div class="mcard-sub">Perolehan, laporan & rekod kewangan.</div><div class="mcard-tag">Drive →</div></div>
+        </div></div>
+        <div class="status-strip"><span class="status-hint">← Pilih unit · Klik modul → buka Drive</span><div class="status-pills"><span class="s-pill green" id="activeLabel">—</span><span class="s-pill">Google Drive</span></div></div>
+      </div>
+    </section>
+  </main>
+
+  <div class="modal-overlay" id="modalOverlay"><div class="modal-box"><div class="modal-head"><div class="modal-title-row"><div class="modal-icon" id="modalIcon">📋</div><div class="modal-title" id="modalTitle">Senarai</div></div><button class="modal-close" id="modalClose">✕</button></div><div class="modal-body"><div id="modalList"></div></div></div></div>
+  <div class="toast" id="toast"><div class="toast-dot"></div><span id="toastMsg">Dipilih</span></div>
+
+  <script>
+    /* THEME */
+    (()=>{const root=document.documentElement,btn=document.getElementById('themeToggle'),ico=document.getElementById('themeIcon'),lbl=document.getElementById('themeLabel');function set(t){root.dataset.theme=t;ico.textContent=t==='light'?'☀':'☾';lbl.textContent=t==='light'?'Light':'Dark';localStorage.setItem('smkg_theme',t)}btn.onclick=()=>set(root.dataset.theme==='light'?'dark':'light');set(localStorage.getItem('smkg_theme')||'dark')})();
+
+    /* DRAWER */
+    const hbg=document.getElementById('hamburger'),drawer=document.getElementById('drawer'),drawerOverlay=document.getElementById('drawerOverlay');
+    function closeDrawer(){hbg.classList.remove('open');drawer.classList.remove('open');drawerOverlay.classList.remove('open')}
+    hbg.onclick=()=>{hbg.classList.contains('open')?closeDrawer():(hbg.classList.add('open'),drawer.classList.add('open'),drawerOverlay.classList.add('open'))};
+    drawerOverlay.onclick=closeDrawer;
+
+    /* TOAST */
+    let toastTimer=null;
+    function showToast(msg){const t=document.getElementById('toast');document.getElementById('toastMsg').textContent=msg;t.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),1800)}
+
+    /* LEFT ACCORDIONS */
+    document.querySelectorAll('.bidang').forEach(box=>{
+      const head=box.querySelector('.bhead'),body=box.querySelector('.bbody');
+      head.addEventListener('click',()=>{const open=!box.classList.contains('open');document.querySelectorAll('.bidang').forEach(b=>{b.classList.remove('open');b.querySelector('.bbody').style.maxHeight='0'});if(open){box.classList.add('open');body.style.maxHeight=body.scrollHeight+'px'}});
+    });
+
+    /* PANELS */
+    const homePanel=document.getElementById('homePanel'),hemPanel=document.getElementById('hemPanel'),ppPanel=document.getElementById('ppPanel'),stdPanel=document.getElementById('stdPanel');
+    const rightTitle=document.getElementById('rightTitle'),badgeText=document.getElementById('badgeText'),activeLabel=document.getElementById('activeLabel');
+    function showPanel(panel){[homePanel,hemPanel,ppPanel,stdPanel].forEach(p=>{if(p){p.style.display='none';p.classList.remove('active')}});panel.style.display='flex';panel.classList.add('active')}
+    function showHEM(){showPanel(hemPanel);showToast('Portal HEM')}
+    function showPP(){showPanel(ppPanel);showToast('Perdana Petang')}
+    function showStd(label,key){showPanel(stdPanel);rightTitle.textContent=label;badgeText.textContent=key.toUpperCase();activeLabel.textContent=key.toUpperCase()+' aktif';showToast('Dipilih: '+label)}
+
+    /* LEFT HEM SUBJECTS */
+    document.querySelectorAll('.subj[data-hem]').forEach(s=>s.addEventListener('click',e=>{e.preventDefault();document.querySelectorAll('.subj').forEach(x=>x.classList.remove('active'));s.classList.add('active');showHEM();const box=s.closest('.bidang');if(box&&!box.classList.contains('open'))box.querySelector('.bhead').click()}));
+
+    /* HEM GRID ACCORDION */
+    document.querySelectorAll('#hemPanel .pp-sec').forEach(sec=>{const head=sec.querySelector('.pp-sec-head'),body=sec.querySelector('.pp-sec-body');head.addEventListener('click',()=>{const w=!sec.classList.contains('open');document.querySelectorAll('#hemPanel .pp-sec').forEach(s=>{s.classList.remove('open');s.querySelector('.pp-sec-body').style.maxHeight='0'});if(w){sec.classList.add('open');body.style.maxHeight=body.scrollHeight+'px'}})});
+
+    /* PP GRID ACCORDION */
+    document.querySelectorAll('#ppPanel .pp-sec').forEach(sec=>{const head=sec.querySelector('.pp-sec-head'),body=sec.querySelector('.pp-sec-body');head.addEventListener('click',()=>{const w=!sec.classList.contains('open');document.querySelectorAll('#ppPanel .pp-sec').forEach(s=>{s.classList.remove('open');s.querySelector('.pp-sec-body').style.maxHeight='0'});if(w){sec.classList.add('open');body.style.maxHeight=body.scrollHeight+'px'}})});
+
+    /* SEARCH */
+    document.getElementById('searchInput').addEventListener('input',function(){const q=this.value.toLowerCase().trim();document.querySelectorAll('.bidang').forEach(box=>{const subs=[...box.querySelectorAll('.subj')];let n=0;subs.forEach(s=>{const ok=!q||s.textContent.toLowerCase().includes(q);s.classList.toggle('hidden',!ok);if(ok)n++});box.style.display=(!q||n)?'':'none';if(q&&n){box.classList.add('open');box.querySelector('.bbody').style.maxHeight='600px'}else if(!q){box.classList.remove('open');box.querySelector('.bbody').style.maxHeight='0'}})});
+
+    /* PP LINKS FROM ORIGINAL */
+    const PP_LINKS={
+      'jadual-pdp':'https://drive.google.com/drive/u/0/folders/1SKTXVgMqx5vYOeoKmCHWhT5_vBuqoSIW',
+      'takwim':'https://drive.google.com/drive/u/0/folders/1r8mUqp2hUezujtADS1KWm2UTQEJxwO2l',
+      'jadual-bertugas':'https://drive.google.com/drive/u/0/folders/1pd5Q5t2PO4wmKxYDNLphSiXEM_9wMtyf',
+      'program-akademik':'https://drive.google.com/drive/u/0/folders/1VT_VXcWPIQ8HFz16uukUvFKqjxdJLWCE',
+      'headcount':'https://drive.google.com/drive/u/0/folders/1YlkyySbGYcXmCwoAQqrznjW9ZA7xJOMx',
+      'disiplin':'https://drive.google.com/drive/u/0/folders/1yyJZ21dEOSixX46AafgBdw53selVvnFq',
+      'kehadiran':'https://drive.google.com/drive/u/0/folders/1Bl69Q8dEIWxhhaCFtixBZ80_0UIFZsCM'
+    };
+    document.querySelectorAll('#ppPanel .pp-item[data-pp-url]').forEach(item=>item.addEventListener('click',e=>{e.preventDefault();const url=PP_LINKS[item.dataset.ppUrl];if(!url)return showToast('Folder belum ditetapkan — hubungi admin.');const a=document.createElement('a');a.href=url;a.target='_blank';a.rel='noopener noreferrer';document.body.appendChild(a);a.click();a.remove()}));
+
+    /* MODULE LINKS */
+    const SUBJECT_LABEL={bm:'Bahasa Melayu',bi:'Bahasa Inggeris',mt:'Matematik',sc:'Sains',sej:'Sejarah',geo:'Geografi',pai:'Pendidikan Agama Islam',pm:'Pendidikan Moral',psv:'Pendidikan Seni Visual',pjpk:'PJPK'};
+    const LINKS={};
+    document.querySelectorAll('.mcard[data-module]').forEach(card=>card.addEventListener('click',()=>showToast('Pautan modul belum ditetapkan — hubungi admin.')));
+
+    /* HOME COUNTDOWN */
+    const exams={spm:'2025-11-10',stpm:'2025-11-24'};
+    function countdown(key,date){const target=new Date(date+'T08:00:00'),diff=target-new Date();const vals=diff>0?[Math.floor(diff/86400000),Math.floor(diff%86400000/3600000),Math.floor(diff%3600000/60000),Math.floor(diff%60000/1000)]:[0,0,0,0];['d','h','m','s'].forEach((u,i)=>{const el=document.getElementById(key+'-'+u);if(el)el.textContent=String(vals[i]).padStart(2,'0')});const bar=document.getElementById(key+'-bar');if(bar)bar.style.width=diff>0?'50%':'100%'}function tick(){countdown('spm',exams.spm);countdown('stpm',exams.stpm)}tick();setInterval(tick,1000);
+
+    /* AUTH / SUPABASE — preserve original external configuration */
+    let authed=true;
+    try{
+      const mod=import('./supabase-config.js');
+      mod.then(({supabase,getUserRole,ensureUserRole,ROLE_LABELS})=>{
+        const chip=document.getElementById('navUserChip'),avatar=document.getElementById('navAvatar'),nameEl=document.getElementById('navUserName'),dot=document.getElementById('navRoleDot');
+        supabase.auth.getSession().then(async({data})=>{const user=data?.session?.user;if(user){const role=await getUserRole(user.id);const name=user.user_metadata?.full_name||user.email||'';avatar.textContent=name[0]?.toUpperCase()||'?';nameEl.textContent=(name.split(' ')[0]||name).slice(0,12);dot.style.background='#4ade80';dot.title=ROLE_LABELS?.[role]||role;chip.style.display='flex'}});
+        chip.onclick=()=>{if(confirm('Log keluar dari SMKG?'))supabase.auth.signOut().then(()=>location.href='index.html')};
+      }).catch(()=>{});
+    }catch(e){}
+
+    /* DEFAULT: show HEM portal */
+    showHEM();
+  </script>
+</body>
+</html>
