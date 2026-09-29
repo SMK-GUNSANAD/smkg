@@ -345,6 +345,89 @@
       color:#888;
     }
 
+    .notes-section{
+      border-top:1px solid #ededed;
+      margin-top:6px;
+      padding-top:16px;
+    }
+
+    .notes-header{
+      font-size:14px;
+      font-weight:800;
+      color:var(--dark);
+      margin-bottom:14px;
+      border-left:3px solid var(--red);
+      padding-left:8px;
+    }
+
+    .reason-btns{
+      display:flex;
+      gap:8px;
+    }
+
+    .reason-btn{
+      flex:1;
+      min-height:48px;
+      border:1px solid var(--border);
+      border-radius:14px;
+      background:white;
+      font-size:14px;
+      font-weight:700;
+      color:var(--text);
+    }
+
+    .reason-btn.selected{
+      border-color:var(--red);
+      background:#fff0f0;
+      color:var(--red);
+    }
+
+    #lainLainNote{
+      width:100%;
+      border:1px solid var(--border);
+      border-radius:14px;
+      padding:12px 14px;
+      font-size:15px;
+      font-family:inherit;
+      resize:vertical;
+    }
+
+    .tagged-box{
+      background:var(--yellow);
+      border:1px solid #ffe278;
+      border-radius:14px;
+      padding:12px 14px;
+      margin-top:14px;
+    }
+
+    .tagged-title{
+      font-size:12px;
+      font-weight:800;
+      color:#7a5b00;
+      margin-bottom:8px;
+    }
+
+    .tagged-table{
+      width:100%;
+      border-collapse:collapse;
+      font-size:13px;
+    }
+
+    .tagged-table td{
+      padding:3px 6px 3px 0;
+      color:#5d4600;
+    }
+
+    .tagged-table td.reason-col{
+      color:#8a7238;
+    }
+
+    .tagged-table td.time-col{
+      text-align:right;
+      color:#a5915a;
+      white-space:nowrap;
+    }
+
     /* ===== DESKTOP ===== */
 
     @media(min-width:768px){
@@ -446,9 +529,10 @@
           <input
             type="text"
             id="name"
-            placeholder="Type teacher's name"
+            placeholder="Type to search teacher's name"
             autocomplete="off"
             required>
+          <input type="hidden" id="nameHidden">
           <div id="nameDropdown" class="name-dropdown"></div>
         </div>
 
@@ -463,6 +547,18 @@
           <div class="hint">
             Class is automatically detected from the QR code.
           </div>
+        </div>
+
+        <div class="field">
+          <label for="subject">Subject</label>
+          <input
+            type="text"
+            id="subject"
+            placeholder="Type to search subject"
+            autocomplete="off"
+            required>
+          <input type="hidden" id="subjectHidden">
+          <div id="subjectDropdown" class="name-dropdown"></div>
         </div>
 
         <div class="field">
@@ -493,6 +589,41 @@
           </select>
         </div>
 
+        <div class="notes-section">
+
+          <div class="notes-header">Notes (mark missing student)</div>
+
+          <div class="field">
+            <label for="studentName">Student</label>
+            <input
+              type="text"
+              id="studentName"
+              placeholder="Type to search student name"
+              autocomplete="off">
+            <input type="hidden" id="studentNameHidden">
+            <div id="studentDropdown" class="name-dropdown"></div>
+          </div>
+
+          <div class="field" id="reasonField" style="display:none;">
+            <label>Reason</label>
+            <div class="reason-btns">
+              <button type="button" class="reason-btn" data-reason="Ponteng">Ponteng</button>
+              <button type="button" class="reason-btn" data-reason="Sakit">Sakit</button>
+              <button type="button" class="reason-btn" data-reason="Lain-lain">Lain-lain</button>
+            </div>
+          </div>
+
+          <div class="field" id="lainLainField" style="display:none;">
+            <textarea id="lainLainNote" placeholder="Write the note here" rows="3"></textarea>
+          </div>
+
+          <div id="taggedBox" class="tagged-box" style="display:none;">
+            <div class="tagged-title">Already tagged today, <span id="taggedClassName"></span></div>
+            <table class="tagged-table" id="taggedTable"></table>
+          </div>
+
+        </div>
+
         <div class="sticky-submit">
           <button
             type="submit"
@@ -513,21 +644,44 @@
 
     /* ===== CONFIG ===== */
     /* Replace this with your deployed Apps Script URL */
-    const API_URL = 'https://script.google.com/macros/s/AKfycbyvGyE-AOn-eDv2F6hQFAYyS6mQEeJRvpRtHEmNvYE3R-SCalUU2Lx3kTdFVH3q2ls/exec';
+    const API_URL = 'https://script.google.com/macros/s/YOUR_DEPLOYMENT_ID/exec';
 
     /* ===== DOM REFS ===== */
 
     const form = document.getElementById('recordForm');
     const submitBtn = document.getElementById('submitBtn');
     const statusBox = document.getElementById('statusBox');
-    const nameInput = document.getElementById('name');
     const classInput = document.getElementById('className');
-    const nameDropdown = document.getElementById('nameDropdown');
     const loadingOverlay = document.getElementById('loadingOverlay');
 
-    /* ===== TEACHER NAMES (loaded from API) ===== */
+    const nameInput = document.getElementById('name');
+    const nameHidden = document.getElementById('nameHidden');
+    const nameDropdown = document.getElementById('nameDropdown');
+
+    const subjectInput = document.getElementById('subject');
+    const subjectHidden = document.getElementById('subjectHidden');
+    const subjectDropdown = document.getElementById('subjectDropdown');
+
+    const studentInput = document.getElementById('studentName');
+    const studentHidden = document.getElementById('studentNameHidden');
+    const studentDropdown = document.getElementById('studentDropdown');
+
+    const reasonField = document.getElementById('reasonField');
+    const reasonBtns = document.querySelectorAll('.reason-btn');
+    const lainLainField = document.getElementById('lainLainField');
+    const lainLainNote = document.getElementById('lainLainNote');
+
+    const taggedBox = document.getElementById('taggedBox');
+    const taggedClassName = document.getElementById('taggedClassName');
+    const taggedTable = document.getElementById('taggedTable');
+
+    /* ===== STATE (loaded from API) ===== */
 
     let teacherNames = [];
+    let subjectNames = [];
+    let studentNames = [];
+    let taggedToday = [];
+    let selectedReason = '';
 
     /* ===== READ TOKEN FROM URL ===== */
 
@@ -550,9 +704,12 @@
           showStatus('error', 'Class not detected. Please scan the correct QR code.');
         }
 
-        if (data.teacherNames) {
-          teacherNames = data.teacherNames;
-        }
+        teacherNames = data.teacherNames || [];
+        subjectNames = data.subjectNames || [];
+        studentNames = data.studentNames || [];
+        taggedToday = data.taggedToday || [];
+
+        renderTaggedBox();
 
       } catch (err) {
         showStatus('error', 'Failed to load. Please check your connection and try again.');
@@ -575,13 +732,6 @@
       statusBox.textContent = '';
     }
 
-    /* ===== DROPDOWN HELPERS ===== */
-
-    function hideDropdown() {
-      nameDropdown.style.display = 'none';
-      nameDropdown.innerHTML = '';
-    }
-
     function escapeHtml(str) {
       return String(str)
         .replaceAll('&', '&amp;')
@@ -591,54 +741,114 @@
         .replaceAll("'", "&#039;");
     }
 
-    function showSuggestions(keyword) {
-      const q = keyword.trim().toLowerCase();
+    /* ===== GENERIC FILTER DROPDOWN ===== */
 
-      if (!q) {
-        hideDropdown();
-        return;
+    function setupFilterDropdown(textInput, hiddenInput, dropdownEl, getSource) {
+
+      function hide() {
+        dropdownEl.style.display = 'none';
+        dropdownEl.innerHTML = '';
       }
 
-      const matches = teacherNames
-        .filter(function(name) {
-          return name.toLowerCase().startsWith(q);
-        })
-        .slice(0, 15);
+      function show(keyword) {
+        const q = keyword.trim().toLowerCase();
 
-      if (matches.length === 0) {
-        hideDropdown();
-        return;
+        if (!q) {
+          hide();
+          return;
+        }
+
+        const matches = getSource()
+          .filter(function(name) {
+            return name.toLowerCase().startsWith(q);
+          })
+          .slice(0, 15);
+
+        if (matches.length === 0) {
+          hide();
+          return;
+        }
+
+        dropdownEl.innerHTML = matches.map(function(name) {
+          return '<div class="name-option" data-name="' + escapeHtml(name) + '">' +
+            escapeHtml(name) + '</div>';
+        }).join('');
+
+        dropdownEl.style.display = 'block';
       }
 
-      nameDropdown.innerHTML = matches.map(function(name) {
-        return '<div class="name-option" data-name="' + escapeHtml(name) + '">' +
-          escapeHtml(name) + '</div>';
-      }).join('');
+      textInput.addEventListener('input', function() {
+        hiddenInput.value = '';
+        show(textInput.value);
+      });
 
-      nameDropdown.style.display = 'block';
+      textInput.addEventListener('focus', function() {
+        show(textInput.value);
+      });
+
+      dropdownEl.addEventListener('click', function(e) {
+        const option = e.target.closest('.name-option');
+        if (!option) return;
+        const value = option.getAttribute('data-name');
+        textInput.value = value;
+        hiddenInput.value = value;
+        hide();
+        textInput.dispatchEvent(new Event('change'));
+      });
+
+      document.addEventListener('click', function(e) {
+        const inside = e.target.closest('#' + textInput.id) ||
+          e.target.closest('#' + dropdownEl.id);
+        if (!inside) hide();
+      });
     }
 
-    /* ===== EVENT LISTENERS ===== */
+    setupFilterDropdown(nameInput, nameHidden, nameDropdown, function() { return teacherNames; });
+    setupFilterDropdown(subjectInput, subjectHidden, subjectDropdown, function() { return subjectNames; });
+    setupFilterDropdown(studentInput, studentHidden, studentDropdown, function() { return studentNames; });
 
-    nameInput.addEventListener('input', function() {
-      showSuggestions(nameInput.value);
+    /* ===== STUDENT TAG UI ===== */
+
+    studentInput.addEventListener('change', function() {
+      if (studentHidden.value) {
+        reasonField.style.display = 'block';
+      } else {
+        reasonField.style.display = 'none';
+        lainLainField.style.display = 'none';
+      }
+      selectedReason = '';
+      reasonBtns.forEach(function(b) { b.classList.remove('selected'); });
     });
 
-    nameInput.addEventListener('focus', function() {
-      showSuggestions(nameInput.value);
+    reasonBtns.forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        selectedReason = btn.getAttribute('data-reason');
+        reasonBtns.forEach(function(b) { b.classList.remove('selected'); });
+        btn.classList.add('selected');
+        lainLainField.style.display = (selectedReason === 'Lain-lain') ? 'block' : 'none';
+      });
     });
 
-    nameDropdown.addEventListener('click', function(e) {
-      const option = e.target.closest('.name-option');
-      if (!option) return;
-      nameInput.value = option.getAttribute('data-name');
-      hideDropdown();
-    });
+    /* ===== TAGGED TODAY RENDER ===== */
 
-    document.addEventListener('click', function(e) {
-      const inside = e.target.closest('#name') || e.target.closest('#nameDropdown');
-      if (!inside) hideDropdown();
-    });
+    function renderTaggedBox() {
+      if (!taggedToday.length) {
+        taggedBox.style.display = 'none';
+        return;
+      }
+
+      taggedClassName.textContent = classInput.value;
+
+      taggedTable.innerHTML = taggedToday.map(function(row) {
+        return '<tr>' +
+          '<td>' + escapeHtml(row.name) + '</td>' +
+          '<td class="reason-col">' + escapeHtml(row.reason) + '</td>' +
+          '<td class="time-col">' + escapeHtml(row.time) + '</td>' +
+          '</tr>';
+      }).join('');
+
+      taggedBox.style.display = 'block';
+    }
 
     /* ===== FORM SUBMIT ===== */
 
@@ -651,16 +861,40 @@
         return;
       }
 
+      if (!nameHidden.value) {
+        showStatus('error', 'Please select your name from the list.');
+        return;
+      }
+
+      if (!subjectHidden.value) {
+        showStatus('error', 'Please select a subject from the list.');
+        return;
+      }
+
+      if (studentHidden.value && !selectedReason) {
+        showStatus('error', 'Please select a reason for the tagged student.');
+        return;
+      }
+
+      if (selectedReason === 'Lain-lain' && !lainLainNote.value.trim()) {
+        showStatus('error', 'Please write a note for Lain-lain.');
+        return;
+      }
+
       submitBtn.disabled = true;
       submitBtn.textContent = 'Saving...';
 
       const formData = {
         action: 'submit',
-        name: nameInput.value.trim(),
+        name: nameHidden.value,
         className: classInput.value.trim(),
+        subject: subjectHidden.value,
         checkout: document.getElementById('checkout').value.trim(),
         totalStudents: document.getElementById('totalStudents').value.trim(),
-        remarks: document.getElementById('remarks').value.trim()
+        remarks: document.getElementById('remarks').value.trim(),
+        taggedStudent: studentHidden.value,
+        taggedReason: selectedReason,
+        taggedNote: lainLainNote.value.trim()
       };
 
       try {
@@ -674,11 +908,28 @@
 
         if (result.ok) {
           showStatus('success', result.message);
+
           nameInput.value = '';
+          nameHidden.value = '';
+          subjectInput.value = '';
+          subjectHidden.value = '';
           document.getElementById('checkout').value = '';
           document.getElementById('totalStudents').value = '';
           document.getElementById('remarks').value = '';
-          hideDropdown();
+
+          studentInput.value = '';
+          studentHidden.value = '';
+          reasonField.style.display = 'none';
+          lainLainField.style.display = 'none';
+          lainLainNote.value = '';
+          selectedReason = '';
+          reasonBtns.forEach(function(b) { b.classList.remove('selected'); });
+
+          if (result.taggedToday) {
+            taggedToday = result.taggedToday;
+            renderTaggedBox();
+          }
+
         } else {
           showStatus('error', result.message);
         }
