@@ -428,6 +428,55 @@
       white-space:nowrap;
     }
 
+    .pending-box{
+      background:#fff0f0;
+      border:1px solid #ffd0d0;
+      border-radius:14px;
+      padding:12px 14px;
+      margin-bottom:14px;
+    }
+
+    .pending-title{
+      font-size:12px;
+      font-weight:800;
+      color:var(--red);
+      margin-bottom:8px;
+    }
+
+    .pending-box .tagged-table td{
+      color:#7a1a1a;
+    }
+
+    .pending-box .tagged-table td.reason-col{
+      color:#a04545;
+    }
+
+    .pending-box .tagged-table td.remove-col{
+      text-align:right;
+      white-space:nowrap;
+    }
+
+    .remove-btn{
+      border:none;
+      background:none;
+      color:var(--red);
+      font-size:13px;
+      font-weight:800;
+      padding:2px 4px;
+    }
+
+    .add-tag-btn{
+      width:100%;
+      min-height:50px;
+      border:1px dashed var(--red);
+      border-radius:14px;
+      background:white;
+      color:var(--red);
+      font-size:15px;
+      font-weight:800;
+      margin-top:4px;
+    }
+
     /* ===== DESKTOP ===== */
 
     @media(min-width:768px){
@@ -586,12 +635,23 @@
             <option value="PdP">PdP</option>
             <option value="PdPr">PdPr</option>
             <option value="Relief Class">Relief Class</option>
+            <option value="Exam">Exam</option>
           </select>
         </div>
 
         <div class="notes-section">
 
           <div class="notes-header">Notes (mark missing student)</div>
+
+          <div id="taggedBox" class="tagged-box" style="display:none;">
+            <div class="tagged-title">Already tagged today, <span id="taggedClassName"></span></div>
+            <table class="tagged-table" id="taggedTable"></table>
+          </div>
+
+          <div id="pendingBox" class="pending-box" style="display:none;">
+            <div class="pending-title">To be submitted</div>
+            <table class="tagged-table" id="pendingTable"></table>
+          </div>
 
           <div class="field">
             <label for="studentName">Student</label>
@@ -617,10 +677,9 @@
             <textarea id="lainLainNote" placeholder="Write the note here" rows="3"></textarea>
           </div>
 
-          <div id="taggedBox" class="tagged-box" style="display:none;">
-            <div class="tagged-title">Already tagged today, <span id="taggedClassName"></span></div>
-            <table class="tagged-table" id="taggedTable"></table>
-          </div>
+          <button type="button" id="addTagBtn" class="add-tag-btn" style="display:none;">
+            + Add to list
+          </button>
 
         </div>
 
@@ -644,7 +703,7 @@
 
     /* ===== CONFIG ===== */
     /* Replace this with your deployed Apps Script URL */
-    const API_URL = 'https://script.google.com/macros/s/AKfycbyvGyE-AOn-eDv2F6hQFAYyS6mQEeJRvpRtHEmNvYE3R-SCalUU2Lx3kTdFVH3q2ls/exec';
+    const API_URL = 'https://script.google.com/macros/s/YOUR_DEPLOYMENT_ID/exec';
 
     /* ===== DOM REFS ===== */
 
@@ -675,12 +734,17 @@
     const taggedClassName = document.getElementById('taggedClassName');
     const taggedTable = document.getElementById('taggedTable');
 
+    const pendingBox = document.getElementById('pendingBox');
+    const pendingTable = document.getElementById('pendingTable');
+    const addTagBtn = document.getElementById('addTagBtn');
+
     /* ===== STATE (loaded from API) ===== */
 
     let teacherNames = [];
     let subjectNames = [];
     let studentNames = [];
     let taggedToday = [];
+    let pendingTags = [];
     let selectedReason = '';
 
     /* ===== READ TOKEN FROM URL ===== */
@@ -809,13 +873,49 @@
 
     /* ===== STUDENT TAG UI ===== */
 
+    function resetTagInputs() {
+      studentInput.value = '';
+      studentHidden.value = '';
+      reasonField.style.display = 'none';
+      lainLainField.style.display = 'none';
+      addTagBtn.style.display = 'none';
+      lainLainNote.value = '';
+      selectedReason = '';
+      reasonBtns.forEach(function(b) { b.classList.remove('selected'); });
+    }
+
+    function alreadyHandled(name) {
+      var lower = name.toLowerCase();
+
+      var inToday = taggedToday.some(function(row) {
+        return row.name.toLowerCase() === lower;
+      });
+
+      var inPending = pendingTags.some(function(row) {
+        return row.name.toLowerCase() === lower;
+      });
+
+      return inToday || inPending;
+    }
+
     studentInput.addEventListener('change', function() {
-      if (studentHidden.value) {
-        reasonField.style.display = 'block';
-      } else {
+
+      if (!studentHidden.value) {
         reasonField.style.display = 'none';
         lainLainField.style.display = 'none';
+        addTagBtn.style.display = 'none';
+        return;
       }
+
+      if (alreadyHandled(studentHidden.value)) {
+        showStatus('error', studentHidden.value + ' has already been tagged today.');
+        resetTagInputs();
+        return;
+      }
+
+      clearStatus();
+      reasonField.style.display = 'block';
+      addTagBtn.style.display = 'none';
       selectedReason = '';
       reasonBtns.forEach(function(b) { b.classList.remove('selected'); });
     });
@@ -826,7 +926,31 @@
         reasonBtns.forEach(function(b) { b.classList.remove('selected'); });
         btn.classList.add('selected');
         lainLainField.style.display = (selectedReason === 'Lain-lain') ? 'block' : 'none';
+        addTagBtn.style.display = 'block';
       });
+    });
+
+    addTagBtn.addEventListener('click', function() {
+
+      if (!studentHidden.value || !selectedReason) {
+        return;
+      }
+
+      if (selectedReason === 'Lain-lain' && !lainLainNote.value.trim()) {
+        showStatus('error', 'Please write a note for Lain-lain.');
+        return;
+      }
+
+      clearStatus();
+
+      pendingTags.push({
+        name: studentHidden.value,
+        reason: selectedReason,
+        note: lainLainNote.value.trim()
+      });
+
+      resetTagInputs();
+      renderPendingBox();
     });
 
     /* ===== TAGGED TODAY RENDER ===== */
@@ -850,6 +974,33 @@
       taggedBox.style.display = 'block';
     }
 
+    /* ===== PENDING (NOT YET SUBMITTED) RENDER ===== */
+
+    function renderPendingBox() {
+      if (!pendingTags.length) {
+        pendingBox.style.display = 'none';
+        return;
+      }
+
+      pendingTable.innerHTML = pendingTags.map(function(row, index) {
+        return '<tr>' +
+          '<td>' + escapeHtml(row.name) + '</td>' +
+          '<td class="reason-col">' + escapeHtml(row.reason) + '</td>' +
+          '<td class="remove-col"><button type="button" class="remove-btn" data-index="' + index + '">Remove</button></td>' +
+          '</tr>';
+      }).join('');
+
+      pendingBox.style.display = 'block';
+    }
+
+    pendingTable.addEventListener('click', function(e) {
+      const btn = e.target.closest('.remove-btn');
+      if (!btn) return;
+      const index = Number(btn.getAttribute('data-index'));
+      pendingTags.splice(index, 1);
+      renderPendingBox();
+    });
+
     /* ===== FORM SUBMIT ===== */
 
     form.addEventListener('submit', async function(e) {
@@ -871,16 +1022,6 @@
         return;
       }
 
-      if (studentHidden.value && !selectedReason) {
-        showStatus('error', 'Please select a reason for the tagged student.');
-        return;
-      }
-
-      if (selectedReason === 'Lain-lain' && !lainLainNote.value.trim()) {
-        showStatus('error', 'Please write a note for Lain-lain.');
-        return;
-      }
-
       submitBtn.disabled = true;
       submitBtn.textContent = 'Saving...';
 
@@ -892,9 +1033,7 @@
         checkout: document.getElementById('checkout').value.trim(),
         totalStudents: document.getElementById('totalStudents').value.trim(),
         remarks: document.getElementById('remarks').value.trim(),
-        taggedStudent: studentHidden.value,
-        taggedReason: selectedReason,
-        taggedNote: lainLainNote.value.trim()
+        taggedStudents: pendingTags
       };
 
       try {
@@ -917,13 +1056,9 @@
           document.getElementById('totalStudents').value = '';
           document.getElementById('remarks').value = '';
 
-          studentInput.value = '';
-          studentHidden.value = '';
-          reasonField.style.display = 'none';
-          lainLainField.style.display = 'none';
-          lainLainNote.value = '';
-          selectedReason = '';
-          reasonBtns.forEach(function(b) { b.classList.remove('selected'); });
+          resetTagInputs();
+          pendingTags = [];
+          renderPendingBox();
 
           if (result.taggedToday) {
             taggedToday = result.taggedToday;
