@@ -240,7 +240,7 @@
       </div>
       <div class="side-section">
         <div class="side-label">Sistem</div>
-        <a class="side-item" data-section="settings" href="#"><div class="side-icon">⚙</div><span class="side-item-text">Tetapan</span></a>
+        <a class="side-item" data-section="settings" href="#"><div class="side-icon">📋</div><span class="side-item-text">Rekod Kawalan</span></a>
       </div>
       <div class="side-footer"><div class="side-version">SMKG Admin · v2.0 · 2026</div></div>
     </aside>
@@ -347,7 +347,294 @@
       <div class="admin-section" id="section-koku"><div class="page-header"><div class="page-title">Ko-Kurikulum</div></div><div style="height:300px;display:flex;align-items:center;justify-content:center;border:1px dashed var(--border);border-radius:var(--radius-lg);color:var(--muted);font-size:14px;flex-direction:column;gap:8px;"><span style="font-size:48px">🏆</span><span>Akan Datang</span></div></div>
       <div class="admin-section" id="section-kaunseling"><div class="page-header"><div class="page-title">Kaunseling</div></div><div style="height:300px;display:flex;align-items:center;justify-content:center;border:1px dashed var(--border);border-radius:var(--radius-lg);color:var(--muted);font-size:14px;flex-direction:column;gap:8px;"><span style="font-size:48px">💬</span><span>Akan Datang</span></div></div>
       <div class="admin-section" id="section-ppki"><div class="page-header"><div class="page-title">PPKI</div></div><div style="height:300px;display:flex;align-items:center;justify-content:center;border:1px dashed var(--border);border-radius:var(--radius-lg);color:var(--muted);font-size:14px;flex-direction:column;gap:8px;"><span style="font-size:48px">♿</span><span>Akan Datang</span></div></div>
-      <div class="admin-section" id="section-settings"><div class="page-header"><div class="page-title">Tetapan</div></div><div style="height:300px;display:flex;align-items:center;justify-content:center;border:1px dashed var(--border);border-radius:var(--radius-lg);color:var(--muted);font-size:14px;flex-direction:column;gap:8px;"><span style="font-size:48px">⚙</span><span>Akan Datang</span></div></div>
+      <div class="admin-section" id="section-settings">
+        <div class="page-header">
+          <div class="page-title">Rekod Kawalan Kelas</div>
+          <div class="page-desc">Data diambil terus dari Google Sheet RKK. Klik Muat Semula untuk data terkini.</div>
+        </div>
+
+        <!-- Top controls -->
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:20px;">
+          <select id="rkMonth" style="padding:8px 12px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--bg2);color:var(--text);font-size:13px;font-family:'Geist',sans-serif;">
+            <option value="">Semua Bulan</option>
+          </select>
+          <select id="rkType" style="padding:8px 12px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--bg2);color:var(--text);font-size:13px;font-family:'Geist',sans-serif;">
+            <option value="">Semua Jenis</option>
+            <option value="PdP">PdP</option>
+            <option value="Relief">Relief</option>
+            <option value="PdPr">PdPr</option>
+          </select>
+          <select id="rkTingkatan" style="padding:8px 12px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--bg2);color:var(--text);font-size:13px;font-family:'Geist',sans-serif;">
+            <option value="">Semua Tingkatan</option>
+            <option value="1">Tingkatan 1</option>
+            <option value="2">Tingkatan 2</option>
+            <option value="3">Tingkatan 3</option>
+            <option value="4">Tingkatan 4</option>
+            <option value="5">Tingkatan 5</option>
+            <option value="6">Tingkatan 6</option>
+          </select>
+          <input id="rkSearch" type="text" placeholder="Cari nama guru atau kelas..." style="padding:8px 12px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--bg2);color:var(--text);font-size:13px;font-family:'Geist',sans-serif;flex:1;min-width:180px;outline:none;"/>
+          <button onclick="rkApplyFilter()" class="btn-primary" style="padding:8px 16px;">Tapis</button>
+          <button onclick="rkReset()" class="btn-secondary" style="padding:8px 16px;">Reset</button>
+          <button onclick="rkLoad()" class="btn-secondary" style="padding:8px 16px;margin-left:auto;">↻ Muat Semula</button>
+          <button onclick="rkExport()" class="btn-secondary" style="padding:8px 16px;">⬇ CSV</button>
+        </div>
+
+        <!-- Summary metrics -->
+        <div class="stat-grid" style="margin-bottom:20px;" id="rkMetrics">
+          <div class="stat-card blue"><div class="stat-top"><span class="stat-label">Jumlah Entri</span><span class="stat-icon">📋</span></div><div class="stat-value" id="rkTotalEntri">—</div><div class="stat-sub">rekod terpilih</div></div>
+          <div class="stat-card green"><div class="stat-top"><span class="stat-label">Guru Aktif</span><span class="stat-icon">👤</span></div><div class="stat-value" id="rkGuruAktif">—</div><div class="stat-sub">guru berbeza</div></div>
+          <div class="stat-card amber"><div class="stat-top"><span class="stat-label">Anomali Masa</span><span class="stat-icon">⚠</span></div><div class="stat-value" id="rkAnomali" style="color:var(--amber);">—</div><div class="stat-sub">rekod perlu semak</div></div>
+          <div class="stat-card purple"><div class="stat-top"><span class="stat-label">PdP / Relief / PdPr</span><span class="stat-icon">📊</span></div><div class="stat-value" id="rkBreakdown" style="font-size:13px;padding-top:6px;">—</div><div class="stat-sub">pecahan jenis rekod</div></div>
+        </div>
+
+        <!-- Bar charts -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px;">
+          <div class="card">
+            <div class="card-header"><div class="card-title-row"><div class="card-icon">👤</div><div><div class="card-title">Top 10 Guru</div><div class="card-subtitle">Berdasarkan bilangan entri</div></div></div></div>
+            <div class="card-body" id="rkBarGuru" style="display:flex;flex-direction:column;gap:7px;"></div>
+          </div>
+          <div class="card">
+            <div class="card-header"><div class="card-title-row"><div class="card-icon">🏫</div><div><div class="card-title">Top 10 Kelas</div><div class="card-subtitle">Berdasarkan bilangan entri</div></div></div></div>
+            <div class="card-body" id="rkBarKelas" style="display:flex;flex-direction:column;gap:7px;"></div>
+          </div>
+        </div>
+
+        <!-- Anomaly table -->
+        <div class="card" style="margin-bottom:20px;" id="rkAnomalyCard">
+          <div class="card-header"><div class="card-title-row"><div class="card-icon" style="background:var(--red-bg);border-color:rgba(239,68,68,.25);">⚠</div><div><div class="card-title">Anomali Dikesan</div><div class="card-subtitle">Masa keluar lebih awal, tempoh 0 minit, bilangan pelajar luar biasa</div></div></div></div>
+          <div style="overflow-x:auto;">
+            <table style="width:100%;border-collapse:collapse;font-size:13px;" id="rkAnomalyTable">
+              <thead><tr style="border-bottom:1px solid var(--border);background:var(--bg2);">
+                <th style="padding:9px 14px;text-align:left;font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.06em;font-family:'Geist Mono',monospace;">Tarikh</th>
+                <th style="padding:9px 14px;text-align:left;font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.06em;font-family:'Geist Mono',monospace;">Guru</th>
+                <th style="padding:9px 14px;text-align:left;font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.06em;font-family:'Geist Mono',monospace;">Kelas</th>
+                <th style="padding:9px 14px;text-align:left;font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.06em;font-family:'Geist Mono',monospace;">Isu</th>
+              </tr></thead>
+              <tbody id="rkAnomalyBody"><tr><td colspan="4" style="padding:32px;text-align:center;color:var(--muted);">Tiada anomali dikesan.</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Main records table -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title-row"><div class="card-icon">📋</div><div><div class="card-title">Senarai Rekod</div><div class="card-subtitle" id="rkTableCaption">—</div></div></div>
+          </div>
+          <div style="overflow-x:auto;">
+            <table style="width:100%;border-collapse:collapse;font-size:13px;" id="rkMainTable">
+              <thead><tr style="border-bottom:1px solid var(--border);background:var(--bg2);">
+                <th style="padding:9px 14px;text-align:left;font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.06em;font-family:'Geist Mono',monospace;">Tarikh</th>
+                <th style="padding:9px 14px;text-align:left;font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.06em;font-family:'Geist Mono',monospace;">Guru</th>
+                <th style="padding:9px 14px;text-align:left;font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.06em;font-family:'Geist Mono',monospace;">Kelas</th>
+                <th style="padding:9px 14px;text-align:left;font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.06em;font-family:'Geist Mono',monospace;">Mata Pelajaran</th>
+                <th style="padding:9px 14px;text-align:left;font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.06em;font-family:'Geist Mono',monospace;">Masa Masuk</th>
+                <th style="padding:9px 14px;text-align:left;font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.06em;font-family:'Geist Mono',monospace;">Masa Keluar</th>
+                <th style="padding:9px 14px;text-align:left;font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.06em;font-family:'Geist Mono',monospace;">Pelajar</th>
+                <th style="padding:9px 14px;text-align:left;font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.06em;font-family:'Geist Mono',monospace;">Jenis</th>
+                <th style="padding:9px 14px;text-align:left;font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.06em;font-family:'Geist Mono',monospace;">Tempoh</th>
+              </tr></thead>
+              <tbody id="rkMainBody"><tr><td colspan="9" style="padding:48px;text-align:center;color:var(--muted);">Klik "Muat Semula" untuk memuatkan data.</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
+        <script>
+          const RKK_URL = 'https://script.google.com/macros/s/AKfycbyvGyE-AOn-eDv2F6hQFAYyS6mQEeJRvpRtHEmNvYE3R-SCalUU2Lx3kTdFVH3q2ls/exec?action=getRKK';
+          let rkAllData = [];
+          let rkFiltered = [];
+
+          // Type badge styles
+          const TYPE_STYLE = {
+            'PdP':    'background:rgba(59,130,246,.15);color:#60a5fa;',
+            'Relief': 'background:rgba(245,158,11,.15);color:#fbbf24;',
+            'PdPr':   'background:rgba(34,197,94,.15);color:#4ade80;',
+          };
+
+          async function rkLoad() {
+            document.getElementById('rkMainBody').innerHTML = '<tr><td colspan="9" style="padding:48px;text-align:center;color:var(--muted);">Memuatkan data...</td></tr>';
+            try {
+              const res = await fetch(RKK_URL);
+              const json = await res.json();
+              rkAllData = json.data || [];
+              // Populate month filter
+              const months = [...new Set(rkAllData.map(r => {
+                const d = r['Date'] || r['Timestamp'] || '';
+                const m = String(d).slice(3,10); // DD/MM/YYYY → MM/YYYY
+                return m;
+              }).filter(Boolean))].sort();
+              const sel = document.getElementById('rkMonth');
+              sel.innerHTML = '<option value="">Semua Bulan</option>';
+              months.forEach(m => {
+                const [mm, yyyy] = m.split('/');
+                const label = new Date(yyyy, mm-1).toLocaleDateString('ms-MY', {month:'long', year:'numeric'});
+                sel.innerHTML += `<option value="${m}">${label}</option>`;
+              });
+              rkFiltered = rkAllData;
+              rkRender(rkFiltered);
+              showToast('Data RKK dimuatkan — ' + rkAllData.length + ' rekod');
+            } catch(e) {
+              document.getElementById('rkMainBody').innerHTML = '<tr><td colspan="9" style="padding:48px;text-align:center;color:var(--red);">Gagal memuatkan data. Semak URL Apps Script.</td></tr>';
+              showToast('Ralat sambungan ke Google Sheet.', true);
+            }
+          }
+
+          function rkApplyFilter() {
+            const month = document.getElementById('rkMonth').value;
+            const type  = document.getElementById('rkType').value;
+            const tingk = document.getElementById('rkTingkatan').value;
+            const q     = document.getElementById('rkSearch').value.toLowerCase().trim();
+
+            rkFiltered = rkAllData.filter(r => {
+              const date    = String(r['Date'] || r['Timestamp'] || '');
+              const guru    = String(r['Name'] || '').toLowerCase();
+              const kelas   = String(r['Class'] || '').toLowerCase();
+              const remarks = String(r['Remarks'] || '');
+              const tingNum = kelas.match(/^(\d)/)?.[1] || '';
+
+              const matchMonth = !month || date.slice(3,10) === month;
+              const matchType  = !type  || remarks === type;
+              const matchTing  = !tingk || tingNum === tingk;
+              const matchQ     = !q     || guru.includes(q) || kelas.includes(q) || String(r['Subject']||'').toLowerCase().includes(q);
+
+              return matchMonth && matchType && matchTing && matchQ;
+            });
+
+            rkRender(rkFiltered);
+          }
+
+          function rkReset() {
+            document.getElementById('rkMonth').value = '';
+            document.getElementById('rkType').value = '';
+            document.getElementById('rkTingkatan').value = '';
+            document.getElementById('rkSearch').value = '';
+            rkFiltered = rkAllData;
+            rkRender(rkFiltered);
+          }
+
+          function rkRender(data) {
+            // Metrics
+            const total = data.length;
+            const gurus = new Set(data.map(r => r['Name'])).size;
+            const pdp     = data.filter(r => r['Remarks'] === 'PdP').length;
+            const relief  = data.filter(r => r['Remarks'] === 'Relief').length;
+            const pdpr    = data.filter(r => r['Remarks'] === 'PdPr').length;
+
+            // Anomaly detection
+            const anomalies = data.filter(r => {
+              const dur = String(r['Duration'] || '');
+              const students = parseInt(r['Total Students'] || 0);
+              const timeIn  = String(r['Time - In'] || '');
+              const timeOut = String(r['Time - Out'] || '');
+              const isDurZero = dur === '00:00:00' || dur === '0:00:00';
+              const isNeg = dur.startsWith('23:') || dur.startsWith('22:') || dur.startsWith('21:');
+              const isCrazy = students > 200;
+              return isDurZero || isNeg || isCrazy;
+            });
+
+            document.getElementById('rkTotalEntri').textContent = total.toLocaleString();
+            document.getElementById('rkGuruAktif').textContent = gurus;
+            document.getElementById('rkAnomali').textContent = anomalies.length;
+            document.getElementById('rkBreakdown').textContent = `${pdp} / ${relief} / ${pdpr}`;
+            document.getElementById('rkTableCaption').textContent = `Menunjukkan ${Math.min(200, total)} daripada ${total} rekod`;
+
+            // Bar — top 10 guru
+            const guruCount = {};
+            data.forEach(r => { const g = r['Name'] || '?'; guruCount[g] = (guruCount[g]||0)+1; });
+            const topGuru = Object.entries(guruCount).sort((a,b)=>b[1]-a[1]).slice(0,10);
+            const maxG = topGuru[0]?.[1] || 1;
+            document.getElementById('rkBarGuru').innerHTML = topGuru.map(([name, count]) =>
+              `<div style="display:flex;align-items:center;gap:8px;font-size:12px;">
+                <div style="width:120px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${name}">${name}</div>
+                <div style="flex:1;height:8px;background:var(--bg2);border-radius:4px;overflow:hidden;">
+                  <div style="height:100%;width:${Math.round(count/maxG*100)}%;background:var(--blue);border-radius:4px;"></div>
+                </div>
+                <div style="width:28px;text-align:right;color:var(--muted2);font-size:11px;font-family:'Geist Mono',monospace;">${count}</div>
+              </div>`
+            ).join('');
+
+            // Bar — top 10 kelas
+            const kelasCount = {};
+            data.forEach(r => { const k = r['Class'] || '?'; kelasCount[k] = (kelasCount[k]||0)+1; });
+            const topKelas = Object.entries(kelasCount).sort((a,b)=>b[1]-a[1]).slice(0,10);
+            const maxK = topKelas[0]?.[1] || 1;
+            document.getElementById('rkBarKelas').innerHTML = topKelas.map(([name, count]) =>
+              `<div style="display:flex;align-items:center;gap:8px;font-size:12px;">
+                <div style="width:120px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${name}</div>
+                <div style="flex:1;height:8px;background:var(--bg2);border-radius:4px;overflow:hidden;">
+                  <div style="height:100%;width:${Math.round(count/maxK*100)}%;background:var(--green);border-radius:4px;"></div>
+                </div>
+                <div style="width:28px;text-align:right;color:var(--muted2);font-size:11px;font-family:'Geist Mono',monospace;">${count}</div>
+              </div>`
+            ).join('');
+
+            // Anomaly table
+            document.getElementById('rkAnomalyBody').innerHTML = anomalies.length
+              ? anomalies.slice(0,50).map(r => {
+                  const dur = String(r['Duration']||'');
+                  const students = parseInt(r['Total Students']||0);
+                  const issues = [];
+                  if(dur==='00:00:00'||dur==='0:00:00') issues.push('Tempoh 0 minit');
+                  if(dur.startsWith('23:')||dur.startsWith('22:')||dur.startsWith('21:')) issues.push('Masa keluar lebih awal dari masa masuk');
+                  if(students>200) issues.push(`${students} pelajar — luar biasa`);
+                  return `<tr style="border-bottom:1px solid var(--border);">
+                    <td style="padding:10px 14px;font-family:'Geist Mono',monospace;font-size:12px;">${String(r['Date']||'').slice(0,10)}</td>
+                    <td style="padding:10px 14px;">${r['Name']||'—'}</td>
+                    <td style="padding:10px 14px;">${r['Class']||'—'}</td>
+                    <td style="padding:10px 14px;">${issues.map(i=>`<span style="padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600;background:var(--red-bg);color:var(--red);margin-right:4px;">${i}</span>`).join('')}</td>
+                  </tr>`;
+                }).join('')
+              : '<tr><td colspan="4" style="padding:24px;text-align:center;color:var(--muted);">Tiada anomali dikesan dalam rekod terpilih.</td></tr>';
+
+            // Main table — show max 200 rows
+            const rows = data.slice(0, 200);
+            document.getElementById('rkMainBody').innerHTML = rows.length
+              ? rows.map(r => {
+                  const remarks = String(r['Remarks']||'');
+                  const dur = String(r['Duration']||'');
+                  const isAnom = dur.startsWith('23:')||dur.startsWith('22:')||dur==='00:00:00';
+                  const style = TYPE_STYLE[remarks] || 'background:var(--surface);color:var(--muted);';
+                  return `<tr style="border-bottom:1px solid var(--border);">
+                    <td style="padding:10px 14px;font-family:'Geist Mono',monospace;font-size:12px;">${String(r['Date']||'').slice(0,10)}</td>
+                    <td style="padding:10px 14px;">${r['Name']||'—'}</td>
+                    <td style="padding:10px 14px;">${r['Class']||'—'}</td>
+                    <td style="padding:10px 14px;color:var(--muted);">${r['Subject']||'—'}</td>
+                    <td style="padding:10px 14px;font-family:'Geist Mono',monospace;font-size:12px;">${String(r['Time - In']||'').slice(0,5)}</td>
+                    <td style="padding:10px 14px;font-family:'Geist Mono',monospace;font-size:12px;">${String(r['Time - Out']||'').slice(0,5)}</td>
+                    <td style="padding:10px 14px;">${r['Total Students']||'—'}</td>
+                    <td style="padding:10px 14px;"><span style="padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600;${style}">${remarks||'—'}</span></td>
+                    <td style="padding:10px 14px;font-family:'Geist Mono',monospace;font-size:12px;${isAnom?'color:var(--red);':''}">${dur.slice(0,5)||'—'}${isAnom?' ⚠':''}</td>
+                  </tr>`;
+                }).join('')
+              : '<tr><td colspan="9" style="padding:48px;text-align:center;color:var(--muted);">Tiada rekod sepadan dengan tapisan.</td></tr>';
+          }
+
+          function rkExport() {
+            if(!rkFiltered.length){ showToast('Tiada data untuk dieksport.',true); return; }
+            const headers = ['Tarikh','Guru','Kelas','Mata Pelajaran','Masa Masuk','Masa Keluar','Pelajar','Jenis','Tempoh'];
+            const rows = rkFiltered.map(r => [
+              String(r['Date']||'').slice(0,10),
+              r['Name']||'', r['Class']||'', r['Subject']||'',
+              String(r['Time - In']||'').slice(0,5),
+              String(r['Time - Out']||'').slice(0,5),
+              r['Total Students']||'', r['Remarks']||'',
+              String(r['Duration']||'').slice(0,5)
+            ]);
+            const csv = [headers,...rows].map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('
+');
+            const a = document.createElement('a');
+            a.href = 'data:text/csv;charset=utf-8,﻿' + encodeURIComponent(csv);
+            a.download = 'rekod-kawalan-kelas-' + new Date().toISOString().slice(0,10) + '.csv';
+            a.click();
+            showToast('CSV dieksport — ' + rkFiltered.length + ' rekod');
+          }
+
+          // Auto-load when section is opened
+          document.querySelector('[data-section="settings"]').addEventListener('click', function() {
+            if(!rkAllData.length) setTimeout(rkLoad, 300);
+          });
+        </script>
+      </div>
 
     </main>
   </div>
@@ -369,7 +656,7 @@
     document.getElementById('sidebarToggle').onclick=()=>{sidebarOpen=!sidebarOpen;sidebar.classList.toggle('collapsed',!sidebarOpen);};
 
     /* SECTION ROUTING */
-    const sectionLabels={ticker:'Ticker & Pengumuman',enrolmen:'Enrolmen & Countdown',stats:'Statistik Sekolah',kurikulum:'Kurikulum',hem:'HEM',koku:'Ko-Kurikulum',kaunseling:'Kaunseling',ppki:'PPKI',settings:'Tetapan'};
+    const sectionLabels={ticker:'Ticker & Pengumuman',enrolmen:'Enrolmen & Countdown',stats:'Statistik Sekolah',kurikulum:'Kurikulum',hem:'HEM',koku:'Ko-Kurikulum',kaunseling:'Kaunseling',ppki:'PPKI',settings:'Rekod Kawalan Kelas'};
     document.querySelectorAll('.side-item[data-section]').forEach(item=>{
       item.onclick=e=>{e.preventDefault();const sec=item.dataset.section;document.querySelectorAll('.side-item').forEach(i=>i.classList.remove('active'));item.classList.add('active');document.querySelectorAll('.admin-section').forEach(s=>s.classList.remove('active'));const target=document.getElementById('section-'+sec);if(target)target.classList.add('active');document.getElementById('breadcrumbCurrent').textContent=sectionLabels[sec]||sec;window.scrollTo(0,0);};
     });
