@@ -439,7 +439,81 @@
           </div>
         </div>
 
-        <script>
+      </div>
+
+    </main>
+  </div>
+
+  <div class="toast" id="toast"><div class="toast-dot"></div><span id="toastMsg">Disimpan!</span></div>
+
+  <script>
+    /* THEME */
+    (function initTheme(){
+      const root=document.documentElement,btn=document.getElementById('themeToggle'),ico=document.getElementById('themeIcon'),lbl=document.getElementById('themeLabel');
+      function set(t){root.setAttribute('data-theme',t);ico.textContent=t==='light'?'☀':'☾';lbl.textContent=t==='light'?'Light':'Dark';localStorage.setItem('smkg_theme',t);}
+      btn.onclick=()=>set(root.getAttribute('data-theme')==='light'?'dark':'light');
+      set(localStorage.getItem('smkg_theme')||'dark');
+    })();
+
+    /* SIDEBAR */
+    const sidebar=document.getElementById('sidebar');
+    let sidebarOpen=true;
+    document.getElementById('sidebarToggle').onclick=()=>{sidebarOpen=!sidebarOpen;sidebar.classList.toggle('collapsed',!sidebarOpen);};
+
+    /* SECTION ROUTING */
+    const sectionLabels={ticker:'Ticker & Pengumuman',enrolmen:'Enrolmen & Countdown',stats:'Statistik Sekolah',kurikulum:'Kurikulum',hem:'HEM',koku:'Ko-Kurikulum',kaunseling:'Kaunseling',ppki:'PPKI',settings:'Rekod Kawalan Kelas'};
+    document.querySelectorAll('.side-item[data-section]').forEach(item=>{
+      item.onclick=e=>{e.preventDefault();const sec=item.dataset.section;document.querySelectorAll('.side-item').forEach(i=>i.classList.remove('active'));item.classList.add('active');document.querySelectorAll('.admin-section').forEach(s=>s.classList.remove('active'));const target=document.getElementById('section-'+sec);if(target)target.classList.add('active');document.getElementById('breadcrumbCurrent').textContent=sectionLabels[sec]||sec;window.scrollTo(0,0);};
+    });
+
+    /* TICKER */
+    const DEFAULT_TICKER=[{icon:'👥',label:'Pelajar',value:'1,204'},{icon:'📢',label:'Pengumuman',value:'Mesyuarat Panitia — 8 April 2026'},{icon:'⭐',label:'GPS',value:'3.20'},{icon:'🏅',label:'Aktiviti',value:'Sukan Daerah Keningau — 12 April'},{icon:'📊',label:'GPMP',value:'Sasaran 2.95 — TOV 3.20'},{icon:'🎓',label:'SPM',value:'100% Gred A — Matematik Tambahan'}];
+    let tickerItems=[],dragSrc=null,hasUnsaved=false;
+    function loadTicker(){try{const s=localStorage.getItem('smkg_ticker');return s?JSON.parse(s):JSON.parse(JSON.stringify(DEFAULT_TICKER));}catch(e){return JSON.parse(JSON.stringify(DEFAULT_TICKER));}}
+    function getItems(){return [...document.querySelectorAll('.ticker-row')].map(row=>({icon:row.querySelector('.icon-input').value.trim()||'📢',label:row.querySelector('.label-input').value.trim()||'Info',value:row.querySelector('.value-input').value.trim()||'—'}));}
+    function markUnsaved(){hasUnsaved=true;document.getElementById('saveHint').textContent='Ada perubahan — belum disimpan';document.getElementById('saveHint').style.color='var(--amber)';updateStats();previewTicker();}
+    function escHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+    function renderList(items){
+      const list=document.getElementById('tickerList');list.innerHTML='';
+      items.forEach((item)=>{
+        const row=document.createElement('div');row.className='ticker-row';row.draggable=true;
+        row.innerHTML=`<div class="tr-drag">⠿</div><input class="tr-input icon-input" type="text" value="${escHtml(item.icon)}" placeholder="🎯" maxlength="4"/><input class="tr-input label-input" type="text" value="${escHtml(item.label)}" placeholder="Label"/><input class="tr-input value-input" type="text" value="${escHtml(item.value)}" placeholder="Nilai" style="width:100%"/><button class="tr-del" onclick="delItem(this)">✕</button>`;
+        row.addEventListener('dragstart',e=>{dragSrc=row;row.style.opacity='.4';e.dataTransfer.effectAllowed='move';});
+        row.addEventListener('dragend',()=>{row.style.opacity='1';document.querySelectorAll('.ticker-row').forEach(r=>r.classList.remove('drag-over'));});
+        row.addEventListener('dragover',e=>{e.preventDefault();row.classList.add('drag-over');});
+        row.addEventListener('dragleave',()=>row.classList.remove('drag-over'));
+        row.addEventListener('drop',e=>{e.preventDefault();if(dragSrc===row)return;row.classList.remove('drag-over');const items2=getItems();const rows=[...document.querySelectorAll('.ticker-row')];const srcIdx=rows.indexOf(dragSrc),dstIdx=rows.indexOf(row);const[moved]=items2.splice(srcIdx,1);items2.splice(dstIdx,0,moved);renderList(items2);markUnsaved();});
+        row.querySelectorAll('input').forEach(inp=>inp.addEventListener('input',markUnsaved));
+        list.appendChild(row);
+      });
+      updateStats();
+    }
+    function addItem(){const items=getItems();items.push({icon:'📌',label:'Baru',value:'Masukkan teks di sini...'});renderList(items);markUnsaved();document.getElementById('tickerList').lastElementChild?.scrollIntoView({behavior:'smooth'});}
+    function delItem(btn){const row=btn.closest('.ticker-row');const items=getItems().filter((_,i)=>i!==[...document.querySelectorAll('.ticker-row')].indexOf(row));renderList(items);markUnsaved();}
+    function resetToDefault(){if(confirm('Reset ke ticker asal?')){renderList(JSON.parse(JSON.stringify(DEFAULT_TICKER)));markUnsaved();}}
+    function updateStats(){const items=getItems();document.getElementById('sv-items').textContent=items.length;const gps=items.find(i=>i.label.toLowerCase().includes('gps'));if(gps)document.getElementById('sv-gps').textContent=gps.value;const stu=items.find(i=>i.label.toLowerCase().includes('pelajar')||i.label.toLowerCase().includes('student'));if(stu)document.getElementById('sv-students').textContent=stu.value;}
+    function previewTicker(){const items=getItems();const track=document.getElementById('previewTrack');if(!track)return;track.innerHTML=[...items,...items].map((it,i)=>`<span class="prev-item"><span>${it.icon}</span><span class="pi-label">${it.label}</span><span class="pi-value">${it.value}</span></span><span class="prev-divider"></span>`).join('');track.style.animationDuration=Math.max(16,items.length*5)+'s';}
+    function saveTicker(){const items=getItems();try{localStorage.setItem('smkg_ticker',JSON.stringify(items));const ts=new Date().toLocaleTimeString('ms-MY',{hour:'2-digit',minute:'2-digit'});document.getElementById('sv-saved').textContent=ts;document.getElementById('saveHint').textContent='Disimpan pada '+ts;document.getElementById('saveHint').style.color='var(--green)';hasUnsaved=false;showToast('Ticker disimpan dan di-publish! 🎉');}catch(e){showToast('Ralat simpan — cuba semula.',true);}}
+    function showToast(msg,isError=false){const t=document.getElementById('toast');const dot=t.querySelector('.toast-dot');document.getElementById('toastMsg').textContent=msg;dot.style.background=isError?'var(--red)':'var(--green)';t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3200);}
+
+    /* ENROLMEN */
+    function loadEnrolmenAdmin(){try{const d=JSON.parse(localStorage.getItem('smkg_enrolmen')||'{}');if(d.total!==undefined)document.getElementById('en-total').value=d.total;if(d.pagi!==undefined)document.getElementById('en-pagi').value=d.pagi;if(d.petang!==undefined)document.getElementById('en-petang').value=d.petang;if(d.prau!==undefined)document.getElementById('en-prau').value=d.prau;}catch(e){}}
+    function saveEnrolmen(){const d={total:document.getElementById('en-total').value||1204,pagi:document.getElementById('en-pagi').value||786,petang:document.getElementById('en-petang').value||324,prau:document.getElementById('en-prau').value||94};localStorage.setItem('smkg_enrolmen',JSON.stringify(d));showToast('Data enrolmen disimpan! 👥');}
+
+    /* EXAM DATES */
+    function loadExamAdmin(){try{const d=JSON.parse(localStorage.getItem('smkg_exam_dates')||'{}');if(d.spm?.date)document.getElementById('ex-spm').value=d.spm.date;if(d.stpm?.date)document.getElementById('ex-stpm').value=d.stpm.date;if(d.ppsa?.date)document.getElementById('ex-ppsa').value=d.ppsa.date;if(d.pasa?.date)document.getElementById('ex-pasa').value=d.pasa.date;}catch(e){}}
+    function saveExamDates(){const today=new Date().toISOString().slice(0,10);const d={spm:{date:document.getElementById('ex-spm').value||'2025-11-10',start:today},stpm:{date:document.getElementById('ex-stpm').value||'2025-11-24',start:today},ppsa:{date:document.getElementById('ex-ppsa').value||'2025-08-25',start:today},pasa:{date:document.getElementById('ex-pasa').value||'2025-10-06',start:today}};localStorage.setItem('smkg_exam_dates',JSON.stringify(d));showToast('Tarikh peperiksaan disimpan! 🗓️');}
+
+    /* INIT */
+    tickerItems=loadTicker();
+    renderList(tickerItems);
+    previewTicker();
+    loadEnrolmenAdmin();
+    loadExamAdmin();
+    window.onbeforeunload=e=>{if(hasUnsaved){e.preventDefault();return '';}};
+  </script>
+
+  <script>
           const RKK_URL = 'https://script.google.com/macros/s/AKfycbyvGyE-AOn-eDv2F6hQFAYyS6mQEeJRvpRtHEmNvYE3R-SCalUU2Lx3kTdFVH3q2ls/exec?action=getRKK';
           let rkAllData = [];
           let rkFiltered = [];
@@ -456,6 +530,7 @@
             // Use JSONP to bypass CORS
             window._rkCallback = function(json) {
               rkAllData = json.data || [];
+              showToast('Data dimuatkan: ' + rkAllData.length + ' rekod');
 
               // Populate month filter
               const months = [...new Set(rkAllData.map(r => {
@@ -639,79 +714,12 @@
           document.querySelector('[data-section="settings"]').addEventListener('click', function() {
             if(!rkAllData.length) setTimeout(rkLoad, 300);
           });
-        </script>
-      </div>
 
-    </main>
-  </div>
-
-  <div class="toast" id="toast"><div class="toast-dot"></div><span id="toastMsg">Disimpan!</span></div>
-
-  <script>
-    /* THEME */
-    (function initTheme(){
-      const root=document.documentElement,btn=document.getElementById('themeToggle'),ico=document.getElementById('themeIcon'),lbl=document.getElementById('themeLabel');
-      function set(t){root.setAttribute('data-theme',t);ico.textContent=t==='light'?'☀':'☾';lbl.textContent=t==='light'?'Light':'Dark';localStorage.setItem('smkg_theme',t);}
-      btn.onclick=()=>set(root.getAttribute('data-theme')==='light'?'dark':'light');
-      set(localStorage.getItem('smkg_theme')||'dark');
-    })();
-
-    /* SIDEBAR */
-    const sidebar=document.getElementById('sidebar');
-    let sidebarOpen=true;
-    document.getElementById('sidebarToggle').onclick=()=>{sidebarOpen=!sidebarOpen;sidebar.classList.toggle('collapsed',!sidebarOpen);};
-
-    /* SECTION ROUTING */
-    const sectionLabels={ticker:'Ticker & Pengumuman',enrolmen:'Enrolmen & Countdown',stats:'Statistik Sekolah',kurikulum:'Kurikulum',hem:'HEM',koku:'Ko-Kurikulum',kaunseling:'Kaunseling',ppki:'PPKI',settings:'Rekod Kawalan Kelas'};
-    document.querySelectorAll('.side-item[data-section]').forEach(item=>{
-      item.onclick=e=>{e.preventDefault();const sec=item.dataset.section;document.querySelectorAll('.side-item').forEach(i=>i.classList.remove('active'));item.classList.add('active');document.querySelectorAll('.admin-section').forEach(s=>s.classList.remove('active'));const target=document.getElementById('section-'+sec);if(target)target.classList.add('active');document.getElementById('breadcrumbCurrent').textContent=sectionLabels[sec]||sec;window.scrollTo(0,0);};
-    });
-
-    /* TICKER */
-    const DEFAULT_TICKER=[{icon:'👥',label:'Pelajar',value:'1,204'},{icon:'📢',label:'Pengumuman',value:'Mesyuarat Panitia — 8 April 2026'},{icon:'⭐',label:'GPS',value:'3.20'},{icon:'🏅',label:'Aktiviti',value:'Sukan Daerah Keningau — 12 April'},{icon:'📊',label:'GPMP',value:'Sasaran 2.95 — TOV 3.20'},{icon:'🎓',label:'SPM',value:'100% Gred A — Matematik Tambahan'}];
-    let tickerItems=[],dragSrc=null,hasUnsaved=false;
-    function loadTicker(){try{const s=localStorage.getItem('smkg_ticker');return s?JSON.parse(s):JSON.parse(JSON.stringify(DEFAULT_TICKER));}catch(e){return JSON.parse(JSON.stringify(DEFAULT_TICKER));}}
-    function getItems(){return [...document.querySelectorAll('.ticker-row')].map(row=>({icon:row.querySelector('.icon-input').value.trim()||'📢',label:row.querySelector('.label-input').value.trim()||'Info',value:row.querySelector('.value-input').value.trim()||'—'}));}
-    function markUnsaved(){hasUnsaved=true;document.getElementById('saveHint').textContent='Ada perubahan — belum disimpan';document.getElementById('saveHint').style.color='var(--amber)';updateStats();previewTicker();}
-    function escHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
-    function renderList(items){
-      const list=document.getElementById('tickerList');list.innerHTML='';
-      items.forEach((item)=>{
-        const row=document.createElement('div');row.className='ticker-row';row.draggable=true;
-        row.innerHTML=`<div class="tr-drag">⠿</div><input class="tr-input icon-input" type="text" value="${escHtml(item.icon)}" placeholder="🎯" maxlength="4"/><input class="tr-input label-input" type="text" value="${escHtml(item.label)}" placeholder="Label"/><input class="tr-input value-input" type="text" value="${escHtml(item.value)}" placeholder="Nilai" style="width:100%"/><button class="tr-del" onclick="delItem(this)">✕</button>`;
-        row.addEventListener('dragstart',e=>{dragSrc=row;row.style.opacity='.4';e.dataTransfer.effectAllowed='move';});
-        row.addEventListener('dragend',()=>{row.style.opacity='1';document.querySelectorAll('.ticker-row').forEach(r=>r.classList.remove('drag-over'));});
-        row.addEventListener('dragover',e=>{e.preventDefault();row.classList.add('drag-over');});
-        row.addEventListener('dragleave',()=>row.classList.remove('drag-over'));
-        row.addEventListener('drop',e=>{e.preventDefault();if(dragSrc===row)return;row.classList.remove('drag-over');const items2=getItems();const rows=[...document.querySelectorAll('.ticker-row')];const srcIdx=rows.indexOf(dragSrc),dstIdx=rows.indexOf(row);const[moved]=items2.splice(srcIdx,1);items2.splice(dstIdx,0,moved);renderList(items2);markUnsaved();});
-        row.querySelectorAll('input').forEach(inp=>inp.addEventListener('input',markUnsaved));
-        list.appendChild(row);
-      });
-      updateStats();
-    }
-    function addItem(){const items=getItems();items.push({icon:'📌',label:'Baru',value:'Masukkan teks di sini...'});renderList(items);markUnsaved();document.getElementById('tickerList').lastElementChild?.scrollIntoView({behavior:'smooth'});}
-    function delItem(btn){const row=btn.closest('.ticker-row');const items=getItems().filter((_,i)=>i!==[...document.querySelectorAll('.ticker-row')].indexOf(row));renderList(items);markUnsaved();}
-    function resetToDefault(){if(confirm('Reset ke ticker asal?')){renderList(JSON.parse(JSON.stringify(DEFAULT_TICKER)));markUnsaved();}}
-    function updateStats(){const items=getItems();document.getElementById('sv-items').textContent=items.length;const gps=items.find(i=>i.label.toLowerCase().includes('gps'));if(gps)document.getElementById('sv-gps').textContent=gps.value;const stu=items.find(i=>i.label.toLowerCase().includes('pelajar')||i.label.toLowerCase().includes('student'));if(stu)document.getElementById('sv-students').textContent=stu.value;}
-    function previewTicker(){const items=getItems();const track=document.getElementById('previewTrack');if(!track)return;track.innerHTML=[...items,...items].map((it,i)=>`<span class="prev-item"><span>${it.icon}</span><span class="pi-label">${it.label}</span><span class="pi-value">${it.value}</span></span><span class="prev-divider"></span>`).join('');track.style.animationDuration=Math.max(16,items.length*5)+'s';}
-    function saveTicker(){const items=getItems();try{localStorage.setItem('smkg_ticker',JSON.stringify(items));const ts=new Date().toLocaleTimeString('ms-MY',{hour:'2-digit',minute:'2-digit'});document.getElementById('sv-saved').textContent=ts;document.getElementById('saveHint').textContent='Disimpan pada '+ts;document.getElementById('saveHint').style.color='var(--green)';hasUnsaved=false;showToast('Ticker disimpan dan di-publish! 🎉');}catch(e){showToast('Ralat simpan — cuba semula.',true);}}
-    function showToast(msg,isError=false){const t=document.getElementById('toast');const dot=t.querySelector('.toast-dot');document.getElementById('toastMsg').textContent=msg;dot.style.background=isError?'var(--red)':'var(--green)';t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3200);}
-
-    /* ENROLMEN */
-    function loadEnrolmenAdmin(){try{const d=JSON.parse(localStorage.getItem('smkg_enrolmen')||'{}');if(d.total!==undefined)document.getElementById('en-total').value=d.total;if(d.pagi!==undefined)document.getElementById('en-pagi').value=d.pagi;if(d.petang!==undefined)document.getElementById('en-petang').value=d.petang;if(d.prau!==undefined)document.getElementById('en-prau').value=d.prau;}catch(e){}}
-    function saveEnrolmen(){const d={total:document.getElementById('en-total').value||1204,pagi:document.getElementById('en-pagi').value||786,petang:document.getElementById('en-petang').value||324,prau:document.getElementById('en-prau').value||94};localStorage.setItem('smkg_enrolmen',JSON.stringify(d));showToast('Data enrolmen disimpan! 👥');}
-
-    /* EXAM DATES */
-    function loadExamAdmin(){try{const d=JSON.parse(localStorage.getItem('smkg_exam_dates')||'{}');if(d.spm?.date)document.getElementById('ex-spm').value=d.spm.date;if(d.stpm?.date)document.getElementById('ex-stpm').value=d.stpm.date;if(d.ppsa?.date)document.getElementById('ex-ppsa').value=d.ppsa.date;if(d.pasa?.date)document.getElementById('ex-pasa').value=d.pasa.date;}catch(e){}}
-    function saveExamDates(){const today=new Date().toISOString().slice(0,10);const d={spm:{date:document.getElementById('ex-spm').value||'2025-11-10',start:today},stpm:{date:document.getElementById('ex-stpm').value||'2025-11-24',start:today},ppsa:{date:document.getElementById('ex-ppsa').value||'2025-08-25',start:today},pasa:{date:document.getElementById('ex-pasa').value||'2025-10-06',start:today}};localStorage.setItem('smkg_exam_dates',JSON.stringify(d));showToast('Tarikh peperiksaan disimpan! 🗓️');}
-
-    /* INIT */
-    tickerItems=loadTicker();
-    renderList(tickerItems);
-    previewTicker();
-    loadEnrolmenAdmin();
-    loadExamAdmin();
-    window.onbeforeunload=e=>{if(hasUnsaved){e.preventDefault();return '';}};
+          // Also expose to global scope
+          window.rkLoad = rkLoad;
+          window.rkApplyFilter = rkApplyFilter;
+          window.rkReset = rkReset;
+          window.rkExport = rkExport;
   </script>
 </body>
 </html>
