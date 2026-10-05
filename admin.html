@@ -374,10 +374,10 @@
             <option value="6">Tingkatan 6</option>
           </select>
           <input id="rkSearch" type="text" placeholder="Cari nama guru atau kelas..." style="padding:8px 12px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--bg2);color:var(--text);font-size:13px;font-family:'Geist',sans-serif;flex:1;min-width:180px;outline:none;"/>
-          <button onclick="rkApplyFilter()" class="btn-primary" style="padding:8px 16px;">Tapis</button>
-          <button onclick="rkReset()" class="btn-secondary" style="padding:8px 16px;">Reset</button>
-          <button onclick="rkLoad()" class="btn-secondary" style="padding:8px 16px;margin-left:auto;">↻ Muat Semula</button>
-          <button onclick="rkExport()" class="btn-secondary" style="padding:8px 16px;">⬇ CSV</button>
+          <button id="rkBtnFilter" class="btn-primary" style="padding:8px 16px;">Tapis</button>
+          <button id="rkBtnReset" class="btn-secondary" style="padding:8px 16px;">Reset</button>
+          <button id="rkBtnLoad" class="btn-secondary" style="padding:8px 16px;margin-left:auto;">↻ Muat Semula</button>
+          <button id="rkBtnExport" class="btn-secondary" style="padding:8px 16px;">⬇ CSV</button>
         </div>
 
         <!-- Summary metrics -->
@@ -715,11 +715,13 @@
             if(!rkAllData.length) setTimeout(rkLoad, 300);
           });
 
-          // Also expose to global scope
-          window.rkLoad = rkLoad;
-          window.rkApplyFilter = rkApplyFilter;
-          window.rkReset = rkReset;
-          window.rkExport = rkExport;
+          // Wire up buttons via event listeners
+          document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('rkBtnLoad').addEventListener('click', rkLoad);
+            document.getElementById('rkBtnExport').addEventListener('click', rkExport);
+            document.getElementById('rkBtnFilter').addEventListener('click', rkApplyFilter);
+            document.getElementById('rkBtnReset').addEventListener('click', rkReset);
+          });
   </script>
 </body>
 </html>
