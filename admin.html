@@ -575,10 +575,22 @@
             document.getElementById('rkBarGuru').innerHTML = '';
             document.getElementById('rkBarKelas').innerHTML = '';
             try {
-              const res = await fetch(RKK_CSV);
+              const res = await fetch(RKK_CSV, { cache: 'no-store' });
               if (!res.ok) throw new Error('HTTP ' + res.status);
               const text = await res.text();
+              // Show first 200 chars in toast for debugging
+              if (!text || text.trim().startsWith('<!')) {
+                throw new Error('Sheet not public or wrong sheet name. Got HTML instead of CSV.');
+              }
               rkAllData = parseCSV(text);
+
+              // Show header names so we can verify column mapping
+              if (rkAllData.length > 0) {
+                const headers = Object.keys(rkAllData[0]);
+                console.log('RKK headers:', headers);
+                // Show in UI for 8 seconds
+                showToast('Headers: ' + headers.join(' | '));
+              }
 
               // Normalise dates
               rkAllData.forEach(r => { r._date = normDate(r['Date'] || r['Timestamp'] || ''); });
@@ -752,18 +764,32 @@
             showToast('CSV dieksport — ' + rkFiltered.length + ' rekod');
           }
 
-          // Auto-load when section is opened
-          document.querySelector('[data-section="settings"]').addEventListener('click', function() {
-            if(!rkAllData.length) setTimeout(rkLoad, 300);
-          });
+          // Wire up everything after DOM is ready
+          function rkInit() {
+            const btnLoad   = document.getElementById('rkBtnLoad');
+            const btnExport = document.getElementById('rkBtnExport');
+            const btnFilter = document.getElementById('rkBtnFilter');
+            const btnReset  = document.getElementById('rkBtnReset');
+            const sideLink  = document.querySelector('[data-section="settings"]');
 
-          // Wire up buttons via event listeners
-          document.addEventListener('DOMContentLoaded', function() {
-            document.getElementById('rkBtnLoad').addEventListener('click', rkLoad);
-            document.getElementById('rkBtnExport').addEventListener('click', rkExport);
-            document.getElementById('rkBtnFilter').addEventListener('click', rkApplyFilter);
-            document.getElementById('rkBtnReset').addEventListener('click', rkReset);
-          });
+            if (btnLoad)   btnLoad.addEventListener('click', rkLoad);
+            if (btnExport) btnExport.addEventListener('click', rkExport);
+            if (btnFilter) btnFilter.addEventListener('click', rkApplyFilter);
+            if (btnReset)  btnReset.addEventListener('click', rkReset);
+
+            // Auto-load when section is opened
+            if (sideLink) {
+              sideLink.addEventListener('click', function() {
+                if (!rkAllData.length) setTimeout(rkLoad, 400);
+              });
+            }
+          }
+
+          if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', rkInit);
+          } else {
+            rkInit(); // DOM already parsed
+          }
   </script>
 </body>
 </html>
