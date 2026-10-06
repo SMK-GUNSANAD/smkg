@@ -377,10 +377,10 @@
             <option value="6">Tingkatan 6</option>
           </select>
           <input id="rkSearch" type="text" placeholder="Cari nama guru atau kelas..." style="padding:8px 12px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--bg2);color:var(--text);font-size:13px;font-family:'Geist',sans-serif;flex:1;min-width:180px;outline:none;"/>
-          <button id="rkBtnFilter" class="btn-primary" style="padding:8px 16px;">Tapis</button>
-          <button id="rkBtnReset" class="btn-secondary" style="padding:8px 16px;">Reset</button>
-          <button id="rkBtnLoad" class="btn-secondary" style="padding:8px 16px;margin-left:auto;">↻ Muat Semula</button>
-          <button id="rkBtnExport" class="btn-secondary" style="padding:8px 16px;">⬇ CSV</button>
+          <button id="rkBtnFilter" class="btn-primary" style="padding:8px 16px;" onclick="rkApplyFilter()">Tapis</button>
+          <button id="rkBtnReset" class="btn-secondary" style="padding:8px 16px;" onclick="rkReset()">Reset</button>
+          <button id="rkBtnLoad" class="btn-secondary" style="padding:8px 16px;margin-left:auto;" onclick="rkLoad()">↻ Muat Semula</button>
+          <button id="rkBtnExport" class="btn-secondary" style="padding:8px 16px;" onclick="rkExport()">⬇ CSV</button>
         </div>
 
         <!-- Summary metrics -->
@@ -762,8 +762,7 @@
               r['Total Students']||'', r['Remarks']||'',
               String(r['Duration']||'').slice(0,5)
             ]);
-            const csv = [headers,...rows].map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('
-');
+            const csv = [headers,...rows].map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\n');
             const a = document.createElement('a');
             a.href = 'data:text/csv;charset=utf-8,﻿' + encodeURIComponent(csv);
             a.download = 'rekod-kawalan-kelas-' + new Date().toISOString().slice(0,10) + '.csv';
@@ -771,32 +770,15 @@
             showToast('CSV dieksport — ' + rkFiltered.length + ' rekod');
           }
 
-          // Wire up everything after DOM is ready
-          function rkInit() {
-            const btnLoad   = document.getElementById('rkBtnLoad');
-            const btnExport = document.getElementById('rkBtnExport');
-            const btnFilter = document.getElementById('rkBtnFilter');
-            const btnReset  = document.getElementById('rkBtnReset');
-            const sideLink  = document.querySelector('[data-section="settings"]');
-
-            if (btnLoad)   btnLoad.addEventListener('click', rkLoad);
-            if (btnExport) btnExport.addEventListener('click', rkExport);
-            if (btnFilter) btnFilter.addEventListener('click', rkApplyFilter);
-            if (btnReset)  btnReset.addEventListener('click', rkReset);
-
-            // Auto-load when section is opened
+          // Auto-load when Rekod Kawalan section is opened via sidebar
+          document.addEventListener('DOMContentLoaded', function() {
+            const sideLink = document.querySelector('[data-section="settings"]');
             if (sideLink) {
               sideLink.addEventListener('click', function() {
                 if (!rkAllData.length) setTimeout(rkLoad, 400);
               });
             }
-          }
-
-          if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', rkInit);
-          } else {
-            rkInit(); // DOM already parsed
-          }
+          });
   </script>
 </body>
 </html>
