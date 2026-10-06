@@ -514,7 +514,8 @@
   </script>
 
   <script>
-          const RKK_URL = 'https://script.google.com/macros/s/AKfycbyvGyE-AOn-eDv2F6hQFAYyS6mQEeJRvpRtHEmNvYE3R-SCalUU2Lx3kTdFVH3q2ls/exec?action=getRKK';
+          // ── RKK: fetch via Google Sheets CSV (no CORS issues) ──
+          const RKK_CSV = 'https://docs.google.com/spreadsheets/d/1-WiEUuClfNMw-ac_e-rAj8AgCon3gqNwUPiz5tq8nNc/gviz/tq?tqx=out:csv&sheet=RKK';
           let rkAllData = [];
           let rkFiltered = [];
 
@@ -525,55 +526,96 @@
             'PdPr':   'background:rgba(34,197,94,.15);color:#4ade80;',
           };
 
-          function rkLoad() {
+          // Parse CSV text into array of objects (handles quoted fields with commas)
+          function parseCSV(text) {
+            const lines = text.trim().split('\n');
+            if (lines.length < 2) return [];
+            function parseLine(line) {
+              const fields = [];
+              let cur = '', inQ = false;
+              for (let i = 0; i < line.length; i++) {
+                const ch = line[i];
+                if (ch === '"') {
+                  if (inQ && line[i+1] === '"') { cur += '"'; i++; }
+                  else { inQ = !inQ; }
+                } else if (ch === ',' && !inQ) {
+                  fields.push(cur); cur = '';
+                } else { cur += ch; }
+              }
+              fields.push(cur);
+              return fields;
+            }
+            const headers = parseLine(lines[0]);
+            return lines.slice(1)
+              .filter(l => l.trim())
+              .map(l => {
+                const vals = parseLine(l);
+                const obj = {};
+                headers.forEach((h, i) => { obj[h.trim()] = (vals[i] || '').trim(); });
+                return obj;
+              })
+              .filter(r => r['Name'] || r['Class']); // skip blank rows
+          }
+
+          // Normalise date to YYYY-MM-DD regardless of format from Sheet
+          function normDate(raw) {
+            if (!raw) return '';
+            // ISO already: 2026-04-15
+            if (/^\d{4}-\d{2}-\d{2}/.test(raw)) return raw.slice(0, 10);
+            // DD/MM/YYYY
+            const m = raw.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+            if (m) return `${m[3]}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`;
+            // Try native parse as last resort
+            const d = new Date(raw);
+            return isNaN(d) ? '' : d.toISOString().slice(0,10);
+          }
+
+          async function rkLoad() {
             document.getElementById('rkMainBody').innerHTML = '<tr><td colspan="9" style="padding:48px;text-align:center;color:var(--muted);">Memuatkan data...</td></tr>';
-            // Use JSONP to bypass CORS
-            window._rkCallback = function(json) {
-              rkAllData = json.data || [];
+            document.getElementById('rkBarGuru').innerHTML = '';
+            document.getElementById('rkBarKelas').innerHTML = '';
+            try {
+              const res = await fetch(RKK_CSV);
+              if (!res.ok) throw new Error('HTTP ' + res.status);
+              const text = await res.text();
+              rkAllData = parseCSV(text);
+
+              // Normalise dates
+              rkAllData.forEach(r => { r._date = normDate(r['Date'] || r['Timestamp'] || ''); });
+
               showToast('Data dimuatkan: ' + rkAllData.length + ' rekod');
 
               // Populate month filter
-              const months = [...new Set(rkAllData.map(r => {
-                const d = String(r['Date'] || '').slice(0,10);
-                return d.slice(5,7) + '/' + d.slice(0,4);
-              }).filter(Boolean))].sort();
+              const monthSet = [...new Set(rkAllData.map(r => r._date.slice(0,7)).filter(Boolean))].sort();
               const sel = document.getElementById('rkMonth');
               sel.innerHTML = '<option value="">Semua Bulan</option>';
-              months.forEach(m => {
-                const [mm, yyyy] = m.split('/');
-                const label = new Date(yyyy, mm-1).toLocaleDateString('ms-MY', {month:'long', year:'numeric'});
-                sel.innerHTML += `<option value="${m}">${label}</option>`;
+              monthSet.forEach(ym => {
+                const [y, m] = ym.split('-');
+                const label = new Date(+y, +m-1).toLocaleDateString('ms-MY', {month:'long', year:'numeric'});
+                sel.innerHTML += `<option value="${ym}">${label}</option>`;
               });
+
               rkFiltered = rkAllData;
               rkRender(rkFiltered);
-            };
-            // Inject JSONP script tag
-            const old = document.getElementById('rkJsonp');
-            if(old) old.remove();
-            const s = document.createElement('script');
-            s.id = 'rkJsonp';
-            s.onerror = function() {
-              document.getElementById('rkMainBody').innerHTML = '<tr><td colspan="9" style="padding:48px;text-align:center;color:var(--red);">Gagal memuatkan data.</td></tr>';
-              showToast('Ralat sambungan ke Google Sheet.', true);
-            };
-            s.src = RKK_URL + '&callback=_rkCallback';
-            document.body.appendChild(s);
+            } catch(err) {
+              document.getElementById('rkMainBody').innerHTML = `<tr><td colspan="9" style="padding:48px;text-align:center;color:var(--red);">Gagal memuatkan data: ${err.message}<br><small style="color:var(--muted);">Pastikan Google Sheet dikongsi sebagai "Anyone with the link can view".</small></td></tr>`;
+              showToast('Ralat: ' + err.message, true);
+            }
           }
 
           function rkApplyFilter() {
-            const month = document.getElementById('rkMonth').value;
+            const month = document.getElementById('rkMonth').value;   // YYYY-MM
             const type  = document.getElementById('rkType').value;
             const tingk = document.getElementById('rkTingkatan').value;
             const q     = document.getElementById('rkSearch').value.toLowerCase().trim();
 
             rkFiltered = rkAllData.filter(r => {
-              const date    = String(r['Date'] || r['Timestamp'] || '');
               const guru    = String(r['Name'] || '').toLowerCase();
               const kelas   = String(r['Class'] || '').toLowerCase();
               const remarks = String(r['Remarks'] || '');
               const tingNum = kelas.match(/^(\d)/)?.[1] || '';
 
-              const matchMonth = !month || date.slice(3,10) === month;
+              const matchMonth = !month || r._date.slice(0,7) === month;
               const matchType  = !type  || remarks === type;
               const matchTing  = !tingk || tingNum === tingk;
               const matchQ     = !q     || guru.includes(q) || kelas.includes(q) || String(r['Subject']||'').toLowerCase().includes(q);
@@ -659,7 +701,7 @@
                   if(dur.startsWith('23:')||dur.startsWith('22:')||dur.startsWith('21:')) issues.push('Masa keluar lebih awal dari masa masuk');
                   if(students>200) issues.push(`${students} pelajar — luar biasa`);
                   return `<tr style="border-bottom:1px solid var(--border);">
-                    <td style="padding:10px 14px;font-family:'Geist Mono',monospace;font-size:12px;">${String(r['Date']||'').slice(0,10)}</td>
+                    <td style="padding:10px 14px;font-family:'Geist Mono',monospace;font-size:12px;">${r._date||'—'}</td>
                     <td style="padding:10px 14px;">${r['Name']||'—'}</td>
                     <td style="padding:10px 14px;">${r['Class']||'—'}</td>
                     <td style="padding:10px 14px;">${issues.map(i=>`<span style="padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600;background:var(--red-bg);color:var(--red);margin-right:4px;">${i}</span>`).join('')}</td>
@@ -676,7 +718,7 @@
                   const isAnom = dur.startsWith('23:')||dur.startsWith('22:')||dur==='00:00:00';
                   const style = TYPE_STYLE[remarks] || 'background:var(--surface);color:var(--muted);';
                   return `<tr style="border-bottom:1px solid var(--border);">
-                    <td style="padding:10px 14px;font-family:'Geist Mono',monospace;font-size:12px;">${String(r['Date']||'').slice(0,10)}</td>
+                    <td style="padding:10px 14px;font-family:'Geist Mono',monospace;font-size:12px;">${r._date||'—'}</td>
                     <td style="padding:10px 14px;">${r['Name']||'—'}</td>
                     <td style="padding:10px 14px;">${r['Class']||'—'}</td>
                     <td style="padding:10px 14px;color:var(--muted);">${r['Subject']||'—'}</td>
