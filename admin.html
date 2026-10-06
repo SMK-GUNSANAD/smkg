@@ -353,6 +353,9 @@
           <div class="page-desc">Data diambil terus dari Google Sheet RKK. Klik Muat Semula untuk data terkini.</div>
         </div>
 
+        <!-- Diagnostic status bar -->
+        <div id="rkStatus" style="font-size:12px;font-family:'Geist Mono',monospace;color:var(--muted);background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 14px;margin-bottom:12px;word-break:break-all;">Belum dimuatkan. Klik "Muat Semula".</div>
+
         <!-- Top controls -->
         <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:20px;">
           <select id="rkMonth" style="padding:8px 12px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--bg2);color:var(--text);font-size:13px;font-family:'Geist',sans-serif;">
@@ -570,27 +573,30 @@
             return isNaN(d) ? '' : d.toISOString().slice(0,10);
           }
 
+          function rkStatus(msg, isError) {
+            const el = document.getElementById('rkStatus');
+            if (el) { el.textContent = msg; el.style.color = isError ? 'var(--red)' : 'var(--green)'; }
+          }
+
           async function rkLoad() {
             document.getElementById('rkMainBody').innerHTML = '<tr><td colspan="9" style="padding:48px;text-align:center;color:var(--muted);">Memuatkan data...</td></tr>';
             document.getElementById('rkBarGuru').innerHTML = '';
             document.getElementById('rkBarKelas').innerHTML = '';
+            rkStatus('Sedang fetch CSV...', false);
             try {
               const res = await fetch(RKK_CSV, { cache: 'no-store' });
+              rkStatus('Fetch selesai: HTTP ' + res.status, !res.ok);
               if (!res.ok) throw new Error('HTTP ' + res.status);
               const text = await res.text();
-              // Show first 200 chars in toast for debugging
               if (!text || text.trim().startsWith('<!')) {
-                throw new Error('Sheet not public or wrong sheet name. Got HTML instead of CSV.');
+                throw new Error('Sheet tidak public atau nama tab salah. Dapat HTML bukan CSV.');
               }
               rkAllData = parseCSV(text);
 
-              // Show header names so we can verify column mapping
-              if (rkAllData.length > 0) {
-                const headers = Object.keys(rkAllData[0]);
-                console.log('RKK headers:', headers);
-                // Show in UI for 8 seconds
-                showToast('Headers: ' + headers.join(' | '));
-              }
+              // Persistent status with header names
+              const headers = rkAllData.length ? Object.keys(rkAllData[0]).join(' | ') : '(tiada baris)';
+              rkStatus(`OK: ${rkAllData.length} baris. Headers: ${headers}`, false);
+              console.log('RKK headers:', Object.keys(rkAllData[0] || {}));
 
               // Normalise dates
               rkAllData.forEach(r => { r._date = normDate(r['Date'] || r['Timestamp'] || ''); });
@@ -610,6 +616,7 @@
               rkFiltered = rkAllData;
               rkRender(rkFiltered);
             } catch(err) {
+              rkStatus('RALAT: ' + err.message, true);
               document.getElementById('rkMainBody').innerHTML = `<tr><td colspan="9" style="padding:48px;text-align:center;color:var(--red);">Gagal memuatkan data: ${err.message}<br><small style="color:var(--muted);">Pastikan Google Sheet dikongsi sebagai "Anyone with the link can view".</small></td></tr>`;
               showToast('Ralat: ' + err.message, true);
             }
